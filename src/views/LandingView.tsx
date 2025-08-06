@@ -1,4 +1,4 @@
-import { LuArrowRight, LuChartColumn, LuCheck, LuCirclePlay, LuLock, LuShield, LuUsers, LuZap } from "react-icons/lu"
+import { LuArrowRight, LuChartColumn, LuCheck, LuCirclePlay, LuShield, LuUsers, LuZap } from "react-icons/lu"
 import { Button } from "../components/Button"
 import { Header } from "../components/Header"
 import { Footer } from "../components/Footer"
