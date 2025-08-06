@@ -2,6 +2,8 @@ import { LuArrowRight, LuMenu, LuX } from "react-icons/lu"
 import { Button } from "./Button"
 import logo from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\Logo.png"
 import { useState } from "react"
+import { LoginModal } from "./modals/LoginModal"
+import { SignUpModal } from "./modals/SignUpModal"
 
 interface HeaderProps {
   isLoggedIn?: boolean
@@ -9,6 +11,19 @@ interface HeaderProps {
 // TODO: Usar isLoggedIn en el archivo
 export const Header = ({ isLoggedIn }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [modalType, setModalType] = useState<'login' | 'signup' | null>(null);  
+
+  const openLoginModal = () => {
+    setModalType('login');
+  }
+
+  const openSignUpModal = () => {
+    setModalType('signup');
+  }
+
+  const closeModal = () => {
+    setModalType(null);
+  }
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -26,7 +41,7 @@ export const Header = ({ isLoggedIn }: HeaderProps) => {
         <div className="hidden lg:flex items-center gap-[5em]">
           <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors">Sobre nosotros</div>
           <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors">Contacto</div>
-          <Button isWhite={false} >Iniciar Sesion</Button>
+          <Button isWhite={false}  action={openLoginModal} >Iniciar Sesion</Button>
           <Button icon={<LuArrowRight />}>Demo Gratis</Button>
         </div>
 
@@ -45,10 +60,24 @@ export const Header = ({ isLoggedIn }: HeaderProps) => {
         <div className="flex flex-col items-start gap-6 py-6 px-6 bg-primary">
           <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors">Sobre nosotros</div>
           <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors">Contacto</div>
-          <Button isWhite={false}  isWidthFull={true}>Iniciar Sesion</Button>
+          <Button isWhite={false} isWidthFull={true}  action={openLoginModal}>Iniciar Sesion</Button>
           <Button isWidthFull={true} icon={<LuArrowRight />}>Demo Gratis</Button>
         </div>
       </div>
+
+       {modalType === 'login' && (
+        <LoginModal 
+          onClose={closeModal} 
+          onSwitchToSignUp={openSignUpModal}  // 
+        />
+      )}
+      
+      {modalType === 'signup' && (
+        <SignUpModal 
+          onClose={closeModal} 
+          onSwitchToLogin={openLoginModal}  // 
+        />
+      )}
     </header>
   )
 }

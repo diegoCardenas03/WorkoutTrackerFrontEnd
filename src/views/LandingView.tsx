@@ -4,6 +4,7 @@ import { Header } from "../components/Header"
 import { Footer } from "../components/Footer"
 
 export const LandingView = () => {
+
   return (
     <>
       <Header />
@@ -59,7 +60,7 @@ export const LandingView = () => {
 
           <div className="w-full h-fit py-6 pb-[8em] lg:grid lg:grid-flow-col lg:grid-rows-2 lg:gap-10 grid grid-flow-row gap-5 items-center justify-between">
             {/* Tarjetas */}
-            <div className="lg:w-[40em] lg:h-[12em] 2xl:w-[50em]  w-full bg-tertiary flex flex-col rounded-lg shadow-2xl px-6 py-5 gap-8">
+            <div className="md:w-[30em] lg:w-[38em] lg:h-[12em] 2xl:w-[50em] w-full bg-tertiary flex flex-col rounded-lg shadow-2xl px-6 py-5 gap-8">
               <div className="w-full flex gap-4 items-center">
                 <div className="bg-white/10 w-[2.5em] h-[2.5em] flex justify-center items-center rounded-lg"> <LuUsers color="white" fontSize={"1.3em"} /> </div>
                 <h2 className="text-white font-semibold text-[1em] lg:text-[1.3em]">Gestión de miembros</h2>
@@ -67,7 +68,7 @@ export const LandingView = () => {
               <p className="text-quaternary text-[12px] md:text-[14px] lg:text-[14px] 2xl:text-[18px]">Administra todos tus miembros desde un panel centralizado con perfiles detallados y seguimiento personalizado.</p>
             </div>
 
-            <div className="lg:w-[40em] lg:h-[12em] 2xl:w-[50em] w-full bg-tertiary flex flex-col rounded-lg shadow-2xl px-6 py-5 gap-8">
+            <div className="md:w-[30em] lg:w-[38em] lg:h-[12em] 2xl:w-[50em] w-full bg-tertiary flex flex-col rounded-lg shadow-2xl px-6 py-5 gap-8">
               <div className="w-full flex gap-4 items-center">
                 <div className="bg-white/10 w-[2.5em] h-[2.5em] flex justify-center items-center rounded-lg"> <LuShield color="white" fontSize={"1.3em"} /> </div>
                 <h2 className="text-white font-semibold text-[1em] lg:text-[1.3em]">App Personalizada</h2>
@@ -75,7 +76,7 @@ export const LandingView = () => {
               <p className="text-quaternary text-[12px] md:text-[14px] lg:text-[14px] 2xl:text-[18px]">Cada gimnasio obtiene su propia versión de la app con su marca, colores y logo corporativo.</p>
             </div>
 
-            <div className="lg:w-[40em] lg:h-[12em] 2xl:w-[50em] w-full bg-tertiary flex flex-col rounded-lg shadow-2xl px-6 py-5 gap-8">
+            <div className="md:w-[30em] lg:w-[38em] lg:h-[12em] 2xl:w-[50em] w-full bg-tertiary flex flex-col rounded-lg shadow-2xl px-6 py-5 gap-8">
               <div className="w-full flex gap-4 items-center">
                 <div className="bg-white/10 w-[2.5em] h-[2.5em] flex justify-center items-center rounded-lg"> <LuChartColumn color="white" fontSize={"1.3em"} /> </div>
                 <h2 className="text-white font-semibold text-[1em] lg:text-[1.3em]">Analytics Avanzados</h2>
@@ -83,7 +84,7 @@ export const LandingView = () => {
               <p className="text-quaternary text-[12px] md:text-[14px] lg:text-[14px] 2xl:text-[18px]">Obtén insights profundos sobre el uso, progreso y retención de tus miembros con reportes en tiempo real.</p>
             </div>
 
-            <div className="lg:w-[40em] lg:h-[12em] 2xl:w-[50em] w-full] bg-tertiary flex flex-col rounded-lg shadow-2xl px-6 py-5 gap-8">
+            <div className="md:w-[30em] lg:w-[38em] lg:h-[12em] 2xl:w-[50em] w-full] bg-tertiary flex flex-col rounded-lg shadow-2xl px-6 py-5 gap-8">
               <div className="w-full flex gap-4 items-center">
                 <div className="bg-white/10 w-[2.5em] h-[2.5em] flex justify-center items-center rounded-lg"> <LuZap color="white" fontSize={"1.3em"} /> </div>
                 <h2 className="text-white font-semibold text-[1em] lg:text-[1.3em]">Implementación Rápida
