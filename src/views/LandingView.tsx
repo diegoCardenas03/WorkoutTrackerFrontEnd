@@ -1,6 +1,6 @@
 import { LuArrowRight, LuChartColumn, LuCheck, LuCirclePlay, LuShield, LuUsers, LuZap } from "react-icons/lu"
 import { Button } from "../components/Button"
-import { Header } from "../components/Header"
+import { Header } from "../components/PublicHeader"
 import { Footer } from "../components/Footer"
 
 export const LandingView = () => {

@@ -26,3 +26,18 @@ body, html {
     width: 100%;
     min-height: 100vh;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.menu-appear {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.menu-disappear {
+  transition: all 0.2s ease-out;
+  opacity: 0;
+  transform: translateY(-10px);
+}
