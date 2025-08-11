@@ -1,13 +1,17 @@
 
-import { PrivateHeader } from "../components/PrivateHeader"
+import { PrivateLayout } from "../layouts/PrivateLayout"
 
 
 export const DashBoardView = () => {
   return (
     <>
-    <PrivateHeader />
-    
-    
+      <PrivateLayout>
+        <div>
+
+        </div>
+
+      </PrivateLayout>
+
     </>
   )
 }
