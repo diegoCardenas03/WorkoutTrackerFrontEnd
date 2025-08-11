@@ -5,11 +5,8 @@ import { useState } from "react"
 import { LoginModal } from "./modals/LoginModal"
 import { SignUpModal } from "./modals/SignUpModal"
 
-interface HeaderProps {
-  isLoggedIn?: boolean
-}
-// TODO: Usar isLoggedIn en el archivo
-export const Header = ({ isLoggedIn }: HeaderProps) => {
+
+export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [modalType, setModalType] = useState<'login' | 'signup' | null>(null);  
 
