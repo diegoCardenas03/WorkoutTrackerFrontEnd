@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { PrivateHeader } from "../components/PrivateHeader";
 import { Navbar } from "../components/Navbar";
+import { Footer } from "../components/Footer";
 
 interface PrivateLayoutProps {
   children: React.ReactNode;
+  isDashboard?: boolean;
 }
 
-export const PrivateLayout = ({ children }: PrivateLayoutProps) => {
+export const PrivateLayout = ({ children, isDashboard = false }: PrivateLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -30,13 +32,15 @@ export const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       {/* CAMBIO: Contenedor principal que incluye header y main */}
       <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out">
         {/* Header - se ajusta al ancho disponible */}
-        <PrivateHeader isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
+        <PrivateHeader isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} isMessage={isDashboard} />
 
         {/* Main */}
         <main className="flex-1">
           {children}
         </main>
+        <Footer />
       </div>
+      
     </div>
   );
 };

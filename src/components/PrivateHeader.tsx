@@ -5,26 +5,27 @@ import { useState } from "react"
 import { MenuProfile } from "./MenuProfile"
 
 interface PrivateHeaderProps {
-  onToggleSidebar: () => void;
-  isSidebarOpen: boolean;
+    onToggleSidebar: () => void;
+    isSidebarOpen: boolean;
+    isMessage?: boolean;
 }
 
 
-export const PrivateHeader = ({onToggleSidebar, isSidebarOpen}: PrivateHeaderProps) => {
+export const PrivateHeader = ({ onToggleSidebar, isSidebarOpen, isMessage }: PrivateHeaderProps) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [shouldRender, setShouldRender] = useState(false);
 
-     const toggleMenu = () => {
+    const toggleMenu = () => {
         if (!isMenuOpen) {
             setShouldRender(true);
             setTimeout(() => setIsMenuOpen(true), 10);
         } else {
             setIsMenuOpen(false);
-            setTimeout(() => setShouldRender(false), 200); 
+            setTimeout(() => setShouldRender(false), 200);
         }
     }
 
-     const closeMenu = () => {
+    const closeMenu = () => {
         if (!isMenuOpen) return;
         setIsMenuOpen(false);
         setTimeout(() => setShouldRender(false), 200);
@@ -36,16 +37,14 @@ export const PrivateHeader = ({onToggleSidebar, isSidebarOpen}: PrivateHeaderPro
             {/* Icono del navbar, nombre y mensaje de bienvenida */}
             <div className="flex items-center justify-center h-full">
                 <div className="flex items-center justify-center md:border-r md:border-white/20 lg:border-r lg:border-white/20 2xl:border-r 2xl:border-white/20 h-full pr-[24px]">
-                    <LuPanelLeft className={`cursor-pointer hover:text-quaternary transition-all text-[20px]`}onClick={onToggleSidebar} />
+                    <LuPanelLeft className={`cursor-pointer hover:text-quaternary transition-all text-[20px]`} onClick={onToggleSidebar} />
                 </div>
-                <div className="flex flex-col md:items-center lg:items-center 2xl:items-center justify-center w-fit md:px-6 lg:px-6 2xl:px-6 gap-2">
-                    <h1 className=" text-[12px] md:text-[1.15em] lg:text-[1.15em] 2xl:text-[1.3em] font-extrabold">¡Hola, Geronimo!</h1>
-                    <p className={`text-quaternary ${isSidebarOpen ? 'w-[11em] md:w-fit' : ''} text-[10px] md:text-[13px] lg:text-[13px] 2xl:text-[15px]`}>Aquí tu resumen de entrenamiento</p>
-                </div>
+                {isMessage && (<div className="flex flex-col md:items-center lg:items-center 2xl:items-center justify-center w-fit md:px-6 lg:px-6 2xl:px-6 gap-2"> <h1 className=" text-[12px] md:text-[1.15em] lg:text-[1.15em] 2xl:text-[1.3em] font-extrabold">¡Hola, Geronimo!</h1>
+                    <p className={`text-quaternary ${isSidebarOpen ? 'w-[11em] md:w-fit' : ''} text-[10px] md:text-[13px] lg:text-[13px] 2xl:text-[15px]`}>Aquí tu resumen de entrenamiento</p> </div>)}
             </div>
 
             {/* Notificacion, Foto perfil, Nombre y Icono de apertura */}
-            <div className={`flex items-center justify-center transition-all h-full gap-10` }>
+            <div className={`flex items-center justify-center transition-all h-full gap-10`}>
                 <div className="flex items-center justify-center">
                     <LuBell className="cursor-pointer hover:text-quaternary transition-colors text-[20px] md:text-[20px] lg:text-[20px] 2xl:text-[24px]" />
                 </div>
@@ -69,7 +68,7 @@ export const PrivateHeader = ({onToggleSidebar, isSidebarOpen}: PrivateHeaderPro
                     </div>
                 </>
             )}
-           
+
         </header>
     )
 }

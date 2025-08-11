@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { DashBoardView } from './views/DashBoardView'
+import { MyProfileView } from './views/MyProfileView'
 
 
 
@@ -9,6 +9,6 @@ import { DashBoardView } from './views/DashBoardView'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <DashBoardView />
+    <MyProfileView />
   </StrictMode>,
 )
