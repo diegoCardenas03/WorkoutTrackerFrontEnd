@@ -34,7 +34,7 @@ export const PrivateLayout = ({ children, isDashboard = false }: PrivateLayoutPr
         <PrivateHeader isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} isMessage={isDashboard} />
 
         {/* Main */}
-        <main className="flex-1">
+        <main className="flex-1 py-2 px-5 md:py-4 md:px-8 lg:px-12">
           {children}
         </main>
         <Footer />

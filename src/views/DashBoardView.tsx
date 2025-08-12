@@ -8,12 +8,12 @@ import { PrivateLayout } from "../layouts/PrivateLayout"
 export const DashBoardView = () => {
   return (
     <PrivateLayout isDashboard={true}>
-      <div className="p-6 h-full overflow-auto">
+      <div className="h-full overflow-auto">
         {/* Grid principal del dashboard */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
           
           {/* Primera fila - Desktop: Próxima sesión y Progreso lado a lado */}
-          {/* CAMBIO: Agregado h-fit para que tengan la misma altura */}
+         
           <div className="col-span-1 h-fit">
             <NextSessionCard />
           </div>
@@ -23,7 +23,6 @@ export const DashBoardView = () => {
           </div>
 
           {/* Segunda fila - Desktop: Mis rutinas y Ejercicios destacados lado a lado */}
-          {/* CAMBIO: Agregado h-fit para que tengan la misma altura */}
           <div className="col-span-1 h-fit">
             <MyRoutinesCard />
           </div>
