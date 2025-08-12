@@ -16,15 +16,14 @@ export const PrivateLayout = ({ children, isDashboard = false }: PrivateLayoutPr
   };
 
   return (
-    <div className="h-screen flex">
-      {/* CAMBIO: Sidebar ahora está al mismo nivel que el contenido principal */}
+    <div className="min-h-screen flex">
       {/* Sidebar - ocupa toda la altura de la ventana */}
       <div
-        className={`bg-navbar transition-all duration-300 ease-in-out ${
+        className={`bg-navbar transition-all duration-300 ease-in-out sticky top-0 self-start   ${
           isSidebarOpen ? "w-[4em] md:w-[13em] lg:w-[15em] 2xl:w-[17em]" : "w-0"
         } overflow-hidden h-screen`}
       >
-        <div className={`w-[20vw] transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`h-full transition-opacity duration-300  ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
           <Navbar />
         </div>
       </div>

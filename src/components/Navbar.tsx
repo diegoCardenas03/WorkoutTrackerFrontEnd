@@ -4,7 +4,7 @@ import { IoCalendarClearOutline, IoGridOutline, IoHomeOutline, IoListCircleOutli
 
 export const Navbar = () => {
   return (
-    <div className="bg-navbar flex flex-col h-screen w-[4em] md:w-[13em] lg:w-[15em] 2xl:w-[17em] align-center text-white font-bold md:border-r md:border-white/20 lg:border-r lg:border-white/20">
+    <div className="bg-navbar flex flex-col h-full w-full align-center text-white font-bold md:border-r md:border-white/20 lg:border-r lg:border-white/20 ">
         <div className="flex align-center justify-center h-0 md:h-auto py-0 md:py-[2em] overflow-hidden">
           <img className="hidden md:block lg:block w-28" src={logo} alt="logo" />
         </div>
