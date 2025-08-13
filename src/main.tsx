@@ -1,8 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { MyProgressView } from './views/MyProgressView'
-import { DashBoardView } from './views/DashBoardView'
+import { CatalogView } from './views/CatalogView'
 
 
 
@@ -10,6 +9,6 @@ import { DashBoardView } from './views/DashBoardView'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MyProgressView />
+    <CatalogView />
   </StrictMode>,
 )
