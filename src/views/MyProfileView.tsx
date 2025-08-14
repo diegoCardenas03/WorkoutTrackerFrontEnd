@@ -2,12 +2,15 @@ import { LuSave } from 'react-icons/lu'
 import { Button } from '../components/Button'
 import { PrivateLayout } from '../layouts/PrivateLayout'
 import fotoPerfil from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\FotoPerfil.png"
+import { SubHeader } from '../components/SubHeader'
 
 export const MyProfileView = () => {
   return (
     <PrivateLayout>
+      <SubHeader nameView='Mi Perfil' description='Verifica o modifica tu informacion personal'/>
+
       <div className='flex flex-col items-center justify-start text-white h-full w-full'>
-        <h1 className='text-[1.8em] md:text-[2.5em] lg:text-[2.5em] font-bold'>MI PERFIL</h1>
+        {/* <h1 className='text-[1.8em] md:text-[2.5em] lg:text-[2.5em] font-bold'>MI PERFIL</h1> */}
         <div className='flex flex-col md:flex-row items-center justify-center gap-3 md:gap-[5em] lg:gap-[5em] mt-[3em]'>
           <div className='flex flex-col h-full'>
             <img className="w-[6em] h-[6em] md:w-[10em] md:h-[10em] lg:w-[10em] lg:h-[10em] 2xl:w-[10em] 2xl:h-[10em] cursor-pointer hover:text-quaternary transition-colors" src={fotoPerfil} alt="fotoPerfil" />

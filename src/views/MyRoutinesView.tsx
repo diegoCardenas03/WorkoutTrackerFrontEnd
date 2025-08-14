@@ -9,6 +9,8 @@ import { CustomSelect } from "../components/CustomSelect"
 import { handleCategoryChange } from "../utils/handleCategoryChange"
 import { RoutineCard } from "../components/myRoutines/cards/RoutineCard"
 import { RoutineModal } from "../components/myRoutines/modals/RoutineModal"
+import { ConfigRoutineModal } from "../components/myRoutines/modals/ConfigRoutineModal"
+import { useNavigate } from "react-router-dom"
 
 interface RoutineData {
     id: string
@@ -37,6 +39,9 @@ export const MyRoutinesView = () => {
     const [searchTerm, setSearchTerm] = useState("")
     const [isRoutineModalOpen, setIsRoutineModalOpen] = useState(false)
     const [selectedRoutine, setSelectedRoutine] = useState<RoutineData | null>(null)
+    const [isConfigRoutineModalOpen, setIsConfigRoutineModalOpen] = useState(false)
+    const [routineFormData, setRoutineFormData] = useState(null)
+    const navigate = useNavigate()
 
     const handleOpenRoutineModal = (routine: RoutineData) => {
         setSelectedRoutine(routine)
@@ -170,6 +175,33 @@ export const MyRoutinesView = () => {
 
     const filteredRoutines = getFilteredRoutines()
 
+    const handleCreateRoutine = () => {
+        setIsConfigRoutineModalOpen(true)
+    }
+
+    const handleContinueToSelection = (data: any) => {
+        console.log("📝 Datos recibidos del modal:", data)
+        setRoutineFormData(data)
+        setIsConfigRoutineModalOpen(false)
+
+        // Guardar datos en localStorage para persistir durante la navegación
+        localStorage.setItem('pendingRoutineData', JSON.stringify(data))
+
+        // Disparar evento personalizado para abrir el catálogo en modo selección
+        console.log("🔥 Disparando evento openCatalogSelectMode")
+        const event = new CustomEvent('openCatalogSelectMode', {
+            detail: data
+        })
+        window.dispatchEvent(event)
+        console.log("✅ Evento disparado")
+
+        console.log("Datos de rutina:", data)
+        console.log("Continuando a selección de ejercicios...")
+
+        console.log("🧭 Navegando a /catalog")
+        navigate('/catalog')
+    }
+
     // Agrupar rutinas en grupos de 3
     const groupedRoutines = []
     for (let i = 0; i < filteredRoutines.length; i += 3) {
@@ -186,6 +218,7 @@ export const MyRoutinesView = () => {
                     lgPaddingLine="lg:px-4"
                     mdHeight=""
                     lgHeight=""
+                    action={handleCreateRoutine}
                 >
                     Crear rutina
                 </Button>
@@ -286,6 +319,11 @@ export const MyRoutinesView = () => {
                     }}
                 />
             )}
+            <ConfigRoutineModal
+                isOpen={isConfigRoutineModalOpen}
+                onClose={() => setIsConfigRoutineModalOpen(false)}
+                onContinueToSelection={handleContinueToSelection}
+            />
         </PrivateLayout>
     )
 }

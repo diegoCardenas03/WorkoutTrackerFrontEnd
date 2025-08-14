@@ -18,9 +18,10 @@ interface ButtonProps {
     mobileText?: string;
     customWidthMobile?: string
     isALike?: boolean
+    onlyMobileText?: boolean
 }
 
-export const Button = ({ isWhite = true, children, icon, isWidthFull, iconPosition = true, mdHeight = "h-10", lgHeight = "h-12", mobileHeight = "h-10", action, isBold = false, isBlocked = false, paddingLine = "px-4", mdPaddingLine = "md:px-6", lgPaddingLine = "lg:px-7", mobileText = "text-[14px]", customWidthMobile = "", isALike = false, }: ButtonProps) => {
+export const Button = ({ isWhite = true, children, icon, isWidthFull, iconPosition = true, mdHeight = "h-10", lgHeight = "h-12", mobileHeight = "h-10", action, isBold = false, isBlocked = false, paddingLine = "px-4", mdPaddingLine = "md:px-6", lgPaddingLine = "lg:px-7", mobileText = "text-[14px]", customWidthMobile = "", isALike = false, onlyMobileText = false }: ButtonProps) => {
 
     const widthClass = isWidthFull ? "w-full" : "md:w-fit lg:w-fit xl:w-fit 2xl:w-fit"
     const heightClass = `${mobileHeight} md:${mdHeight} lg:${lgHeight}`
@@ -30,7 +31,7 @@ export const Button = ({ isWhite = true, children, icon, isWidthFull, iconPositi
         (isWhite ? <button disabled={isBlocked} onClick={action} className={`${widthClass} ${heightClass} ${paddingLine}  ${mdPaddingLine} ${lgPaddingLine}  rounded-lg ${isALike ? 'bg-[#FFCFCF]' : 'bg-white'}  ${isBold ? 'font-bold' : 'font-semibold'} transition-colors flex justify-center items-center gap-2 ${isBlocked
             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
             : `${isALike ? 'text-[#7C0000] hover:bg-[#FFCFCF]/90' : 'text-primary hover:bg-white/90'}  cursor-pointer  `
-            } ${mobileText} md:text-[15px] lg:text-[15px] `}>
+            } ${mobileText} ${onlyMobileText ? 'md:text-[13px]' : 'md:text-[15px] lg:text-[15px]'}  `}>
             {icon && !iconPosition && <span className="text-lg">{icon}</span>}
             <div className={`${customWidthMobile} md:w-fit`}>
                 {children}

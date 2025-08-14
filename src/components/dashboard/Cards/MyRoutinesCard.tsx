@@ -1,6 +1,7 @@
 
 import { LuArrowRight, LuDumbbell } from "react-icons/lu"
 
+
 export const MyRoutinesCard = () => {
   return (
     <div className="bg-tertiary rounded-lg p-6 text-white border border-white/20  h-[17em] md:h-[19em] flex flex-col ">
