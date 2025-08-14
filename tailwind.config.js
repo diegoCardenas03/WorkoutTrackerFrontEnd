@@ -3,6 +3,9 @@ export default {
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      screens: {
+        'RoutineCards': '1400px', // Breakpoint personalizado
+      },
       colors: {
         'test-color': '#ff0000', 
         quaternary: '#AFAFAF',

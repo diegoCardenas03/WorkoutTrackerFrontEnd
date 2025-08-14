@@ -1,11 +1,11 @@
 import { LuBookmark, LuHeart, LuTrendingUp, LuUsers } from "react-icons/lu"
-import { FeatureCard } from "../components/community/cards/FeatureCard"
+import { FeatureCard } from "../components/FeatureCard"
 import { SubHeader } from "../components/SubHeader"
 import { PrivateLayout } from "../layouts/PrivateLayout"
 import { SearchBar } from "../components/SearchBar"
 import { CustomSelect } from "../components/CustomSelect"
 import { handleCategoryChange } from "../utils/handleCategoryChange"
-import { CommunityExerciseCard } from "../components/community/cards/CommunityExerciseCard"
+import { CommunityExerciseCard } from "../components/community/cards/CommunityRoutineCard"
 import { useState } from "react"
 import { CommentsModal } from "../components/community/modals/CommentsModal"
 
@@ -66,10 +66,10 @@ export const CommunityView = () => {
         <PrivateLayout>
             <SubHeader nameView="Rutinas de la Comunidad" description="Descubre, valora y comparte rutinas creadas por otros usuarios" />
             <div className="flex flex-col mt-6 gap-6">
-                <div className="flex flex-col lg:flex-row justify-between gap-5 lg:gap-20">
+                <div className="flex flex-col xl:flex-row justify-between gap-5 xl:gap-20">
                     <FeatureCard
                         icon={<LuUsers size={20} className="text-[#89B4DB]" />}
-                        title="Rutinas disponibles"
+                        title="Total rutinas"
                         value="6"
                     />
                     <FeatureCard
@@ -93,7 +93,7 @@ export const CommunityView = () => {
                         placeholder="Buscar rutinas, autores o palabras clave..."
                         onSearch={(value) => console.log("Searching:", value)}
                     />
-                    <div className="flex lg:flex-row flex-col w-full gap-4">
+                    <div className="flex xl:flex-row flex-col w-full gap-4">
                         <CustomSelect
                             name="Todas las categorias"
                             options={categories}
@@ -114,7 +114,7 @@ export const CommunityView = () => {
                         />
                     </div>
                 </div>
-                <div className="flex flex-col lg:flex-row justify-between gap-5">
+                <div className="flex flex-col xl:flex-row justify-between gap-5">
                     <CommunityExerciseCard
                         {...exerciseData}
                         onLike={() => console.log("Liked!")}
@@ -137,7 +137,7 @@ export const CommunityView = () => {
                         onClick={() => console.log("Card clicked!")}
                     />
                 </div>
-                <div className="flex flex-col lg:flex-row justify-between gap-5 mb-10">
+                <div className="flex flex-col xl:flex-row justify-between gap-5 mb-10">
                     <CommunityExerciseCard
                         {...exerciseData}
                         onLike={() => console.log("Liked!")}

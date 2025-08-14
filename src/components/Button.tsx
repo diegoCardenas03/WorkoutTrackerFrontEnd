@@ -32,7 +32,7 @@ export const Button = ({ isWhite = true, children, icon, isWidthFull, iconPositi
             : `${isALike ? 'text-[#7C0000] hover:bg-[#FFCFCF]/90' : 'text-primary hover:bg-white/90'}  cursor-pointer  `
             } ${mobileText} md:text-[15px] lg:text-[15px] `}>
             {icon && !iconPosition && <span className="text-lg">{icon}</span>}
-            <div className={`${customWidthMobile}`}>
+            <div className={`${customWidthMobile} md:w-fit`}>
                 {children}
             </div>
 

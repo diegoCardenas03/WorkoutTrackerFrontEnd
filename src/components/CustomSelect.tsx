@@ -56,7 +56,7 @@ export const CustomSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`pl-4 pr-4 h-10 md:h-12 w-full lg:w-[15em] py-2 flex items-center justify-between
+        className={`pl-4 pr-4 h-10 2xl:h-12 w-full lg:w-[12em] xl:w-[15em] py-2 flex items-center justify-between
           bg-itemsCard rounded-lg text-sm md:text-base
           focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent
           transition-all duration-200 cursor-pointer ${isOpen ? "ring-2 ring-white/20 border-white/20" : ""}`}
@@ -76,17 +76,17 @@ export const CustomSelect = ({
       {/* Dropdown */}
       {isOpen && (
         <div
-          className="absolute z-10 w-full lg:w-[15em] mt-1 bg-itemsCard border border-white/20 rounded-lg 
+          className="absolute z-10 w-full lg:w-[12em] xl:w-[15em] mt-1 bg-itemsCard border border-white/20 rounded-lg 
           shadow-lg overflow-hidden transition-all duration-200"
           role="listbox"
         >
-          <ul className="max-h-60 overflow-auto">
+          <ul className="max-h-60 overflow-none">
             {options.map((option) => (
               <li
                 key={option.value}
                 onClick={() => handleSelect(option.value)}
                 className={`px-4 py-3 cursor-pointer transition-colors text-sm md:text-base
-                  ${selectedValue === option.value ? "bg-blue-50 text-quaternary" : "hover:bg-linksNavbar text-quaternary"}`}
+                  ${selectedValue === option.value ? "bg-primary/50 text-quaternary" : "hover:bg-linksNavbar text-quaternary"}`}
                 role="option"
                 aria-selected={selectedValue === option.value}
               >

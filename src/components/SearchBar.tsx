@@ -33,7 +33,7 @@ export const SearchBar = ({
           value={searchValue}
           onChange={handleSearchChange}
           placeholder={placeholder}
-          className="w-full h-10 md:h-12 pl-12 pr-4 bg-itemsCard  rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/40 transition-all text-sm md:text-base"
+          className="w-full h-10 2xl:h-12 pl-12 pr-4 bg-itemsCard  rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/40 transition-all text-sm md:text-base"
         />
       </div>
 

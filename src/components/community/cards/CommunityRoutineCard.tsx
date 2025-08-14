@@ -162,6 +162,7 @@ export const CommunityExerciseCard = ({
         iconPosition={false}
         icon={<LuHeart className="text-[#7C0000]" />}
         isALike= {true}
+        lgHeight="lg:h-40"
         >
             312
         </Button>
