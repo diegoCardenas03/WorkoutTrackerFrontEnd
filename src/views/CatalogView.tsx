@@ -5,6 +5,7 @@ import { SearchBar } from "../components/SearchBar"
 import { SubHeader } from "../components/SubHeader"
 import { PrivateLayout } from "../layouts/PrivateLayout"
 import { ExerciseModal } from "../components/catalog/modals/ExerciseModal"
+import { handleCategoryChange } from "../utils/handleCategoryChange"
 
 
 export const CatalogView = () => {
@@ -72,10 +73,7 @@ export const CatalogView = () => {
 
 
 
-    const handleCategoryChange = (value: string) => {
-        console.log("Categoría seleccionada:", value);
-        // Aquí puedes manejar el cambio de selección
-    };
+    
 
     return (
         <PrivateLayout>
