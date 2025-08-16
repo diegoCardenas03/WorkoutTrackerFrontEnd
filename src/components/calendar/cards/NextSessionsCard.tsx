@@ -28,7 +28,7 @@ export const NextSessionsCard = ({ sessions = [] }: NextSessionsCardProps) => {
   const sessionsToShow = sessions.length > 0 ? sessions : defaultSessions
 
   return (
-    <div className="bg-tertiary rounded-lg border border-white/10 p-6">
+    <div className="bg-tertiary rounded-lg border border-white/10 p-6 w-full">
       {/* Header */}
       <div className="mb-4">
         <h3 className="text-white text-lg font-medium">

@@ -41,7 +41,7 @@ export const Button = ({ isWhite = true, children, icon, isWidthFull, iconPositi
             {icon && iconPosition && <span className="text-lg">{icon}</span>}
         </button> :
             <button disabled={isBlocked} onClick={action} className={`${widthClass} ${heightClass} w-full ${paddingLine} ${mdPaddingLine} ${lgPaddingLine} rounded-lg bg-black border border-white/30 ${isBold ? 'font-bold' : 'font-semibold'}  transition-colors justify-center flex items-center gap-2 ${isBlocked
-                ? 'bg-gray-600 border-gray-500 text-gray-400 cursor-not-allowed'
+                ? 'bg-itemsCard border-gray-500 text-quaternary cursor-not-allowed'
                 : 'bg-black border-white/30 text-white cursor-pointer hover:bg-primary'
                 } ${mobileText} md:text-[15px] lg:text-[15px] `}>
                 {icon && !iconPosition && <span className="text-lg">{icon}</span>}

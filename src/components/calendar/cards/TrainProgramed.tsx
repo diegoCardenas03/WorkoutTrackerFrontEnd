@@ -32,7 +32,7 @@ export const TrainProgramed = ({ selectedDate, workouts = [] }: TrainProgramedPr
   const defaultDate = selectedDate || new Date()
 
   return (
-    <div className="bg-tertiary rounded-lg border border-white/10 p-6 lg:w-[45vw] ">
+    <div className="bg-tertiary rounded-lg border border-white/10 p-6 w-full ">
       {/* Header */}
       <div className="mb-6">
         <h3 className="text-white text-lg font-medium mb-1">

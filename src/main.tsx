@@ -9,6 +9,7 @@ import { DashBoardView } from './views/DashBoardView'
 import { CalendarView } from './views/CalendarView'
 import { MyProgressView } from './views/MyProgressView'
 import { MyProfileView } from './views/MyProfileView'
+import { TrainingView } from './views/TrainingView'
 
 
 
@@ -25,6 +26,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/progress" element={<MyProgressView />} />
         <Route path="/community" element={<CommunityView />} />
         <Route path="/myProfile" element={<MyProfileView/>} />
+        <Route path="/training" element={<TrainingView/>} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

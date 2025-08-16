@@ -39,13 +39,15 @@ export const CalendarView = () => {
                 <Button customWidthMobile="w-[10.7em]" mobileText="text-[11px]" iconPosition={false} icon={<LuPlus />} action={handleToggleModal}>Nuevo entrenamiento</Button>
             </SubHeader>
             <div className="mt-6 flex flex-col lg:flex-row justify-between gap-6">
-                <Calendar
-                    selectedDate={selectedDate}
-                    onDateSelect={setSelectedDate}
-                    highlightedDates={workoutDates}
+                <div className="lg:w-[27em] 2xl:w-[50em] ]">
+                    <Calendar
+                        selectedDate={selectedDate}
+                        onDateSelect={setSelectedDate}
+                        highlightedDates={workoutDates}
+                    />
+                </div>
 
-                />
-                <div className="flex flex-col gap-4 mb-6">
+                <div className="flex-1 flex flex-col gap-4 mb-6 min-w-0">
                     <TrainProgramed />
                     <NextSessionsCard sessions={nextSessions} />
                 </div>

@@ -1,7 +1,10 @@
 import { LuCalendar, LuTarget } from "react-icons/lu"
 import { Button } from "../../Button"
+import { useNavigate } from "react-router-dom"
 
 export const NextSessionCard = () => {
+    const navigate = useNavigate();
+
     return (
         <div className="bg-tertiary rounded-lg p-6 text-white border border-white/20 h-[17em] md:h-[19em] flex flex-col">
             {/* Header con icono y título */}
@@ -37,7 +40,7 @@ export const NextSessionCard = () => {
                 mobileHeight="h-11"
                 mdHeight="h-11"
                 lgHeight="h-11"
-                action={() => console.log("Comenzar entrenamiento")}
+                action={() => navigate('/training')}
             >
                 Comenzar entrenamiento
             </Button>
