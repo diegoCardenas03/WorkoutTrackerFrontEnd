@@ -4,11 +4,13 @@ import logo from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\Logo.p
 import { useState } from "react"
 import { LoginModal } from "./modals/LoginModal"
 import { SignUpModal } from "./modals/SignUpModal"
+import { useNavigate } from "react-router-dom"
 
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [modalType, setModalType] = useState<'login' | 'signup' | null>(null);  
+  const navigate = useNavigate();
 
   const openLoginModal = () => {
     setModalType('login');
@@ -31,15 +33,15 @@ export const Header = () => {
       {/* Header Principal */}
       <div className="flex justify-between items-center h-20 px-6">
         <div>
-          <img className="w-25" src={logo} alt="logo" />
+          <img className="w-25 cursor-pointer" src={logo} alt="logo" onClick={() => navigate('/landing')} />
         </div>
 
         {/* Desktop Menu */}
         <div className="hidden lg:flex items-center gap-[5em]">
-          <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors">Sobre nosotros</div>
-          <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors">Contacto</div>
+          <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/about')}>Sobre nosotros</div>
+          <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/contact')}>Contacto</div>
           <Button isWhite={false}  action={openLoginModal} >Iniciar Sesion</Button>
-          <Button icon={<LuArrowRight />}>Demo Gratis</Button>
+          <Button action={() => navigate('/')} icon={<LuArrowRight />}>Demo Gratis</Button>
         </div>
 
         {/* Mobile Menu Button */}

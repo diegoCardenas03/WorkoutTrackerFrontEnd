@@ -41,7 +41,7 @@ export const MenuProfile = ({ isVisible }: MenuProfileProps) => {
                         <LuLogOut strokeWidth={3} className="" />
 
                     </div>
-                    <p className="w-[8em] text-[13px] ">Cerrar sesión</p>
+                    <p className="w-[8em] text-[13px] " onClick={() => navigate('/landing')}>Cerrar sesión</p>
                 </div>
 
             </div>
