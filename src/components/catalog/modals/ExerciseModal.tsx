@@ -2,25 +2,12 @@ import { IoClose, IoPlay, IoAdd } from "react-icons/io5"
 import { LuDumbbell, LuPlay } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
-
-
-interface Tag {
-  label: string
-  color: 'green' | 'blue' | 'yellow' | 'red' | 'orange'
-}
+import type { EjercicioResponseDTO } from "../../../types/ejercicio/EjercicioResponseDTO"
 
 interface ExerciseModalProps {
   isOpen: boolean
   onClose: () => void
-  exercise: {
-    title: string
-    description: string
-    difficulty: Tag
-    equipment: Tag
-    targetMuscles: string[]
-    instructions: string[]
-    tips: string
-  }
+  exercise: EjercicioResponseDTO | null
   onAddToRoutine?: () => void
   onWatchVideo?: () => void
 }
@@ -33,7 +20,15 @@ export const ExerciseModal = ({
   onWatchVideo
 }: ExerciseModalProps) => {
   
-  if (!isOpen) return null
+  if (!isOpen || !exercise) return null
+
+  // Adaptar datos del ejercicio para el modal
+  const equipmentLabel = exercise.equipment?.[0]?.name || "Sin equipo"
+  const equipmentColor = "orange" as const
+  const targetMuscles = exercise.targetMuscles?.map(m => m.name) || []
+  const instructions = exercise.instructions ? Object.values(exercise.instructions) : []
+  const tips = exercise.tips || ""
+  const description = exercise.description
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -44,13 +39,13 @@ export const ExerciseModal = ({
       />
 
       {/* Modal */}
-      <div className="relative bg-primary border border-white/20 rounded-lg w-full max-w-lg mx-auto shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-primary border border-white/20 rounded-lg w-full max-w-lg mx-auto shadow-2xl max-h-[90vh] overflow-y-scroll [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {/* Header */}
-        <div className="sticky top-0 rounded-t-lg p-6 pb-4 border-b border-white/10">
+        <div className="sticky top-0 rounded-t-lg p-6 pb-4 border-b border-white/10 bg-primary">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               <LuDumbbell className="text-white" size={24} />
-              <h2 className="text-white text-[16px] md:text-xl font-medium">{exercise.title}</h2>
+              <h2 className="text-white text-[16px] md:text-xl font-medium">{exercise.name}</h2>
             </div>
             <button 
               onClick={onClose}
@@ -63,15 +58,9 @@ export const ExerciseModal = ({
           {/* Tags de dificultad y equipo */}
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-quaternary text-[12px] md:text-sm block mb-1">Dificultad</span>
-              <span className={`px-3 py-1 rounded-full text-[10px] md:text-xs font-medium border ${getTagStyles(exercise.difficulty.color)}`}>
-                {exercise.difficulty.label}
-              </span>
-            </div>
-            <div>
               <span className="text-quaternary text-[12px] md:text-sm block mb-1">Equipo necesario</span>
-              <span className={`px-3 py-1 rounded-full text-[10px] md:text-xs font-medium border ${getTagStyles(exercise.equipment.color)}`}>
-                {exercise.equipment.label}
+              <span className={`px-3 py-1 rounded-full text-[10px] md:text-xs font-medium border ${getTagStyles(equipmentColor)}`}>
+                {equipmentLabel}
               </span>
             </div>
           </div>
@@ -83,7 +72,7 @@ export const ExerciseModal = ({
           <div>
             <h3 className="text-white text-[14px] md:text-base font-medium mb-2">Descripción</h3>
             <p className="text-quaternary text-[12px] md:text-sm leading-relaxed">
-              {exercise.description}
+              {description}
             </p>
           </div>
 
@@ -91,7 +80,7 @@ export const ExerciseModal = ({
           <div>
             <h3 className="text-white text-[14px] md:text-base font-medium mb-3">Músculos objetivo</h3>
             <div className="flex flex-wrap gap-2">
-              {exercise.targetMuscles.map((muscle, index) => (
+              {targetMuscles.map((muscle, index) => (
                 <span
                   key={index}
                   className="px-3 py-1 bg-linksNavbar text-quaternary rounded-full text-xs "
@@ -106,7 +95,7 @@ export const ExerciseModal = ({
           <div>
             <h3 className="text-white text-[14px] md:text-base font-medium mb-3">Instrucciones</h3>
             <ol className="space-y-2">
-              {exercise.instructions.map((instruction, index) => (
+              {instructions.map((instruction, index) => (
                 <li key={index} className="text-quaternary text-[12px] md:text-sm flex gap-3">
                   <span className="text-quaternary font-medium min-w-[20px]">{index + 1}.</span>
                   <span className="leading-relaxed">{instruction}</span>
@@ -119,24 +108,26 @@ export const ExerciseModal = ({
           <div>
             <h3 className="text-white text-[14px] md:text-base font-medium mb-2">Consejos</h3>
             <p className="text-quaternary text-[12px] md:text-sm leading-relaxed">
-              {exercise.tips}
+              {tips}
             </p>
           </div>
         </div>
 
         {/* Footer con botones */}
-        <div className="sticky bottom-0 rounded-b-lg p-6 pt-4 border-t border-white/10">
+        <div className="sticky bottom-0 rounded-b-lg p-6 pt-4 border-t border-white/10 bg-primary">
           <div className="flex flex-col sm:flex-row justify-between gap-3">
             
             <Button
             iconPosition={false}
             icon={<LuPlay />}
+            
             >
                 Añadir a rutina
             </Button>
 
             <Button
             isWhite={false}
+            action={onWatchVideo}
             >
                 Ver video tutorial
             </Button>

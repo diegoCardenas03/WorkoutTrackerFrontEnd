@@ -3,12 +3,12 @@ import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
 
 interface Tag {
-  label: string
+  name: string
   color: 'green' | 'blue' | 'yellow' | 'red' | 'orange'
 }
 
 interface ExerciseCardProps {
-  title: string
+  name: string
   description: string
   tags: Tag[]
   onClick?: () => void
@@ -18,7 +18,7 @@ interface ExerciseCardProps {
 }
 
 export const ExerciseCard = ({
-  title,
+  name,
   description,
   tags,
   onClick,
@@ -26,6 +26,10 @@ export const ExerciseCard = ({
   isSelected = false,
   onConfigureExercise
 }: ExerciseCardProps) => {
+
+  const shortDescription = description.length > 100
+    ? description.slice(0, 100) + "..."
+    : description
 
   return (
     <div
@@ -47,7 +51,7 @@ export const ExerciseCard = ({
       {/* Header con título e icono */}
       <div className="flex items-start justify-between mb-3">
         <h3 className="text-white text-lg font-medium transition-colors">
-          {title}
+          {name}
         </h3>
         <div className="text-quaternary group-hover:text-white transition-colors">
           <LuDumbbell size={20} />
@@ -56,7 +60,7 @@ export const ExerciseCard = ({
 
       {/* Descripción */}
       <p className="text-quaternary text-sm mb-4 leading-relaxed">
-        {description}
+        {shortDescription}
       </p>
 
       {/* Tags */}
@@ -66,7 +70,7 @@ export const ExerciseCard = ({
             key={index}
             className={`px-3 py-1 rounded-full text-xs font-medium border ${getTagStyles(tag.color)} transition-all duration-200`}
           >
-            {tag.label}
+            {tag.name}
           </span>
         ))}
       </div>

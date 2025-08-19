@@ -9,6 +9,12 @@ import { handleCategoryChange } from "../utils/handleCategoryChange"
 import { Button } from "../components/Button"
 import { LuArrowLeft, LuCheck } from "react-icons/lu"
 import { ConfigExerciseOnSelectMode } from "../components/catalog/modals/ConfigExerciseOnSelectMode"
+import { useDispatch, useSelector } from "react-redux"
+import type { AppDispatch, RootState } from "../store"
+import { fetchExercises } from "../store/slices/exerciseSlice"
+import { fetchEquipments } from "../store/slices/equipmentSlice"
+import type { EjercicioResponseDTO } from "../types/ejercicio/EjercicioResponseDTO"
+
 
 
 interface RoutineFormData {
@@ -22,7 +28,7 @@ interface RoutineFormData {
 export const CatalogView = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [selectedExercise, setSelectedExercise] = useState(null)
+    const [selectedExercise, setSelectedExercise] = useState<EjercicioResponseDTO | null>(null)
     const [isSelectMode, setIsSelectMode] = useState(false)
     const [routineData, setRoutineData] = useState<RoutineFormData | null>(null)
     const [selectedExercises, setSelectedExercises] = useState<any[]>([])
@@ -38,8 +44,20 @@ export const CatalogView = () => {
         5: [], // Sábado
         6: []  // Domingo
     })
+    const [searchTerm, setSearchTerm] = useState("")
+    const [selectedMuscle, setSelectedMuscle] = useState("")
+    const [selectedEquipment, setSelectedEquipment] = useState("")
+
+    const dispatch = useDispatch<AppDispatch>()
+    const { exercises, loading: exercisesLoading, error: exercisesError } = useSelector((state: RootState) => state.exercises)
+
+
+
 
     useEffect(() => {
+
+        dispatch(fetchExercises())
+
         console.log("CatalogView montado, configurando listener")
 
         const pendingRoutineData = localStorage.getItem('pendingRoutineData')
@@ -61,7 +79,17 @@ export const CatalogView = () => {
             console.log("CatalogView desmontado, removiendo listener")
             window.removeEventListener('openCatalogSelectMode', handleOpenSelectMode as EventListener)
         }
-    }, [])
+    }, [dispatch])
+
+
+    const handleSearch = (value: string) => setSearchTerm(value)
+    const handleMuscleSelect = (value: string) => setSelectedMuscle(value)
+    const handleEquipmentSelect = (value: string) => setSelectedEquipment(value)
+
+    const getEquipmentTag = (equipment: { id: number; name: string }[] = []) => {
+        if (!Array.isArray(equipment) || equipment.length === 0) return []
+        return [{ name: equipment[0].name, color: "orange" as const }]
+    }
 
     const handleExerciseClick = (exercise: any) => {
         setSelectedExercise(exercise)
@@ -79,8 +107,7 @@ export const CatalogView = () => {
     }
 
     const handleWatchVideo = () => {
-        console.log("Ver video de:", selectedExercise);
-        // Aquí puedes manejar la lógica para ver video
+        window.open(selectedExercise?.sampleVideos[1], "_blank");
     }
 
     const enterSelectMode = (routineFormData: RoutineFormData) => {
@@ -127,7 +154,7 @@ export const CatalogView = () => {
     }
 
     // Función para verificar si un ejercicio está seleccionado en el día actual
-    const isExerciseSelected = (exerciseId: string) => {
+    const isExerciseSelected = (exerciseId: number) => {
         return getCurrentDayExercises().some(ex => ex.id === exerciseId)
     }
 
@@ -151,6 +178,20 @@ export const CatalogView = () => {
         exitSelectMode()
     }
 
+    const filteredExercises = exercises.filter(exercise => {
+        // Filtrado por búsqueda
+        const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
+        // Filtrado por músculo objetivo
+        const matchesMuscle = selectedMuscle
+            ? exercise.targetMuscles?.some(m => m.name === selectedMuscle)
+            : true
+        // Filtrado por equipo
+        const matchesEquipment = selectedEquipment
+            ? exercise.equipment.some(eq => eq.name === selectedEquipment)
+            : true
+        return matchesSearch && matchesMuscle && matchesEquipment
+    })
+
     // Días de la semana
     const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
@@ -158,69 +199,51 @@ export const CatalogView = () => {
 
 
 
-    const categories = [
-        { value: "weight", label: "Peso corporal" },
-        { value: "Bar", label: "Barra" },
-        { value: "legs", label: "Piernas" },
-        { value: "back", label: "Espalda" },
-    ];
-    const difficulties = [
-        { value: "easy", label: "Principiante" },
-        { value: "medium", label: "Intermedio" },
-        { value: "hard", label: "Avanzado" },
+    const muscleOptions = [
+        { value: "", label: "Todos los músculos" },
+        { value: "pecho", label: "Pecho" },
+        { value: "espalda", label: "Espalda" },
+        { value: "tríceps", label: "Tríceps" },
+        // ...agrega los que necesites
+    ]
 
-    ];
     const equipment = [
         { value: "", label: "Todo el equipo" },
-        { value: "Barra", label: "Barra" },
-        { value: "Mancuernas", label: "Mancuernas" },
-        { value: "Peso corporal", label: "Peso corporal" }
+        { value: "barra", label: "Barra" },
+        { value: "mancuernas", label: "Mancuernas" },
+        { value: "peso corporal", label: "Peso corporal" }
     ]
 
-    const exercisePressBanca = {
-        title: "Press de banca",
-        description: "Ejercicio fundamental para el desarrollo del pecho, deltoides anterior y tríceps.",
-        difficulty: { label: "Intermedio", color: "yellow" as const },
-        equipment: { label: "Barra", color: "orange" as const },
-        targetMuscles: ["Pecho", "Deltoides anterior", "Tríceps"],
-        instructions: [
-            "Acuéstate en el banco con los pies apoyados en el suelo",
-            "Agarra la barra con las manos separadas a la altura de los hombros",
-            "Baja la barra hasta tocar el pecho",
-            "Empuja la barra hacia arriba hasta extender completamente los brazos"
-        ],
-        tips: "Mantén la espalda apoyada en el banco y controla el movimiento en todo momento."
-    }
 
-    const exercises = [
-        {
-            id: "1",
-            title: "Press de banca",
-            description: "Ejercicio fundamental para el desarrollo del pecho, deltoides anterior y tríceps.",
-            tags: [
-                { label: "Intermedio", color: "yellow" as const },
-                { label: "Barra", color: "orange" as const }
-            ]
-        },
-        {
-            id: "2",
-            title: "Sentadillas",
-            description: "Ejercicio básico para fortalecer piernas y glúteos.",
-            tags: [
-                { label: "Principiante", color: "green" as const },
-                { label: "Peso corporal", color: "blue" as const }
-            ]
-        },
-        {
-            id: "3",
-            title: "Dominadas",
-            description: "Ejercicio de peso corporal para fortalecer la espalda y bíceps.",
-            tags: [
-                { label: "Avanzado", color: "red" as const },
-                { label: "Barra", color: "orange" as const }
-            ]
-        }
-    ]
+    // const exercises = [
+    //     {
+    //         id: "1",
+    //         title: "Press de banca",
+    //         description: "Ejercicio fundamental para el desarrollo del pecho, deltoides anterior y tríceps.",
+    //         tags: [
+    //             { label: "Intermedio", color: "yellow" as const },
+    //             { label: "Barra", color: "orange" as const }
+    //         ]
+    //     },
+    //     {
+    //         id: "2",
+    //         title: "Sentadillas",
+    //         description: "Ejercicio básico para fortalecer piernas y glúteos.",
+    //         tags: [
+    //             { label: "Principiante", color: "green" as const },
+    //             { label: "Peso corporal", color: "blue" as const }
+    //         ]
+    //     },
+    //     {
+    //         id: "3",
+    //         title: "Dominadas",
+    //         description: "Ejercicio de peso corporal para fortalecer la espalda y bíceps.",
+    //         tags: [
+    //             { label: "Avanzado", color: "red" as const },
+    //             { label: "Barra", color: "orange" as const }
+    //         ]
+    //     }
+    // ]
 
 
 
@@ -229,6 +252,15 @@ export const CatalogView = () => {
             <PrivateLayout>
                 {/* Header especial para modo selección */}
                 <div className="border-b border-white/10 pb-6">
+
+                    {exercisesError && (
+                        <div style={{ color: "white", background: "red", padding: 8, borderRadius: 4, marginBottom: 16 }}>
+                            {exercisesError}
+                        </div>
+                    )}
+
+
+
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-4">
                             <button
@@ -277,8 +309,8 @@ export const CatalogView = () => {
                                         key={day}
                                         onClick={() => setCurrentDay(index)}
                                         className={`relative px-3 py-2 rounded text-sm transition-colors ${isActive
-                                                ? 'bg-white text-black'
-                                                : 'bg-itemsCard text-quaternary hover:text-white hover:bg-white/10'
+                                            ? 'bg-white text-black'
+                                            : 'bg-itemsCard text-quaternary hover:text-white hover:bg-white/10'
                                             }`}
                                     >
                                         {day}
@@ -287,8 +319,8 @@ export const CatalogView = () => {
                                         {exerciseCount > 0 && (
                                             <span
                                                 className={`absolute -top-2 -right-2 min-w-[20px] h-5 rounded-full text-xs flex items-center justify-center font-medium ${isActive
-                                                        ? 'bg-linksNavbar text-white'
-                                                        : 'bg-white text-black'
+                                                    ? 'bg-linksNavbar text-white'
+                                                    : 'bg-white text-black'
                                                     }`}
                                             >
                                                 {exerciseCount}
@@ -347,26 +379,20 @@ export const CatalogView = () => {
                     <div className="p-6 flex flex-col bg-tertiary rounded-lg gap-4 border border-white/20">
                         <SearchBar
                             placeholder="Buscar ejercicios..."
-                            onSearch={(value) => console.log("Searching:", value)}
+                            onSearch={handleSearch}
                         />
                         <div className="flex lg:flex-row flex-col w-full gap-4">
                             <CustomSelect
-                                name="Todas las categorías"
-                                options={categories}
+                                name="Todos los músculos"
+                                options={muscleOptions}
                                 defaultValue=""
-                                onChange={(value) => console.log(value)}
-                            />
-                            <CustomSelect
-                                name="Todas las dificultades"
-                                options={difficulties}
-                                defaultValue=""
-                                onChange={(value) => console.log(value)}
+                                onChange={handleMuscleSelect}
                             />
                             <CustomSelect
                                 name="Todo el equipo"
                                 options={equipment}
                                 defaultValue=""
-                                onChange={(value) => console.log(value)}
+                                onChange={handleEquipmentSelect}
                             />
                         </div>
                     </div>
@@ -375,18 +401,17 @@ export const CatalogView = () => {
 
                     {/* Grid de ejercicios en modo selección */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {exercises.map((exercise) => (
-                            <ExerciseCard
-                                key={exercise.id}
-                                title={exercise.title}
-                                description={exercise.description}
-                                tags={exercise.tags}
-                                onClick={() => { }}
-                                isSelectMode={true}
-                                isSelected={isExerciseSelected(exercise.id)}
-                                onConfigureExercise={() => handleExerciseConfig(exercise)}
-                            />
-                        ))}
+                        {
+                            filteredExercises.map((exercise) => (
+                                <ExerciseCard
+                                    key={exercise.id}
+                                    name={exercise.name}
+                                    description={exercise.description}
+                                    tags={getEquipmentTag(exercise.equipment)}
+                                    onClick={() => handleExerciseClick(exercise)}
+                                />
+                            ))
+                        }
                     </div>
                 </div>
 
@@ -411,29 +436,32 @@ export const CatalogView = () => {
             <SubHeader nameView="Catálogo de ejercicios" description="Explora todos los ejercicios disponibles" />
 
             <div className="flex flex-col gap-6">
+
+                {exercisesError && (
+                    <div style={{ color: "white", background: "red", padding: 8, borderRadius: 4, marginBottom: 16 }}>
+                        {exercisesError}
+                    </div>
+                )}
+
+
+
                 <div className="mt-6 p-6 flex flex-col bg-tertiary rounded-lg gap-4 border border-white/20">
                     <SearchBar
                         placeholder="Buscar ejercicios..."
-                        onSearch={(value) => console.log("Searching:", value)}
+                        onSearch={handleSearch}
                     />
                     <div className="flex lg:flex-row flex-col w-full gap-4">
                         <CustomSelect
-                            name="Todas las categorias"
-                            options={categories}
+                            name="Todos los músculos"
+                            options={muscleOptions}
                             defaultValue=""
-                            onChange={handleCategoryChange}
-                        />
-                        <CustomSelect
-                            name="Todas las dificultades"
-                            options={difficulties}
-                            defaultValue=""
-                            onChange={handleCategoryChange}
+                            onChange={handleMuscleSelect}
                         />
                         <CustomSelect
                             name="Todo el equipo"
                             options={equipment}
                             defaultValue=""
-                            onChange={handleCategoryChange}
+                            onChange={handleEquipmentSelect}
                         />
                     </div>
                 </div>
@@ -441,62 +469,17 @@ export const CatalogView = () => {
                     6 ejercicios encontrados
                 </div>
                 <div className="flex flex-col xl:flex-row gap-6 w-full justify-between">
-                    <ExerciseCard
-                        title="Press de banca"
-                        description="Ejercicio fundamental para el desarrollo del pecho, deltoides anterior y tríceps."
-                        tags={[
-                            { label: "Intermedio", color: "yellow" },
-                            { label: "Barra", color: "orange" }
-                        ]}
-                        onClick={() => handleExerciseClick(exercisePressBanca)}
-                    />
-                    <ExerciseCard
-                        title="Sentadillas"
-                        description="Ejercicio básico para fortalecer piernas y glúteos."
-                        tags={[
-                            { label: "Principiante", color: "green" },
-                            { label: "Peso corporal", color: "blue" }
-                        ]}
-                        onClick={() => console.log("Press de banca clicked")}
-                    />
-                    <ExerciseCard
-                        title="Dominadas"
-                        description="Ejercicio de peso corporal para fortalecer la espalda y bíceps."
-                        tags={[
-                            { label: "Avanzado", color: "red" },
-                            { label: "Barra", color: "orange" }
-                        ]}
-                        onClick={() => console.log("Press de banca clicked")}
-                    />
-                </div>
-                <div className="flex flex-col lg:flex-row gap-6 w-full justify-between mb-20">
-                    <ExerciseCard
-                        title="Press de banca"
-                        description="Ejercicio fundamental para el desarrollo del pecho, deltoides anterior y tríceps."
-                        tags={[
-                            { label: "Intermedio", color: "yellow" },
-                            { label: "Barra", color: "orange" }
-                        ]}
-                        onClick={() => console.log("Press de banca clicked")}
-                    />
-                    <ExerciseCard
-                        title="Sentadillas"
-                        description="Ejercicio básico para fortalecer piernas y glúteos."
-                        tags={[
-                            { label: "Principiante", color: "green" },
-                            { label: "Peso corporal", color: "blue" }
-                        ]}
-                        onClick={() => console.log("Press de banca clicked")}
-                    />
-                    <ExerciseCard
-                        title="Dominadas"
-                        description="Ejercicio de peso corporal para fortalecer la espalda y bíceps."
-                        tags={[
-                            { label: "Avanzado", color: "red" },
-                            { label: "Barra", color: "orange" }
-                        ]}
-                        onClick={() => console.log("Press de banca clicked")}
-                    />
+                    {
+                        filteredExercises.map((exercise) => (
+                            <ExerciseCard
+                                key={exercise.id}
+                                name={exercise.name}
+                                description={exercise.description}
+                                tags={getEquipmentTag(exercise.equipment)}
+                                onClick={() => handleExerciseClick(exercise)}
+                            />
+                        ))
+                    }
                 </div>
             </div>
             {/* Modal */}
