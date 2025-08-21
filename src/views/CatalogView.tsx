@@ -5,45 +5,18 @@ import { SearchBar } from "../components/SearchBar"
 import { SubHeader } from "../components/SubHeader"
 import { PrivateLayout } from "../layouts/PrivateLayout"
 import { ExerciseModal } from "../components/catalog/modals/ExerciseModal"
-import { handleCategoryChange } from "../utils/handleCategoryChange"
 import { Button } from "../components/Button"
 import { LuArrowLeft, LuCheck } from "react-icons/lu"
 import { ConfigExerciseOnSelectMode } from "../components/catalog/modals/ConfigExerciseOnSelectMode"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../store"
 import { fetchExercises } from "../store/slices/exerciseSlice"
-import { fetchEquipments } from "../store/slices/equipmentSlice"
+import { useRoutineSelection } from "../hooks/useRoutineSelection"
 import type { EjercicioResponseDTO } from "../types/ejercicio/EjercicioResponseDTO"
 
-
-
-interface RoutineFormData {
-    name: string
-    category: string
-    difficulty: string
-    description: string
-    publishToCommunity: boolean
-}
-
 export const CatalogView = () => {
-
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedExercise, setSelectedExercise] = useState<EjercicioResponseDTO | null>(null)
-    const [isSelectMode, setIsSelectMode] = useState(false)
-    const [routineData, setRoutineData] = useState<RoutineFormData | null>(null)
-    const [selectedExercises, setSelectedExercises] = useState<any[]>([])
-    const [isConfigExerciseModalOpen, setIsConfigExerciseModalOpen] = useState(false)
-    const [exerciseToConfig, setExerciseToConfig] = useState(null)
-    const [currentDay, setCurrentDay] = useState(0) // 0 = Lunes, 1 = Martes, etc.
-    const [exercisesByDay, setExercisesByDay] = useState<{ [key: number]: any[] }>({
-        0: [], // Lunes
-        1: [], // Martes  
-        2: [], // Miércoles
-        3: [], // Jueves
-        4: [], // Viernes
-        5: [], // Sábado
-        6: []  // Domingo
-    })
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedMuscle, setSelectedMuscle] = useState("")
     const [selectedEquipment, setSelectedEquipment] = useState("")
@@ -51,35 +24,53 @@ export const CatalogView = () => {
     const dispatch = useDispatch<AppDispatch>()
     const { exercises, loading: exercisesLoading, error: exercisesError } = useSelector((state: RootState) => state.exercises)
 
-
-
+    // Custom hook para modo selección de rutina
+    const {
+        isSelectMode,
+        routineData,
+        selectedExercises,
+        isConfigExerciseModalOpen,
+        exerciseToConfig,
+        currentDay,
+        exercisesByDay,
+        setCurrentDay,
+        setExercisesByDay,
+        setSelectedExercises,
+        enterSelectMode,
+        exitSelectMode,
+        handleExerciseConfig,
+        handleAddExerciseToRoutine,
+        getCurrentDayExercises,
+        getTotalExercises,
+        getExerciseCountForDay,
+        setIsConfigExerciseModalOpen,
+        setExerciseToConfig,
+    } = useRoutineSelection()
 
     useEffect(() => {
-
         dispatch(fetchExercises())
-
-        console.log("CatalogView montado, configurando listener")
 
         const pendingRoutineData = localStorage.getItem('pendingRoutineData')
         if (pendingRoutineData) {
-            console.log("📦 Datos encontrados en localStorage:", pendingRoutineData)
             const data = JSON.parse(pendingRoutineData)
             enterSelectMode(data)
-            localStorage.removeItem('pendingRoutineData') // Limpiar después de usar
+            localStorage.removeItem('pendingRoutineData')
         }
 
         const handleOpenSelectMode = (event: CustomEvent) => {
-            console.log("✅ Evento recibido en CatalogView:", event.detail)
             enterSelectMode(event.detail)
         }
 
         window.addEventListener('openCatalogSelectMode', handleOpenSelectMode as EventListener)
-
         return () => {
-            console.log("CatalogView desmontado, removiendo listener")
             window.removeEventListener('openCatalogSelectMode', handleOpenSelectMode as EventListener)
         }
-    }, [dispatch])
+    }, [dispatch, enterSelectMode])
+
+
+    const [currentPage, setCurrentPage] = useState(1)
+    const exercisesPerPage = 9
+
 
 
     const handleSearch = (value: string) => setSearchTerm(value)
@@ -102,109 +93,46 @@ export const CatalogView = () => {
     }
 
     const handleAddToRoutine = () => {
-        console.log("Añadir a rutina:", selectedExercise);
         // Aquí puedes manejar la lógica para añadir a rutina
     }
 
     const handleWatchVideo = () => {
-        window.open(selectedExercise?.sampleVideos[1], "_blank");
+        window.open(selectedExercise?.sampleVideos[1], "_blank")
     }
 
-    const enterSelectMode = (routineFormData: RoutineFormData) => {
-        console.log("🚀 Entrando en modo selección con datos:", routineFormData)
-        setRoutineData(routineFormData)
-        setIsSelectMode(true)
-        setSelectedExercises([])
-        console.log("Estado después de enterSelectMode - isSelectMode:", true)
-    }
-
-    // Agregar log al inicio del componente para verificar el estado:
-    console.log("🔍 CatalogView render - isSelectMode:", isSelectMode, "routineData:", routineData)
-
-    const exitSelectMode = () => {
-        setIsSelectMode(false)
-        setRoutineData(null)
-        setSelectedExercises([])
-    }
-
-    const handleExerciseConfig = (exercise: any) => {
-        setExerciseToConfig(exercise)
-        setIsConfigExerciseModalOpen(true)
-    }
-
-    const handleAddExerciseToRoutine = (exerciseConfig: any) => {
-        console.log("Agregando ejercicio al día:", currentDay, exerciseConfig)
-
-        // Agregar ejercicio al día actual
-        setExercisesByDay(prev => ({
-            ...prev,
-            [currentDay]: [...prev[currentDay], { ...exerciseConfig, dayIndex: currentDay }]
-        }))
-
-        // Agregar a la lista general (para mantener compatibilidad)
-        setSelectedExercises(prev => [...prev, { ...exerciseConfig, dayIndex: currentDay }])
-
-        setIsConfigExerciseModalOpen(false)
-        setExerciseToConfig(null)
-    }
-
-    // Función para obtener ejercicios del día actual
-    const getCurrentDayExercises = () => {
-        return exercisesByDay[currentDay] || []
-    }
-
-    // Función para verificar si un ejercicio está seleccionado en el día actual
-    const isExerciseSelected = (exerciseId: number) => {
-        return getCurrentDayExercises().some(ex => ex.id === exerciseId)
-    }
-
-    // Función para obtener el total de ejercicios de todos los días
-    const getTotalExercises = () => {
-        return Object.values(exercisesByDay).flat().length
-    }
-
-    // Función para obtener ejercicios por día específico
-    const getExerciseCountForDay = (dayIndex: number) => {
-        return exercisesByDay[dayIndex]?.length || 0
-    }
-
-    // Actualizar handleFinishRoutine
     const handleFinishRoutine = () => {
-        console.log("Rutina finalizada:", {
-            routineData,
-            exercisesByDay,
-            totalExercises: getTotalExercises()
-        })
+        // Aquí puedes manejar el guardado de la rutina
         exitSelectMode()
     }
 
     const filteredExercises = exercises.filter(exercise => {
-        // Filtrado por búsqueda
         const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
-        // Filtrado por músculo objetivo
         const matchesMuscle = selectedMuscle
             ? exercise.targetMuscles?.some(m => m.name === selectedMuscle)
             : true
-        // Filtrado por equipo
         const matchesEquipment = selectedEquipment
             ? exercise.equipment.some(eq => eq.name === selectedEquipment)
             : true
         return matchesSearch && matchesMuscle && matchesEquipment
     })
 
-    // Días de la semana
+    const totalPages = Math.ceil(filteredExercises.length / exercisesPerPage)
+    const paginatedExercises = filteredExercises.slice(
+        (currentPage - 1) * exercisesPerPage,
+        currentPage * exercisesPerPage
+    )
+
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchTerm, selectedMuscle, selectedEquipment])
+
     const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-
-
-
-
 
     const muscleOptions = [
         { value: "", label: "Todos los músculos" },
         { value: "pecho", label: "Pecho" },
         { value: "espalda", label: "Espalda" },
         { value: "tríceps", label: "Tríceps" },
-        // ...agrega los que necesites
     ]
 
     const equipment = [
@@ -214,53 +142,15 @@ export const CatalogView = () => {
         { value: "peso corporal", label: "Peso corporal" }
     ]
 
-
-    // const exercises = [
-    //     {
-    //         id: "1",
-    //         title: "Press de banca",
-    //         description: "Ejercicio fundamental para el desarrollo del pecho, deltoides anterior y tríceps.",
-    //         tags: [
-    //             { label: "Intermedio", color: "yellow" as const },
-    //             { label: "Barra", color: "orange" as const }
-    //         ]
-    //     },
-    //     {
-    //         id: "2",
-    //         title: "Sentadillas",
-    //         description: "Ejercicio básico para fortalecer piernas y glúteos.",
-    //         tags: [
-    //             { label: "Principiante", color: "green" as const },
-    //             { label: "Peso corporal", color: "blue" as const }
-    //         ]
-    //     },
-    //     {
-    //         id: "3",
-    //         title: "Dominadas",
-    //         description: "Ejercicio de peso corporal para fortalecer la espalda y bíceps.",
-    //         tags: [
-    //             { label: "Avanzado", color: "red" as const },
-    //             { label: "Barra", color: "orange" as const }
-    //         ]
-    //     }
-    // ]
-
-
-
     if (isSelectMode) {
         return (
             <PrivateLayout>
-                {/* Header especial para modo selección */}
                 <div className="border-b border-white/10 pb-6">
-
                     {exercisesError && (
                         <div style={{ color: "white", background: "red", padding: 8, borderRadius: 4, marginBottom: 16 }}>
                             {exercisesError}
                         </div>
                     )}
-
-
-
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-4">
                             <button
@@ -288,8 +178,6 @@ export const CatalogView = () => {
                             Finalizar rutina
                         </Button>
                     </div>
-
-                    {/* Días de la semana con contador */}
                     <div>
                         <p className="text-quaternary text-sm mb-2">
                             Día actual: <span className="text-white font-medium">{daysOfWeek[currentDay]}</span>
@@ -303,7 +191,6 @@ export const CatalogView = () => {
                             {daysOfWeek.map((day, index) => {
                                 const exerciseCount = getExerciseCountForDay(index)
                                 const isActive = index === currentDay
-
                                 return (
                                     <button
                                         key={day}
@@ -314,8 +201,6 @@ export const CatalogView = () => {
                                             }`}
                                     >
                                         {day}
-
-                                        {/* Contador de ejercicios */}
                                         {exerciseCount > 0 && (
                                             <span
                                                 className={`absolute -top-2 -right-2 min-w-[20px] h-5 rounded-full text-xs flex items-center justify-center font-medium ${isActive
@@ -332,10 +217,7 @@ export const CatalogView = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Contenido en modo selección */}
                 <div className="flex flex-col mt-6 gap-6">
-                    {/* Mostrar ejercicios del día actual */}
                     {getCurrentDayExercises().length > 0 && (
                         <div className="bg-tertiary rounded-lg p-4 border border-white/20">
                             <h3 className="text-white font-medium mb-3">
@@ -355,12 +237,10 @@ export const CatalogView = () => {
                                         </div>
                                         <button
                                             onClick={() => {
-                                                // Remover ejercicio del día actual
                                                 setExercisesByDay(prev => ({
                                                     ...prev,
                                                     [currentDay]: prev[currentDay].filter((_, i) => i !== index)
                                                 }))
-                                                // Actualizar lista general
                                                 setSelectedExercises(prev =>
                                                     prev.filter(ex => !(ex.id === exercise.id && ex.dayIndex === currentDay))
                                                 )
@@ -374,8 +254,6 @@ export const CatalogView = () => {
                             </div>
                         </div>
                     )}
-
-                    {/* Filtros */}
                     <div className="p-6 flex flex-col bg-tertiary rounded-lg gap-4 border border-white/20">
                         <SearchBar
                             placeholder="Buscar ejercicios..."
@@ -396,10 +274,7 @@ export const CatalogView = () => {
                             />
                         </div>
                     </div>
-
                     <p className="text-quaternary">{exercises.length} ejercicios encontrados</p>
-
-                    {/* Grid de ejercicios en modo selección */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                         {
                             filteredExercises.map((exercise) => (
@@ -414,8 +289,6 @@ export const CatalogView = () => {
                         }
                     </div>
                 </div>
-
-                {/* Modal de configuración de ejercicio */}
                 {exerciseToConfig && (
                     <ConfigExerciseOnSelectMode
                         isOpen={isConfigExerciseModalOpen}
@@ -434,17 +307,12 @@ export const CatalogView = () => {
     return (
         <PrivateLayout>
             <SubHeader nameView="Catálogo de ejercicios" description="Explora todos los ejercicios disponibles" />
-
             <div className="flex flex-col gap-6">
-
                 {exercisesError && (
                     <div style={{ color: "white", background: "red", padding: 8, borderRadius: 4, marginBottom: 16 }}>
                         {exercisesError}
                     </div>
                 )}
-
-
-
                 <div className="mt-6 p-6 flex flex-col bg-tertiary rounded-lg gap-4 border border-white/20">
                     <SearchBar
                         placeholder="Buscar ejercicios..."
@@ -466,23 +334,48 @@ export const CatalogView = () => {
                     </div>
                 </div>
                 <div className="text-quaternary">
-                    6 ejercicios encontrados
+                    {filteredExercises.length} ejercicios encontrados
                 </div>
-                <div className="flex flex-col xl:flex-row gap-6 w-full justify-between">
-                    {
-                        filteredExercises.map((exercise) => (
-                            <ExerciseCard
-                                key={exercise.id}
-                                name={exercise.name}
-                                description={exercise.description}
-                                tags={getEquipmentTag(exercise.equipment)}
-                                onClick={() => handleExerciseClick(exercise)}
-                            />
-                        ))
-                    }
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-[2em]">
+                    {paginatedExercises.map((exercise) => (
+                        <ExerciseCard
+                            key={exercise.id}
+                            name={exercise.name}
+                            description={exercise.description}
+                            tags={getEquipmentTag(exercise.equipment)}
+                            onClick={() => handleExerciseClick(exercise)}
+                        />
+                    ))}
                 </div>
+                {/* Controles de paginación */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center mt-6 gap-2">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1 rounded bg-itemsCard text-white disabled:opacity-50"
+                        >
+                            Anterior
+                        </button>
+                        {[...Array(totalPages)].map((_, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setCurrentPage(idx + 1)}
+                                className={`px-3 py-1 rounded ${currentPage === idx + 1 ? 'bg-white text-black' : 'bg-itemsCard text-white'}`}
+                            >
+                                {idx + 1}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-1 rounded bg-itemsCard text-white disabled:opacity-50"
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+                )}
             </div>
-            {/* Modal */}
             {selectedExercise && (
                 <ExerciseModal
                     isOpen={isModalOpen}
@@ -492,7 +385,6 @@ export const CatalogView = () => {
                     onWatchVideo={handleWatchVideo}
                 />
             )}
-
         </PrivateLayout>
     )
 }

@@ -33,7 +33,7 @@ export const ExerciseCard = ({
 
   return (
     <div
-      className={`bg-tertiary rounded-lg xl:w-[18em] 2xl:w-[23em] py-8 px-6 text-white border transition-all duration-200 cursor-pointer group relative flex flex-col justify-between ${isSelectMode
+      className={`bg-tertiary rounded-lg  py-8 px-6 text-white border transition-all duration-200 cursor-pointer group relative flex flex-col justify-between ${isSelectMode
           ? isSelected
             ? 'border-green-500 bg-green-500/10'
             : 'border-white/10 hover:border-white/20'

@@ -26,7 +26,6 @@ export const fetchExercises = createAsyncThunk(
       const data = await ejercicioService.getAll()
       return data as EjercicioResponseDTO[]
     } catch (error) {
-      console.error("Error al traer ejercicios:", error)
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
     }
   }

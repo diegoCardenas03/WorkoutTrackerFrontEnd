@@ -10,11 +10,9 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     const response = await fetch(`${this.baseUrl}?relations=true`, {
     });
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || `Error ${response.status} al obtener el elemento`);
+    
     }
     const data = await response.json();
-    console.log("Respuesta ejercicios:", data);
     return data as ResponseType[];
   }
 
