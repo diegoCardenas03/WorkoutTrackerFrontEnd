@@ -1,16 +1,19 @@
-import { useState } from "react"
-import { LuClock, LuPlus, LuTarget, LuTrendingUp } from "react-icons/lu"
+import { useEffect, useState } from "react"
+import { LuPlus, LuTarget, LuTrendingUp } from "react-icons/lu"
 import { Button } from "../components/Button"
 import { SubHeader } from "../components/SubHeader"
 import { PrivateLayout } from "../layouts/PrivateLayout"
 import { FeatureCard } from "../components/FeatureCard"
 import { SearchBar } from "../components/SearchBar"
 import { CustomSelect } from "../components/CustomSelect"
-import { handleCategoryChange } from "../utils/handleCategoryChange"
+// import { handleCategoryChange } from "../utils/handleCategoryChange"
 import { RoutineCard } from "../components/myRoutines/cards/RoutineCard"
 import { RoutineModal } from "../components/myRoutines/modals/RoutineModal"
 import { ConfigRoutineModal } from "../components/myRoutines/modals/ConfigRoutineModal"
 import { useNavigate } from "react-router-dom"
+import type { RutinaResponseDTO } from "../types/rutina/RutinaResponseDTO"
+import { useDispatch, useSelector } from "react-redux"
+import { fetchRoutines } from "../store/slices/routineSlice"
 
 interface RoutineData {
     id: string
@@ -40,8 +43,17 @@ export const MyRoutinesView = () => {
     const [isRoutineModalOpen, setIsRoutineModalOpen] = useState(false)
     const [selectedRoutine, setSelectedRoutine] = useState<RoutineData | null>(null)
     const [isConfigRoutineModalOpen, setIsConfigRoutineModalOpen] = useState(false)
-    const [routineFormData, setRoutineFormData] = useState(null)
+    // const [routineFormData, setRoutineFormData] = useState(null)
+    const dispatch = useDispatch()
+    const routinesFromStore: RutinaResponseDTO[] = useSelector((state: any) => state.routines?.routines ?? [])
+    const routinesLoading: boolean = useSelector((state: any) => state.routines?.loading ?? false)
     const navigate = useNavigate()
+
+    useEffect(() => {
+        if (!routinesLoading && routinesFromStore.length === 0) {
+            dispatch(fetchRoutines() as any)
+        }
+    }, [dispatch, routinesFromStore.length, routinesLoading])
 
     const handleOpenRoutineModal = (routine: RoutineData) => {
         setSelectedRoutine(routine)
@@ -52,6 +64,8 @@ export const MyRoutinesView = () => {
         setIsRoutineModalOpen(false)
         setSelectedRoutine(null)
     }
+
+    
 
     const categories = [
         { value: "", label: "Todas las categorías" },
@@ -76,72 +90,101 @@ export const MyRoutinesView = () => {
         { value: "weekly", label: "Semanal" }
     ];
 
-    // Datos de las rutinas
-    const allRoutines: RoutineData[] = [
-        {
-            id: "1",
-            title: "Tren Superior",
-            level: { label: "Intermedio", color: "yellow" },
-            category: "Fuerza",
-            exerciseCount: 8,
-            isWeekly: false,
-            simpleData: { lastCompleted: "hace 5 días" }
-        },
-        {
-            id: "2",
-            title: "Tren Superior Pro",
-            level: { label: "Intermedio", color: "yellow" },
-            category: "Fuerza",
-            exerciseCount: 8,
-            isWeekly: false,
-            simpleData: { lastCompleted: "hace 5 días" }
-        },
-        {
-            id: "3",
-            title: "Cardio Básico",
-            level: { label: "Principiante", color: "green" },
-            category: "Cardio",
-            exerciseCount: 6,
-            isWeekly: false,
-            simpleData: { lastCompleted: "hace 3 días" }
-        },
-        {
-            id: "4",
-            title: "Plan Fuerza Completo",
-            level: { label: "Avanzado", color: "red" },
-            exerciseCount: 24,
-            isWeekly: true,
-            weeklyData: {
-                duration: "3 días",
-                activeDays: ["Lunes", "Miércoles", "Viernes"],
-                lastCompleted: "hace 2 días"
-            }
-        },
-        {
-            id: "5",
-            title: "Rutina Semanal Cardio",
-            level: { label: "Intermedio", color: "blue" },
-            exerciseCount: 20,
-            isWeekly: true,
-            weeklyData: {
-                duration: "5 días",
-                activeDays: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"],
-                lastCompleted: "hace 1 día"
-            }
-        },
-        {
-            id: "6",
-            title: "Plan Semanal Avanzado",
-            level: { label: "Avanzado", color: "red" },
-            exerciseCount: 30,
-            isWeekly: true,
-            weeklyData: {
-                duration: "6 días",
-                activeDays: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
-                lastCompleted: "hace 1 día"
+    // Helpers de mapeo desde RutinaResponseDTO
+    const mapDifficultyToLevel = (difficulty: unknown): { label: string; color: 'green' | 'blue' | 'yellow' | 'red' | 'orange' } => {
+        const diff = String(difficulty)
+        switch (diff) {
+            case 'PRINCIPIANTE':
+                return { label: 'Principiante', color: 'green' }
+            case 'INTERMEDIO':
+                return { label: 'Intermedio', color: 'yellow' }
+            case 'AVANZADO':
+                return { label: 'Avanzado', color: 'red' }
+            default:
+                return { label: diff, color: 'blue' }
+        }
+    }
+
+    const mapDayOfWeekToSpanish: Record<string, string> = {
+        MONDAY: 'Lunes',
+        TUESDAY: 'Martes',
+        WEDNESDAY: 'Miércoles',
+        THURSDAY: 'Jueves',
+        FRIDAY: 'Viernes',
+        SATURDAY: 'Sábado',
+        SUNDAY: 'Domingo'
+    }
+
+    const mapDtoToRoutine = (dto: RutinaResponseDTO): RoutineData => {
+        const sessions = dto.sessions ?? []
+        const isWeekly = (sessions.length ?? 0) > 1
+        const totalExercises = sessions.reduce((sum, s) => sum + (s.sessionExercises?.length ?? 0), 0)
+
+        const activeDaysSet = new Set<string>()
+        sessions.forEach(s => {
+            const day = mapDayOfWeekToSpanish[String(s.dayOfWeek)]
+            if (day) activeDaysSet.add(day)
+        })
+        const activeDays = Array.from(activeDaysSet)
+
+        return {
+            id: String(dto.id),
+            title: dto.name,
+            level: mapDifficultyToLevel(dto.difficulty),
+            category: dto.category?.name ?? undefined,
+            exerciseCount: totalExercises,
+            isWeekly,
+            weeklyData: isWeekly ? { duration: `${activeDays.length} días`, activeDays } : undefined,
+            simpleData: !isWeekly ? { /* lastCompleted: no disponible en DTO */ } : undefined,
+        }
+    }
+
+    // Datos de las rutinas mapeados desde el store
+    const allRoutines: RoutineData[] = (routinesFromStore ?? []).map(mapDtoToRoutine)
+
+    // Construir datos completos para el modal desde el DTO original
+    const buildRoutineModalData = (routine: RoutineData) => {
+        const dto = (routinesFromStore ?? []).find(r => String(r.id) === routine.id)
+        // target muscles agregados de todas las sesiones
+        const targetMusclesSet = new Set<string>()
+        const exercises: { id: string; name: string; sets: number; reps: string; rest: string; equipment?: string }[] = []
+        const exerciseDtos: any[] = []
+
+        if (dto) {
+            for (const s of dto.sessions ?? []) {
+                for (const se of s.sessionExercises ?? []) {
+                    // muscles
+                    se.exercise?.targetMuscles?.forEach(m => targetMusclesSet.add(m.name))
+                    // equipment
+                    const equipmentNames = se.exercise?.equipment?.map(e => e.name).filter(Boolean) ?? []
+                    const rest = typeof se.restBetweenSets === 'number' && !Number.isNaN(se.restBetweenSets)
+                        ? `${se.restBetweenSets}s`
+                        : '—'
+                    exercises.push({
+                        id: String(se.id),
+                        name: se.exercise?.name ?? 'Ejercicio',
+                        sets: se.sets,
+                        reps: String(se.reps),
+                        rest,
+                        equipment: equipmentNames.length ? equipmentNames.join(', ') : undefined,
+                    })
+                    if (se.exercise) {
+                        exerciseDtos.push(se.exercise)
+                    }
+                }
             }
         }
-    ]
+
+        const routineData = {
+            ...routine,
+            description: dto?.description,
+            estimatedTime: undefined,
+            targetMuscles: Array.from(targetMusclesSet),
+            exercises,
+        }
+
+        return { routineData, exerciseDtos }
+    }
 
     // Función para filtrar rutinas
     const getFilteredRoutines = () => {
@@ -181,7 +224,7 @@ export const MyRoutinesView = () => {
 
     const handleContinueToSelection = (data: any) => {
         console.log("📝 Datos recibidos del modal:", data)
-        setRoutineFormData(data)
+    // setRoutineFormData(data)
         setIsConfigRoutineModalOpen(false)
 
         // Guardar datos en localStorage para persistir durante la navegación
@@ -277,7 +320,7 @@ export const MyRoutinesView = () => {
                     </div>
                 ) : (
                     groupedRoutines.map((group, groupIndex) => (
-                        <div key={groupIndex} className="flex flex-col xl:flex-row justify-between gap-6">
+                        <div key={groupIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-[4em]">
                             {group.map((routine) => (
                                 <RoutineCard
                                     key={routine.id}
@@ -298,17 +341,12 @@ export const MyRoutinesView = () => {
                 )}
             </div>
 
-            {selectedRoutine && (
+            {selectedRoutine && (() => { const built = buildRoutineModalData(selectedRoutine); return (
                 <RoutineModal
                     isOpen={isRoutineModalOpen}
                     onClose={handleCloseRoutineModal}
-                    routine={{
-                        ...selectedRoutine,
-                        description: "Rutina completa para el desarrollo del tren superior",
-                        estimatedTime: "45-60 min",
-                        targetMuscles: ["Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps"],
-                        exercises: []
-                    }}
+                    routine={built.routineData}
+                    exerciseDtos={built.exerciseDtos}
                     onStart={() => {
                         console.log("Starting routine", selectedRoutine.id)
                         handleCloseRoutineModal()
@@ -317,8 +355,7 @@ export const MyRoutinesView = () => {
                         console.log("Editing routine", selectedRoutine.id)
                         handleCloseRoutineModal()
                     }}
-                />
-            )}
+                />) })()}
             <ConfigRoutineModal
                 isOpen={isConfigRoutineModalOpen}
                 onClose={() => setIsConfigRoutineModalOpen(false)}

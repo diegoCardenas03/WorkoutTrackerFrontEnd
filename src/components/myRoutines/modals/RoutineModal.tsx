@@ -1,8 +1,10 @@
-
 import { IoClose } from "react-icons/io5"
-import { LuDumbbell, LuCalendarDays, LuPlay, LuClock, LuTarget, LuPencil,  } from "react-icons/lu"
+import { LuDumbbell, LuPlay, LuPencil } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
+import { useState } from "react"
+import type { EjercicioResponseDTO } from "../../../types/ejercicio/EjercicioResponseDTO"
+import { ExerciseModal } from "../../catalog/modals/ExerciseModal"
 
 interface Exercise {
   id: string
@@ -41,6 +43,7 @@ interface RoutineModalProps {
   }
   onStart?: () => void
   onEdit?: () => void
+  exerciseDtos?: EjercicioResponseDTO[]
 }
 
 export const RoutineModal = ({
@@ -48,7 +51,8 @@ export const RoutineModal = ({
   onClose,
   routine,
   onStart,
-  onEdit
+  onEdit,
+  exerciseDtos
 }: RoutineModalProps) => {
   
   if (!isOpen) return null
@@ -65,6 +69,12 @@ export const RoutineModal = ({
   ]
 
   const exercisesToShow = routine.exercises.length > 0 ? routine.exercises : defaultExercises
+
+  const [selectedExerciseIdx, setSelectedExerciseIdx] = useState<number | null>(null)
+  const selectedExerciseDto: EjercicioResponseDTO | null =
+    selectedExerciseIdx !== null && exerciseDtos && exerciseDtos[selectedExerciseIdx]
+      ? exerciseDtos[selectedExerciseIdx]!
+      : null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -197,7 +207,11 @@ export const RoutineModal = ({
             <h3 className="text-white text-base font-medium mb-4">Ejercicios ({exercisesToShow.length})</h3>
             <div className="space-y-3">
               {exercisesToShow.map((exercise, index) => (
-                <div key={exercise.id} className="bg-tertiary rounded-lg p-4 border border-white/10 cursor-pointer hover:border-white/40 transition-colors">
+                <div
+                  key={exercise.id}
+                  className="bg-tertiary rounded-lg p-4 border border-white/10 cursor-pointer hover:border-white/40 transition-colors"
+                  onClick={() => setSelectedExerciseIdx(index)}
+                >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-3">
                       <span className="text-quaternary font-medium text-sm min-w-[24px]">
@@ -249,6 +263,15 @@ export const RoutineModal = ({
           </div>
         </div>
       </div>
+
+      {/* Exercise Modal overlayed from routine modal */}
+      <ExerciseModal
+        isOpen={selectedExerciseIdx !== null}
+        onClose={() => setSelectedExerciseIdx(null)}
+        exercise={selectedExerciseDto}
+        showBackButton={true}
+        onBack={() => setSelectedExerciseIdx(null)}
+      />
     </div>
   )
 }
