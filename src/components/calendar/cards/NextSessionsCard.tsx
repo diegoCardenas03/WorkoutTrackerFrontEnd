@@ -9,23 +9,16 @@ interface NextSession {
 
 interface NextSessionsCardProps {
   sessions?: NextSession[]
+  onSelect?: (id: string) => void
 }
 
-export const NextSessionsCard = ({ sessions = [] }: NextSessionsCardProps) => {
+export const NextSessionsCard = ({ sessions = [], onSelect }: NextSessionsCardProps) => {
   
-  const formatDaysAgo = (days: number) => {
+  const formatDays = (days: number) => {
     if (days === 0) return "Hoy"
-    if (days === 1) return "1 día"
-    return `${days} días`
+    if (days === 1) return "En 1 día"
+    return `En ${days} días`
   }
-
-  const defaultSessions: NextSession[] = [
-    { id: "1", name: "Tren Superior", daysAgo: 12 },
-    { id: "2", name: "Piernas & Glúteos", daysAgo: 18 },
-    { id: "3", name: "Cardio HIIT", daysAgo: 25 }
-  ]
-
-  const sessionsToShow = sessions.length > 0 ? sessions : defaultSessions
 
   return (
     <div className="bg-tertiary rounded-lg border border-white/10 p-6 w-full">
@@ -37,30 +30,35 @@ export const NextSessionsCard = ({ sessions = [] }: NextSessionsCardProps) => {
       </div>
 
       {/* Sessions List */}
-      <div className="space-y-3">
-        {sessionsToShow.map((session) => (
-          <div
-            key={session.id}
-            className="bg-itemsCard rounded-lg p-[10px] border border-white/5 hover:border-white/10 transition-all duration-200 cursor-pointer group"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="text-quaternary group-hover:text-white transition-colors">
-                  <LuDumbbell size={16} />
-                </div>
-                <div>
-                  <h4 className="text-white text-sm font-medium mb-1">
-                    {session.name}
-                  </h4>
-                  <p className="text-quaternary text-xs">
-                    {formatDaysAgo(session.daysAgo)} ago
-                  </p>
+      {sessions.length === 0 ? (
+        <div className="text-quaternary text-sm">No hay próximas sesiones programadas</div>
+      ) : (
+        <div className="space-y-3">
+          {sessions.map((session) => (
+            <div
+              key={session.id}
+              className="bg-itemsCard rounded-lg p-[10px] border border-white/5 hover:border-white/10 transition-all duration-200 cursor-pointer group"
+              onClick={() => onSelect && onSelect(session.id)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="text-quaternary group-hover:text-white transition-colors">
+                    <LuDumbbell size={16} />
+                  </div>
+                  <div>
+                    <h4 className="text-white text-sm font-medium mb-1">
+                      {session.name}
+                    </h4>
+                    <p className="text-quaternary text-xs">
+                      {formatDays(session.daysAgo)}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

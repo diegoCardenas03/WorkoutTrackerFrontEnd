@@ -4,6 +4,7 @@ import equipmentReducer from './slices/equipmentSlice'
 import routineReducer from './slices/routineSlice'
 import categoryReducer from './slices/categorySlice'
 import trainingReducer from './slices/trainingSlice'
+import agendaReducer from './slices/agendaSlice'
 
 
 
@@ -14,6 +15,7 @@ export const store = configureStore({
     routines: routineReducer,
     categories: categoryReducer,
   training: trainingReducer,
+  agenda: agendaReducer,
   }
 })
 

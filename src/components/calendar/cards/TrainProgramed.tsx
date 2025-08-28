@@ -1,6 +1,7 @@
 
 import { IoTimeOutline, IoCheckmarkCircle } from "react-icons/io5"
 import { LuDumbbell } from "react-icons/lu"
+import { Button } from "../../Button"
 
 interface Workout {
   id: string
@@ -14,9 +15,11 @@ interface Workout {
 interface TrainProgramedProps {
   selectedDate?: Date
   workouts?: Workout[]
+  onSelect?: (id: string) => void
+  onMarkComplete?: (id: string) => void
 }
 
-export const TrainProgramed = ({ selectedDate, workouts = [] }: TrainProgramedProps) => {
+export const TrainProgramed = ({ selectedDate, workouts = [], onSelect, onMarkComplete }: TrainProgramedProps) => {
   
   const formatDate = (date: Date) => {
     const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
@@ -62,35 +65,48 @@ export const TrainProgramed = ({ selectedDate, workouts = [] }: TrainProgramedPr
                 hover:border-white/10 transition-all duration-200 cursor-pointer
                 ${workout.isCompleted ? 'opacity-75' : ''}
               `}
+              onClick={() => onSelect && onSelect(workout.id)}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className={`font-medium ${workout.isCompleted ? 'text-green-400' : 'text-white'}`}>
+                    <h4 className={`font-medium ${workout.isCompleted ? 'text-green-400 line-through' : 'text-white'}`}>
                       {workout.name}
                     </h4>
                     {workout.isCompleted && (
                       <IoCheckmarkCircle className="text-green-400" size={16} />
                     )}
                   </div>
-                  
-                  <div className="flex items-center gap-4 text-quaternary text-sm">
-                    <div className="flex items-center gap-1">
-                      <IoTimeOutline size={14} />
-                      <span>{workout.duration} min</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <LuDumbbell size={14} />
-                      <span>{workout.exercises} ejercicios</span>
-                    </div>
-                  </div>
-                  
-                  {workout.time && (
+                 
+                  {workout.time && !workout.isCompleted && (
                     <div className="mt-2">
                       <span className="text-blue-400 text-xs bg-blue-500/10 px-2 py-1 rounded">
                         {workout.time}
                       </span>
                     </div>
+                  )}
+                </div>
+                <div className="shrink-0">
+                  {!workout.isCompleted ? (
+                    <Button
+                      isWhite={true}
+                      isWidthFull={false}
+                      paddingLine="px-3"
+                      mdPaddingLine="md:px-3"
+                      lgPaddingLine="lg:px-3"
+                      mobileText="text-[12px]"
+                      mdHeight="h-9"
+                      lgHeight="h-9"
+                      action={(e?: any) => {
+                        // Evitar abrir detalles cuando se marca completada
+                        if (e && e.stopPropagation) e.stopPropagation()
+                        onMarkComplete && onMarkComplete(workout.id)
+                      }}
+                    >
+                      Marcar completada
+                    </Button>
+                  ) : (
+                    <span className="text-green-400 text-xs">Completada</span>
                   )}
                 </div>
               </div>

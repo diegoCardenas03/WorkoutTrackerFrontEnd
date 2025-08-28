@@ -9,11 +9,13 @@ interface RegisterSessionModalProps {
   onClose: () => void
   selectedDate?: Date
   onRegisterSession?: (sessionData: SessionData) => void
+  routinesOptions?: { value: string; label: string }[]
 }
 
 interface SessionData {
-  routine: string
+  routineId: string
   date: string
+  time: string
   reminderEnabled: boolean
   reminderTime: string
   notes: string
@@ -23,21 +25,20 @@ export const RegisterSessionModal = ({
   isOpen, 
   onClose, 
   selectedDate = new Date(),
-  onRegisterSession
+  onRegisterSession,
+  routinesOptions = [],
 }: RegisterSessionModalProps) => {
-  const [routine, setRoutine] = useState("")
+  const [routineId, setRoutineId] = useState("")
   const [date, setDate] = useState(selectedDate.toISOString().split('T')[0])
+  const [time, setTime] = useState(() => {
+    const d = selectedDate || new Date()
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mm = String(d.getMinutes()).padStart(2, '0')
+    return `${hh}:${mm}`
+  })
   const [reminderEnabled, setReminderEnabled] = useState(false)
   const [reminderTime, setReminderTime] = useState("30")
   const [notes, setNotes] = useState("")
-
-  const routineOptions = [
-    { value: "upper-body", label: "Tren Superior" },
-    { value: "lower-body", label: "Piernas & Glúteos" },
-    { value: "cardio", label: "Cardio HIIT" },
-    { value: "full-body", label: "Cuerpo Completo" },
-    { value: "strength", label: "Fuerza" }
-  ]
 
   const reminderOptions = [
     { value: "15", label: "15 minutos antes" },
@@ -48,8 +49,9 @@ export const RegisterSessionModal = ({
 
   const handleRegister = () => {
     const sessionData: SessionData = {
-      routine,
+      routineId,
       date,
+  time,
       reminderEnabled,
       reminderTime,
       notes
@@ -101,9 +103,9 @@ export const RegisterSessionModal = ({
             </label>
             <CustomSelect
               name="Elige una rutina"
-              options={routineOptions}
-              defaultValue={routine}
-              onChange={setRoutine}
+              options={routinesOptions}
+              defaultValue={routineId}
+              onChange={setRoutineId}
               className="w-full"
             />
           </div>
@@ -119,6 +121,17 @@ export const RegisterSessionModal = ({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                className="w-full h-12 px-4 bg-itemsCard border border-white/5 rounded-lg text-white focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/20 transition-all"
+              />
+            </div>
+
+            {/* Hora */}
+            <div className="mb-4">
+              <label className="text-quaternary text-sm block mb-2">Hora</label>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
                 className="w-full h-12 px-4 bg-itemsCard border border-white/5 rounded-lg text-white focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/20 transition-all"
               />
             </div>
@@ -183,6 +196,7 @@ export const RegisterSessionModal = ({
               isWidthFull={true}
               icon={<LuCalendar size={16} />}
               iconPosition={false}
+              isBlocked={!routineId}
             >
               Programar entrenamiento
             </Button>
