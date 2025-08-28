@@ -11,8 +11,14 @@ import { ConfigExerciseOnSelectMode } from "../components/catalog/modals/ConfigE
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../store"
 import { fetchExercises } from "../store/slices/exerciseSlice"
+import { fetchCategories } from "../store/slices/categorySlice"
 import { useRoutineSelection } from "../hooks/useRoutineSelection"
 import type { EjercicioResponseDTO } from "../types/ejercicio/EjercicioResponseDTO"
+
+import { createRoutine, fetchRoutines, updateRoutine } from "../store/slices/routineSlice"
+import type { RutinaRequestDTO } from "../types/rutina/RutinaRequestDTO"
+import { buildRutinaRequest } from "../utils/buildRutinaRequest"
+import { useNavigate } from "react-router-dom"
 
 export const CatalogView = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -21,14 +27,18 @@ export const CatalogView = () => {
     const [selectedMuscle, setSelectedMuscle] = useState("")
     const [selectedEquipment, setSelectedEquipment] = useState("")
 
+
     const dispatch = useDispatch<AppDispatch>()
-    const { exercises, loading: exercisesLoading, error: exercisesError } = useSelector((state: RootState) => state.exercises)
+    const { exercises, error: exercisesError } = useSelector((state: RootState) => state.exercises)
+    const categoriesFromStore = useSelector((state: RootState) => state.categories?.categories ?? []) as { id: number; name: string }[]
+    const navigate = useNavigate()
+    const [editingRoutineId, setEditingRoutineId] = useState<number | null>(null)
 
     // Custom hook para modo selección de rutina
     const {
         isSelectMode,
         routineData,
-        selectedExercises,
+    // selectedExercises,
         isConfigExerciseModalOpen,
         exerciseToConfig,
         currentDay,
@@ -38,30 +48,50 @@ export const CatalogView = () => {
         setSelectedExercises,
         enterSelectMode,
         exitSelectMode,
-        handleExerciseConfig,
+    handleExerciseConfig,
         handleAddExerciseToRoutine,
         getCurrentDayExercises,
         getTotalExercises,
         getExerciseCountForDay,
+    isExerciseSelected,
         setIsConfigExerciseModalOpen,
         setExerciseToConfig,
     } = useRoutineSelection()
 
     useEffect(() => {
-        dispatch(fetchExercises())
+    dispatch(fetchExercises())
+    dispatch(fetchCategories() as any)
 
         const pendingRoutineData = localStorage.getItem('pendingRoutineData')
         if (pendingRoutineData) {
             const data = JSON.parse(pendingRoutineData)
             enterSelectMode(data)
+            // precargar ejercicios si existen (flujo de edición)
+            const pendingExercises = localStorage.getItem('pendingExercisesByDay')
+            if (pendingExercises) {
+                const byDay = JSON.parse(pendingExercises)
+                setExercisesByDay(byDay)
+                // construir selectedExercises plano
+                const entries = Object.entries(byDay as Record<string, any[]>)
+                const flat = entries.flatMap(([dayIdx, arr]) =>
+                    (arr ?? []).map((ex: any) => ({ ...ex, dayIndex: Number(dayIdx) }))
+                )
+                setSelectedExercises(flat)
+            }
+            const editingIdStr = localStorage.getItem('editingRoutineId')
+            if (editingIdStr) {
+                setEditingRoutineId(Number(editingIdStr))
+            }
             localStorage.removeItem('pendingRoutineData')
+            localStorage.removeItem('pendingExercisesByDay')
+            localStorage.removeItem('editingRoutineId')
         }
 
         const handleOpenSelectMode = (event: CustomEvent) => {
             enterSelectMode(event.detail)
         }
 
-        window.addEventListener('openCatalogSelectMode', handleOpenSelectMode as EventListener)
+    window.addEventListener('openCatalogSelectMode', handleOpenSelectMode as EventListener)
         return () => {
             window.removeEventListener('openCatalogSelectMode', handleOpenSelectMode as EventListener)
         }
@@ -100,9 +130,58 @@ export const CatalogView = () => {
         window.open(selectedExercise?.sampleVideos[1], "_blank")
     }
 
-    const handleFinishRoutine = () => {
-        // Aquí puedes manejar el guardado de la rutina
-        exitSelectMode()
+    // Nota: la resolución de categoría se realiza en handleFinishRoutine con datos frescos
+
+    const resolveUserId = (): number => {
+        // TODO: obtener userId desde auth/store; fallback 1
+        return 1
+    }
+
+    const handleFinishRoutine = async () => {
+        if (!routineData) return
+
+        // Asegurar categorías cargadas antes de resolver categoryId para evitar caer en "General"
+        let categoriesList = categoriesFromStore as { id: number; name: string; active?: boolean }[]
+        if (!categoriesList || categoriesList.length === 0) {
+            try {
+                const result: any = await (dispatch as any)(fetchCategories())
+                categoriesList = (result?.payload as any[]) ?? categoriesList
+            } catch {
+                // si falla, mantenemos el fallback existente
+            }
+        }
+
+        const resolveCategoryIdLocal = (label: string | undefined): number => {
+            const name = (label || '').trim().toLowerCase()
+            const found = (categoriesList || []).find(c => (c.name || '').toLowerCase() === name)
+            return found?.id ?? ((categoriesList || []).find(c => (c as any).active !== false)?.id ?? 1)
+        }
+
+        const payload: RutinaRequestDTO = buildRutinaRequest(
+            routineData,
+            exercisesByDay,
+            resolveCategoryIdLocal,
+            resolveUserId
+        )
+
+        try {
+            if (editingRoutineId) {
+                await dispatch(updateRoutine({ id: editingRoutineId, routineData: payload })).unwrap()
+            } else {
+                await dispatch(createRoutine(payload)).unwrap()
+            }
+            // refrescar la lista para asegurar datos completos del backend
+            await dispatch(fetchRoutines())
+            // limpiar estado de selección y storage
+            exitSelectMode()
+            localStorage.removeItem('pendingRoutineData')
+            localStorage.removeItem('pendingExercisesByDay')
+            setEditingRoutineId(null)
+            // navegar a Mis Rutinas
+            navigate('/routines', { replace: true })
+        } catch (e) {
+            console.error('Error creando rutina:', e)
+        }
     }
 
     const filteredExercises = exercises.filter(exercise => {
@@ -154,14 +233,19 @@ export const CatalogView = () => {
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={exitSelectMode}
-                                className="text-quaternary hover:text-white transition-colors"
+                                onClick={() => {
+                                    // salir de selección y volver a Mis rutinas
+                                    exitSelectMode()
+                                    setEditingRoutineId(null)
+                                    navigate('/routines', { replace: true })
+                                }}
+                                className="text-quaternary hover:text-white transition-colors cursor-pointer"
                             >
                                 <LuArrowLeft size={24} />
                             </button>
                             <div>
                                 <h1 className="text-white text-xl font-semibold">
-                                    Creando: {routineData?.name || 'Rutina Prueba'}
+                                    {editingRoutineId ? 'Editando' : 'Creando'}: {routineData?.name || 'Rutina Prueba'}
                                 </h1>
                                 <p className="text-quaternary text-sm">
                                     Selecciona ejercicios para tu rutina semanal ({getTotalExercises()} ejercicios agregados)
@@ -274,7 +358,7 @@ export const CatalogView = () => {
                             />
                         </div>
                     </div>
-                    <p className="text-quaternary">{exercises.length} ejercicios encontrados</p>
+                    <p className="text-quaternary">{filteredExercises.length} ejercicios encontrados</p>
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                         {
                             filteredExercises.map((exercise) => (
@@ -284,6 +368,15 @@ export const CatalogView = () => {
                                     description={exercise.description}
                                     tags={getEquipmentTag(exercise.equipment)}
                                     onClick={() => handleExerciseClick(exercise)}
+                                    isSelectMode={true}
+                                    isSelected={isExerciseSelected(exercise.id)}
+                                    onConfigureExercise={() => handleExerciseConfig({
+                                        id: exercise.id,
+                                        title: exercise.name,
+                                        tags: Array.isArray(exercise.equipment) && exercise.equipment.length > 0
+                                            ? [{ label: exercise.equipment[0].name, color: 'orange' as const }]
+                                            : []
+                                    })}
                                 />
                             ))
                         }

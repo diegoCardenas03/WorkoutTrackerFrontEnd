@@ -3,6 +3,7 @@ import { LuDumbbell, LuPlay, LuPencil } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
 import { useState } from "react"
+import { DayOfWeek } from "../../../types/enums/DayOfWeek"
 import type { EjercicioResponseDTO } from "../../../types/ejercicio/EjercicioResponseDTO"
 import { ExerciseModal } from "../../catalog/modals/ExerciseModal"
 
@@ -41,9 +42,11 @@ interface RoutineModalProps {
       lastCompleted?: string
     }
   }
-  onStart?: () => void
+  onStart?: (options?: { dayOfWeek?: DayOfWeek }) => void
   onEdit?: () => void
   exerciseDtos?: EjercicioResponseDTO[]
+  // opcional: ejercicios agrupados por día (para rutinas semanales)
+  exercisesByDay?: Record<string, Exercise[]>
 }
 
 export const RoutineModal = ({
@@ -52,7 +55,8 @@ export const RoutineModal = ({
   routine,
   onStart,
   onEdit,
-  exerciseDtos
+  exerciseDtos,
+  exercisesByDay
 }: RoutineModalProps) => {
   
   if (!isOpen) return null
@@ -69,6 +73,43 @@ export const RoutineModal = ({
   ]
 
   const exercisesToShow = routine.exercises.length > 0 ? routine.exercises : defaultExercises
+
+  // selector de día para rutinas semanales
+  const dayKeys = exercisesByDay ? Object.keys(exercisesByDay) : []
+  const getSpanishTodayLabel = (): string => {
+    const idx = new Date().getDay() // 0=Dom,1=Lun,...
+    const labels = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+    return labels[idx]!
+  }
+  const availableDayLabels: string[] = exercisesByDay
+    ? dayKeys
+    : (routine.weeklyData?.activeDays ?? [])
+  // intentar recuperar el último día usado para esta rutina
+  const storageKey = `lastRoutineDay:${routine.id}`
+  const savedDayRaw = (typeof window !== 'undefined') ? window.localStorage.getItem(storageKey) : null
+  const savedDay = savedDayRaw && availableDayLabels.find(d => d.toLowerCase() === savedDayRaw.toLowerCase())
+  const todayLabel = getSpanishTodayLabel()
+  const initialDay = savedDay
+    ?? availableDayLabels.find(d => d.toLowerCase() === todayLabel.toLowerCase())
+    ?? availableDayLabels[0]
+    ?? null
+  const [selectedDay, setSelectedDay] = useState<string | null>(initialDay)
+  // helper para mapear etiqueta española a DayOfWeek enum
+  const mapSpanishToEnum = (label: string): DayOfWeek | undefined => {
+    const l = label.toLowerCase()
+    if (l.startsWith('lun')) return DayOfWeek.MONDAY
+    if (l.startsWith('mar')) return DayOfWeek.TUESDAY
+    if (l.startsWith('mié') || l.startsWith('mie')) return DayOfWeek.WEDNESDAY
+    if (l.startsWith('jue')) return DayOfWeek.THURSDAY
+    if (l.startsWith('vie')) return DayOfWeek.FRIDAY
+    if (l.startsWith('sáb') || l.startsWith('sab')) return DayOfWeek.SATURDAY
+    if (l.startsWith('dom')) return DayOfWeek.SUNDAY
+    return undefined
+  }
+
+  const visibleExercises = exercisesByDay && selectedDay && exercisesByDay[selectedDay]?.length
+    ? exercisesByDay[selectedDay]!
+    : exercisesToShow
 
   const [selectedExerciseIdx, setSelectedExerciseIdx] = useState<number | null>(null)
   const selectedExerciseDto: EjercicioResponseDTO | null =
@@ -126,13 +167,13 @@ export const RoutineModal = ({
 
           {/* Estadísticas de la rutina */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
+            {/* <div className="text-center">
               
               <p className="text-white text-sm font-medium">{routine.exerciseCount}</p>
               <p className="text-quaternary text-xs">Ejercicios</p>
-            </div>
+            </div> */}
             
-            {routine.estimatedTime && (
+            {/* {routine.estimatedTime && (
               <div className="text-center">
                 
                 <p className="text-white text-sm font-medium">{routine.estimatedTime}</p>
@@ -154,15 +195,15 @@ export const RoutineModal = ({
                   <p className="text-quaternary text-xs">Última vez</p>
                 </div>
               )
-            )}
+            )} */}
 
-            {routine.targetMuscles && routine.targetMuscles.length > 0 && (
+            {/* {routine.targetMuscles && routine.targetMuscles.length > 0 && (
               <div className="text-center">
             
                 <p className="text-white text-sm font-medium">{routine.targetMuscles.length}</p>
                 <p className="text-quaternary text-xs">Músculos</p>
               </div>
-            )}
+            )} */}
           </div>
         </div>
 
@@ -173,14 +214,22 @@ export const RoutineModal = ({
             <div>
               <h3 className="text-white text-base font-medium mb-3">Días de entrenamiento</h3>
               <div className="flex flex-wrap gap-2">
-                {routine.weeklyData.activeDays.map((day) => (
-                  <span
-                    key={day}
-                    className="px-3 py-[2px] bg-itemsCard border border-white/10 rounded-lg text-white text-[12px] xl:text-sm"
-                  >
-                    {day}
-                  </span>
-                ))}
+                {(exercisesByDay ? Object.keys(exercisesByDay) : routine.weeklyData.activeDays).map((day) => {
+                  const isActive = selectedDay === day
+                  const isToday = day.toLowerCase() === todayLabel.toLowerCase()
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => setSelectedDay(day)}
+                      className={`px-3 py-[2px] rounded-lg text-[12px] xl:text-sm border transition-colors flex items-center gap-2 ${isActive ? 'bg-white text-black border-white' : 'bg-itemsCard text-white border-white/10 hover:border-white/30'}`}
+                    >
+                      <span>{day}</span>
+                      {isToday && (
+                        <span className={`px-2 py-[1px] rounded-full text-[10px] font-medium ${isActive ? 'bg-black text-white' : 'bg-white text-black'}`}>Hoy</span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -204,9 +253,9 @@ export const RoutineModal = ({
 
           {/* Lista de ejercicios */}
           <div>
-            <h3 className="text-white text-base font-medium mb-4">Ejercicios ({exercisesToShow.length})</h3>
+            <h3 className="text-white text-base font-medium mb-4">Ejercicios ({visibleExercises.length}){selectedDay ? ` · ${selectedDay}` : ''}</h3>
             <div className="space-y-3">
-              {exercisesToShow.map((exercise, index) => (
+              {visibleExercises.map((exercise, index) => (
                 <div
                   key={exercise.id}
                   className="bg-tertiary rounded-lg p-4 border border-white/10 cursor-pointer hover:border-white/40 transition-colors"
@@ -245,7 +294,21 @@ export const RoutineModal = ({
             <Button
               iconPosition={false}
               icon={<LuPlay size={16} />}
-              action={onStart}
+              action={() => {
+                if (onStart) {
+                  if (routine.isWeekly && selectedDay) {
+                    // intentar mapear selectedDay ya sea de exercisesByDay o etiqueta española
+                    const dayEnum = mapSpanishToEnum(selectedDay)
+                    try {
+                      // persistir el último día seleccionado por rutina
+                      window.localStorage.setItem(storageKey, selectedDay)
+                    } catch {}
+                    onStart({ dayOfWeek: dayEnum })
+                  } else {
+                    onStart()
+                  }
+                }
+              }}
               isWidthFull={true}
             >
               Iniciar rutina
@@ -268,7 +331,7 @@ export const RoutineModal = ({
       <ExerciseModal
         isOpen={selectedExerciseIdx !== null}
         onClose={() => setSelectedExerciseIdx(null)}
-        exercise={selectedExerciseDto}
+  exercise={selectedExerciseDto}
         showBackButton={true}
         onBack={() => setSelectedExerciseIdx(null)}
       />

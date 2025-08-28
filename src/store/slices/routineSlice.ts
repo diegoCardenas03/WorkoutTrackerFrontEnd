@@ -67,7 +67,7 @@ export const updateRoutine = createAsyncThunk(
   'routines/updateRoutine',
   async ({ id, routineData }: { id: number; routineData: RutinaRequestDTO }, { rejectWithValue }) => {
     try {
-      const data = await rutinaService.put(id, routineData)
+  const data = await rutinaService.patch(id, routineData as any)
       return data as RutinaResponseDTO
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Error al actualizar rutina')

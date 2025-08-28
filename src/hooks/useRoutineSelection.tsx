@@ -30,6 +30,10 @@ export function useRoutineSelection() {
         setIsSelectMode(false)
         setRoutineData(null)
         setSelectedExercises([])
+        setExercisesByDay({ 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] })
+        setIsConfigExerciseModalOpen(false)
+        setExerciseToConfig(null)
+        setCurrentDay(0)
     }, [])
 
     const handleExerciseConfig = useCallback((exercise: any) => {

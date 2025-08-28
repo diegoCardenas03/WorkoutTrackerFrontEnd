@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { IoClose } from "react-icons/io5"
 import { LuDumbbell } from "react-icons/lu"
 import { Button } from "../../Button"
@@ -8,6 +8,11 @@ interface ConfigRoutineModalProps {
   isOpen: boolean
   onClose: () => void
   onContinueToSelection: (routineData: RoutineFormData) => void
+  initialFormData?: Partial<RoutineFormData>
+  showSaveChanges?: boolean
+  onSaveChanges?: (routineData: RoutineFormData) => void
+  categoriesOptions?: { value: string; label: string }[]
+  difficultiesOptions?: { value: string; label: string }[]
 }
 
 interface RoutineFormData {
@@ -21,7 +26,12 @@ interface RoutineFormData {
 export const ConfigRoutineModal = ({
   isOpen,
   onClose,
-  onContinueToSelection
+  onContinueToSelection,
+  initialFormData,
+  showSaveChanges,
+  onSaveChanges,
+  categoriesOptions,
+  difficultiesOptions,
 }: ConfigRoutineModalProps) => {
   const [formData, setFormData] = useState<RoutineFormData>({
     name: "",
@@ -30,15 +40,40 @@ export const ConfigRoutineModal = ({
     description: "",
     publishToCommunity: false
   })
+  const [initialSnapshot, setInitialSnapshot] = useState<RoutineFormData | null>(null)
 
-  const categories = [
+  // Prefill data when editing
+  useEffect(() => {
+    if (isOpen && initialFormData) {
+      setFormData(prev => ({
+        ...prev,
+        ...initialFormData,
+        name: initialFormData.name ?? prev.name,
+        category: initialFormData.category ?? prev.category,
+        difficulty: initialFormData.difficulty ?? prev.difficulty,
+        description: initialFormData.description ?? prev.description,
+        publishToCommunity: initialFormData.publishToCommunity ?? prev.publishToCommunity,
+      }))
+      // take a snapshot to compare for enabling save
+      const snap: RoutineFormData = {
+        name: initialFormData.name ?? "",
+        category: initialFormData.category ?? "",
+        difficulty: initialFormData.difficulty ?? "",
+        description: initialFormData.description ?? "",
+        publishToCommunity: initialFormData.publishToCommunity ?? false,
+      }
+      setInitialSnapshot(snap)
+    }
+  }, [isOpen, initialFormData])
+
+  const categories = categoriesOptions ?? [
     { value: "Fuerza", label: "Fuerza" },
     { value: "Cardio", label: "Cardio" },
     { value: "Peso corporal", label: "Peso corporal" },
     { value: "Flexibilidad", label: "Flexibilidad" }
   ]
 
-  const difficulties = [
+  const difficulties = difficultiesOptions ?? [
     { value: "Principiante", label: "Principiante" },
     { value: "Intermedio", label: "Intermedio" },
     { value: "Avanzado", label: "Avanzado" }
@@ -51,6 +86,16 @@ export const ConfigRoutineModal = ({
   }
 
   if (!isOpen) return null
+
+  const isDirty = initialSnapshot
+    ? (
+        formData.name !== initialSnapshot.name ||
+        formData.category !== initialSnapshot.category ||
+        formData.difficulty !== initialSnapshot.difficulty ||
+        formData.description !== initialSnapshot.description ||
+        formData.publishToCommunity !== initialSnapshot.publishToCommunity
+      )
+    : (formData.name !== "" || formData.category !== "" || formData.difficulty !== "" || formData.description !== "" || formData.publishToCommunity)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -181,6 +226,18 @@ export const ConfigRoutineModal = ({
               Cancelar
             </Button>
           </div>
+          {showSaveChanges && (
+            <div className="mt-3">
+              <Button
+                isWhite={false}
+                isWidthFull={true}
+                isBlocked={!isDirty}
+                action={() => onSaveChanges && onSaveChanges(formData)}
+              >
+                Guardar cambios
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,167 +1,77 @@
-import { useState, useEffect } from "react"
-import { LuArrowLeft, LuHouse, LuChevronLeft, LuChevronRight, LuSkipForward } from "react-icons/lu"
+import { useEffect, useMemo } from "react"
+import { LuArrowLeft, LuSkipForward, LuX } from "react-icons/lu"
 import { PrivateLayout } from "../layouts/PrivateLayout"
 import { Button } from "../components/Button"
 import { ExercisesProgressCard } from "../components/training/cards/ExercisesProgressCard"
 import { CurrentExerciseCard } from "../components/training/cards/CurrentExerciseCard"
 import { SetsCard } from "../components/training/cards/SetsCard"
+import { useDispatch, useSelector } from "react-redux"
+import type { RootState } from "../store"
+import { addRestSeconds, nextExercise, pauseRest, previousExercise, resumeRest, toggleSetCompleted, tickSecond, startRest, stopRest, resetTraining } from "../store/slices/trainingSlice"
+import { Navigate, useNavigate } from "react-router-dom"
 
-interface Set {
-    id: number
-    completed: boolean
-    reps: number
-}
-
-interface Exercise {
-    id: string
-    title: string
-    category: string
-    tags: { label: string; color: 'green' | 'blue' | 'yellow' | 'red' | 'orange' }[]
-    sets: string
-    reps: string
-    weight: string
-    restTime: string
-    notes?: string
-    seriesData: Set[]
-}
+// using training slice state, no local Exercise type needed
 
 export const TrainingView = () => {
-    // Estados principales
-    const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0)
-    const [isResting, setIsResting] = useState(false)
-    const [restTimeRemaining, setRestTimeRemaining] = useState(0)
-    const [startTime] = useState(new Date())
-    const [elapsedTime, setElapsedTime] = useState("1:25")
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
+    const training = useSelector((state: RootState) => state.training)
 
-    // Datos de ejemplo
-    const exercises: Exercise[] = [
-        {
-            id: "1",
-            title: "Press de banca",
-            category: "Pecho",
-            tags: [
-                { label: "Intermedio", color: "yellow" },
-                { label: "Barra", color: "orange" }
-            ],
-            sets: "3",
-            reps: "10",
-            weight: "80",
-            restTime: "90",
-            notes: "Mantén la espalda pegada al banco",
-            seriesData: [
-                { id: 1, completed: false, reps: 10 },
-                { id: 2, completed: false, reps: 10 },
-                { id: 3, completed: false, reps: 10 }
-            ]
-        },
-        {
-            id: "2",
-            title: "Sentadillas",
-            category: "Piernas",
-            tags: [
-                { label: "Principiante", color: "green" },
-                { label: "Peso corporal", color: "blue" }
-            ],
-            sets: "4",
-            reps: "12",
-            weight: "60",
-            restTime: "60",
-            seriesData: [
-                { id: 4, completed: false, reps: 12 },
-                { id: 5, completed: false, reps: 12 },
-                { id: 6, completed: false, reps: 12 },
-                { id: 7, completed: false, reps: 12 }
-            ]
-        }
-    ]
+    // Guard render: if no active routine, redirect immediately (avoids visual flash)
+    if (!training.activeRoutineId || training.exercises.length === 0) {
+        return <Navigate to="/routines" replace />
+    }
 
-    const [exerciseStates, setExerciseStates] = useState(exercises)
-
-    // Ejercicio actual
-    const currentExercise = exerciseStates[currentExerciseIndex]
-
-    // Cálculos de progreso
-    const totalExercises = exercises.length
-    const completedExercises = exerciseStates.filter(ex =>
-        ex.seriesData.every(set => set.completed)
-    ).length
-    const completionPercentage = Math.round(
-        (completedExercises / totalExercises) * 100
-    )
-
-    // Timer de descanso
+    // Tick every second for elapsed time and rest countdown
     useEffect(() => {
-        let interval: ReturnType<typeof setInterval>
-        if (isResting && restTimeRemaining > 0) {
-            interval = setInterval(() => {
-                setRestTimeRemaining(prev => {
-                    if (prev <= 1) {
-                        setIsResting(false)
-                        return 0
-                    }
-                    return prev - 1
-                })
-            }, 1000)
-        }
+        const interval = setInterval(() => dispatch(tickSecond()), 1000)
         return () => clearInterval(interval)
-    }, [isResting, restTimeRemaining])
+    }, [dispatch])
 
-    // Handlers
+    const elapsedTime = useMemo(() => {
+        const total = training.elapsedSeconds
+        const m = Math.floor(total / 60).toString()
+        const s = (total % 60).toString().padStart(2, '0')
+        return `${m}:${s}`
+    }, [training.elapsedSeconds])
+
+    const currentExercise = training.exercises[training.currentExerciseIndex]
+    const totalExercises = training.exercises.length
+    const completedExercises = training.exercises.filter(ex => ex.seriesData.every(s => s.completed)).length
+    const completionPercentage = totalExercises > 0 ? Math.round((completedExercises / totalExercises) * 100) : 0
+
     const handleSetComplete = (setId: number) => {
-        setExerciseStates(prev => prev.map(exercise =>
-            exercise.id === currentExercise.id
-                ? {
-                    ...exercise,
-                    seriesData: exercise.seriesData.map(set =>
-                        set.id === setId ? { ...set, completed: !set.completed } : set
-                    )
-                }
-                : exercise
-        ))
+        dispatch(toggleSetCompleted({ setId }))
+        // Start rest immediately after marking set as done
+        dispatch(startRest())
     }
-
-    const handleStartRest = () => {
-        setIsResting(true)
-        setRestTimeRemaining(parseInt(currentExercise.restTime))
-    }
-
-    const handlePreviousExercise = () => {
-        if (currentExerciseIndex > 0) {
-            setCurrentExerciseIndex(prev => prev - 1)
-            setIsResting(false)
-        }
-    }
-
-    const handleNextExercise = () => {
-        if (currentExerciseIndex < exercises.length - 1) {
-            setCurrentExerciseIndex(prev => prev + 1)
-            setIsResting(false)
-        }
-    }
-
+    // rest starts automatically when completing a set
+    const handlePreviousExercise = () => dispatch(previousExercise())
+    const handleNextExercise = () => dispatch(nextExercise())
     const handleFinishWorkout = () => {
-        console.log("Entrenamiento finalizado")
-        // Aquí puedes agregar la lógica para finalizar el entrenamiento
+        // limpiar estado y volver a Mis rutinas
+        dispatch(resetTraining())
+        navigate('/routines')
     }
-
-    const handleGoHome = () => {
-        console.log("Ir al inicio")
-        // Aquí puedes agregar navegación al home
-    }
+    const isResting = training.isResting
+    const restTimeRemaining = training.restTimeRemaining
 
     return (
         <PrivateLayout>
-            {/* Header personalizado */}
-            <div className="flex items-center justify-center mb-6">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
                 <h1 className="text-white text-xl sm:text-2xl font-semibold">
-                    Tren Superior
+                    {training.routineName ?? 'Entrenamiento'}
                 </h1>
+                <button onClick={handleFinishWorkout}>
+                    <LuX className="text-quaternary hover:text-white transition-colors cursor-pointer text-2xl" />
+                </button>
             </div>
 
             {/* Progress Card */}
             <div className="mb-6">
                 <ExercisesProgressCard
-                    currentExercise={currentExerciseIndex + 1}
+                    currentExercise={Math.min(training.currentExerciseIndex + 1, Math.max(1, totalExercises))}
                     totalExercises={totalExercises}
                     completionPercentage={completionPercentage}
                     totalTime={elapsedTime}
@@ -172,25 +82,47 @@ export const TrainingView = () => {
             {/* Layout principal */}
             <div className="flex flex-col gap-6 mb-6">
                 {/* Current Exercise Card */}
-                <CurrentExerciseCard
-                    title={currentExercise.title}
-                    category={currentExercise.category}
-                    tags={currentExercise.tags}
-                    sets={currentExercise.sets}
-                    reps={currentExercise.reps}
-                    weight={currentExercise.weight}
-                    restTime={currentExercise.restTime}
-                    notes={currentExercise.notes}
-                />
+                {currentExercise && (
+                    <CurrentExerciseCard
+                        title={currentExercise.title}
+                        category={currentExercise.category ?? ''}
+                        tags={currentExercise.tags}
+                        sets={currentExercise.sets}
+                        reps={currentExercise.reps}
+                        weight={currentExercise.weight ?? ''}
+                        restTime={currentExercise.restTime}
+                        notes={currentExercise.notes}
+                    />
+                )}
 
                 {/* Sets Card */}
-                <SetsCard
-                    sets={currentExercise.seriesData}
-                    onSetComplete={handleSetComplete}
-                    onStartRest={handleStartRest}
-                    isResting={isResting}
-                    restTimeRemaining={restTimeRemaining}
-                />
+                {currentExercise && (
+                    <SetsCard
+                        sets={currentExercise.seriesData}
+                        isResting={isResting}
+                        restTimeRemaining={restTimeRemaining}
+                        onPauseRest={() => dispatch(pauseRest())}
+                        onResumeRest={() => dispatch(resumeRest())}
+                        onAddRest={(sec) => dispatch(addRestSeconds({ seconds: sec }))}
+                        onEndRest={() => {
+                            // Stop rest and proceed to next series if available, otherwise next exercise or finish
+                            dispatch(stopRest())
+                            const hasRemainingSets = currentExercise?.seriesData?.some(s => !s.completed)
+                            if (hasRemainingSets) {
+                                // move to next set by marking it complete? No, already completed by the button action.
+                                // Here we only end rest to allow the user to press "Terminar serie" again for next set.
+                                return
+                            }
+                            // no sets left -> next exercise or finish
+                            const isLastExercise = training.currentExerciseIndex >= totalExercises - 1
+                            if (!isLastExercise) {
+                                handleNextExercise()
+                            } else {
+                                handleFinishWorkout()
+                            }
+                        }}
+                    />
+                )}
             </div>
 
             {/* Navigation Buttons */}
@@ -202,30 +134,52 @@ export const TrainingView = () => {
                     isWhite={false}
                     isWidthFull={true}
                     action={handlePreviousExercise}
-                    isBlocked={currentExerciseIndex === 0}
+                    isBlocked={training.currentExerciseIndex === 0}
                 >
                     Anterior
                 </Button>
 
                 {/* Siguiente o Finalizar */}
-                {currentExerciseIndex < exercises.length - 1 ? (
-                    <Button
-                        icon={<LuSkipForward size={16} />}
-                        isWhite={true}
-                        isWidthFull={true}
-                        action={handleNextExercise}
-                    >
-                        Siguiente
-                    </Button>
-                ) : (
-                    <Button
-                        isWhite={true}
-                        isWidthFull={true}
-                        action={handleFinishWorkout}
-                    >
-                        Finalizar entrenamiento
-                    </Button>
-                )}
+                {(() => {
+                    const hasRemainingSets = currentExercise?.seriesData?.some(s => !s.completed)
+                    const isLastExercise = training.currentExerciseIndex >= totalExercises - 1
+                    if (hasRemainingSets) {
+                        return (
+                            <Button
+                                icon={<LuSkipForward size={16} />}
+                                isWhite={true}
+                                isWidthFull={true}
+                                action={() => {
+                                    const nextSet = currentExercise?.seriesData.find(s => !s.completed)
+                                    if (nextSet) handleSetComplete(nextSet.id)
+                                }}
+                            >
+                                Terminar serie
+                            </Button>
+                        )
+                    }
+                    if (!isLastExercise) {
+                        return (
+                            <Button
+                                icon={<LuSkipForward size={16} />}
+                                isWhite={true}
+                                isWidthFull={true}
+                                action={handleNextExercise}
+                            >
+                                Siguiente ejercicio
+                            </Button>
+                        )
+                    }
+                    return (
+                        <Button
+                            isWhite={true}
+                            isWidthFull={true}
+                            action={handleFinishWorkout}
+                        >
+                            Finalizar entrenamiento
+                        </Button>
+                    )
+                })()}
             </div>
         </PrivateLayout>
     )

@@ -40,6 +40,11 @@ export const CustomSelect = ({
     };
   }, []);
 
+  // Mantener sincronizado cuando cambia defaultValue externamente
+  useEffect(() => {
+    setSelectedValue(defaultValue)
+  }, [defaultValue])
+
   const selectedOption = options.find(opt => opt.value === selectedValue) || {
     value: "",
     label: name,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { LuPlus, LuTarget, LuTrendingUp } from "react-icons/lu"
 import { Button } from "../components/Button"
 import { SubHeader } from "../components/SubHeader"
@@ -13,7 +13,9 @@ import { ConfigRoutineModal } from "../components/myRoutines/modals/ConfigRoutin
 import { useNavigate } from "react-router-dom"
 import type { RutinaResponseDTO } from "../types/rutina/RutinaResponseDTO"
 import { useDispatch, useSelector } from "react-redux"
-import { fetchRoutines } from "../store/slices/routineSlice"
+import { fetchRoutines, updateRoutine } from "../store/slices/routineSlice"
+import { fetchCategories } from "../store/slices/categorySlice"
+import { startRoutineFromDto } from "../store/slices/trainingSlice"
 
 interface RoutineData {
     id: string
@@ -38,21 +40,27 @@ interface RoutineData {
 export const MyRoutinesView = () => {
     const [selectedCategory, setSelectedCategory] = useState("")
     const [selectedDifficulty, setSelectedDifficulty] = useState("")
-    const [selectedType, setSelectedType] = useState("")
+    const [selectedType, setSelectedType] = useState("simple")
     const [searchTerm, setSearchTerm] = useState("")
     const [isRoutineModalOpen, setIsRoutineModalOpen] = useState(false)
     const [selectedRoutine, setSelectedRoutine] = useState<RoutineData | null>(null)
     const [isConfigRoutineModalOpen, setIsConfigRoutineModalOpen] = useState(false)
+    const [editPrefill, setEditPrefill] = useState<any | null>(null)
+    const [editRoutineId, setEditRoutineId] = useState<number | null>(null)
+    const afterConfigRef = useRef<null | ((data: any) => void)>(null)
     // const [routineFormData, setRoutineFormData] = useState(null)
     const dispatch = useDispatch()
     const routinesFromStore: RutinaResponseDTO[] = useSelector((state: any) => state.routines?.routines ?? [])
     const routinesLoading: boolean = useSelector((state: any) => state.routines?.loading ?? false)
+    const categoriesFromStore: { id: number; name: string; active?: boolean }[] = useSelector((state: any) => state.categories?.categories ?? [])
     const navigate = useNavigate()
 
     useEffect(() => {
         if (!routinesLoading && routinesFromStore.length === 0) {
             dispatch(fetchRoutines() as any)
         }
+        // fetch categories
+        dispatch(fetchCategories() as any)
     }, [dispatch, routinesFromStore.length, routinesLoading])
 
     const handleOpenRoutineModal = (routine: RoutineData) => {
@@ -65,17 +73,25 @@ export const MyRoutinesView = () => {
         setSelectedRoutine(null)
     }
 
+    const handleStartRoutine = (routine: RoutineData) => {
+        // Si es semanal, abrir el modal para elegir día antes de iniciar
+        if (routine.isWeekly) {
+            setSelectedRoutine(routine)
+            setIsRoutineModalOpen(true)
+            return
+        }
+        const dto = (routinesFromStore ?? []).find(r => String(r.id) === routine.id)
+        if (!dto) return
+        ;(dispatch as any)(startRoutineFromDto({ routine: dto }))
+        navigate('/training')
+    }
+
     
 
-    const categories = [
+    const categoriesFilterOptions = [
         { value: "", label: "Todas las categorías" },
-        { value: "Fuerza", label: "Fuerza" },
-        { value: "Cardio", label: "Cardio" },
-        { value: "Peso corporal", label: "Peso corporal" },
-        { value: "Barra", label: "Barra" },
-        { value: "Piernas", label: "Piernas" },
-        { value: "Espalda", label: "Espalda" },
-    ];
+        ...categoriesFromStore.filter((c: any) => c.active !== false).map((c: any) => ({ value: c.name, label: c.name }))
+    ]
 
     const difficulties = [
         { value: "", label: "Todas las dificultades" },
@@ -85,7 +101,6 @@ export const MyRoutinesView = () => {
     ];
 
     const typeOfRoutine = [
-        { value: "", label: "Todos los tipos" },
         { value: "simple", label: "Simple" },
         { value: "weekly", label: "Semanal" }
     ];
@@ -113,6 +128,15 @@ export const MyRoutinesView = () => {
         FRIDAY: 'Viernes',
         SATURDAY: 'Sábado',
         SUNDAY: 'Domingo'
+    }
+    const dayEnumToIndex: Record<string, number> = {
+        MONDAY: 0,
+        TUESDAY: 1,
+        WEDNESDAY: 2,
+        THURSDAY: 3,
+        FRIDAY: 4,
+        SATURDAY: 5,
+        SUNDAY: 6,
     }
 
     const mapDtoToRoutine = (dto: RutinaResponseDTO): RoutineData => {
@@ -149,9 +173,12 @@ export const MyRoutinesView = () => {
         const targetMusclesSet = new Set<string>()
         const exercises: { id: string; name: string; sets: number; reps: string; rest: string; equipment?: string }[] = []
         const exerciseDtos: any[] = []
+        const exercisesByDayForModal: Record<string, typeof exercises> = {}
 
         if (dto) {
             for (const s of dto.sessions ?? []) {
+                const dayName = mapDayOfWeekToSpanish[String(s.dayOfWeek)]
+                if (dayName && !exercisesByDayForModal[dayName]) exercisesByDayForModal[dayName] = []
                 for (const se of s.sessionExercises ?? []) {
                     // muscles
                     se.exercise?.targetMuscles?.forEach(m => targetMusclesSet.add(m.name))
@@ -160,14 +187,18 @@ export const MyRoutinesView = () => {
                     const rest = typeof se.restBetweenSets === 'number' && !Number.isNaN(se.restBetweenSets)
                         ? `${se.restBetweenSets}s`
                         : '—'
-                    exercises.push({
+                    const exItem = {
                         id: String(se.id),
                         name: se.exercise?.name ?? 'Ejercicio',
                         sets: se.sets,
                         reps: String(se.reps),
                         rest,
                         equipment: equipmentNames.length ? equipmentNames.join(', ') : undefined,
-                    })
+                    }
+                    exercises.push(exItem)
+                    if (dayName) {
+                        exercisesByDayForModal[dayName]?.push(exItem)
+                    }
                     if (se.exercise) {
                         exerciseDtos.push(se.exercise)
                     }
@@ -183,7 +214,55 @@ export const MyRoutinesView = () => {
             exercises,
         }
 
-        return { routineData, exerciseDtos }
+        return { routineData, exerciseDtos, exercisesByDayForModal }
+    }
+
+    // Preparar datos para edición en el catálogo
+    const prepareEditAndNavigate = (routine: RoutineData) => {
+        const dto = (routinesFromStore ?? []).find(r => String(r.id) === routine.id)
+        if (!dto) return
+        const routineFormData = {
+            name: dto.name,
+            category: dto.category?.name ?? '',
+            difficulty: mapDifficultyToLevel(dto.difficulty).label,
+            description: dto.description || '',
+            publishToCommunity: !!dto.isPublic,
+        }
+    // Open config modal first with prefill
+        setEditPrefill(routineFormData)
+    setEditRoutineId(dto.id)
+        setIsConfigRoutineModalOpen(true)
+        // Save the rest for after the modal confirmation
+    const continueAfterConfig = (finalData: typeof routineFormData) => {
+            const byDay: { [key: number]: any[] } = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] }
+            for (const s of dto.sessions ?? []) {
+                const idx = dayEnumToIndex[String(s.dayOfWeek)] ?? 0
+                for (const se of s.sessionExercises ?? []) {
+                    const tag = se.exercise?.equipment?.[0]?.name
+                    byDay[idx].push({
+                        id: se.exercise?.id,
+                        title: se.exercise?.name,
+                        tags: tag ? [{ label: tag, color: 'orange' as const }] : [],
+                        config: {
+                            series: se.sets,
+                            reps: String(se.reps),
+                            restTime: se.restBetweenSets != null ? String(se.restBetweenSets) : undefined,
+                            notes: se.comment || '',
+                        }
+                    })
+                }
+            }
+            // Persist and navigate to catalog selection mode
+            localStorage.setItem('pendingRoutineData', JSON.stringify(finalData))
+            localStorage.setItem('pendingExercisesByDay', JSON.stringify(byDay))
+            localStorage.setItem('editingRoutineId', String(dto.id))
+            const event = new CustomEvent('openCatalogSelectMode', { detail: finalData })
+            window.dispatchEvent(event)
+            navigate('/catalog')
+        }
+    // store continuation in ref to survive re-renders
+    afterConfigRef.current = continueAfterConfig
+        return
     }
 
     // Función para filtrar rutinas
@@ -294,7 +373,7 @@ export const MyRoutinesView = () => {
                     <div className="flex lg:flex-row flex-col w-full gap-4">
                         <CustomSelect
                             name="Todas las categorias"
-                            options={categories}
+                            options={categoriesFilterOptions}
                             defaultValue={selectedCategory}
                             onChange={setSelectedCategory}
                         />
@@ -331,7 +410,7 @@ export const MyRoutinesView = () => {
                                     isWeekly={routine.isWeekly}
                                     weeklyData={routine.weeklyData}
                                     simpleData={routine.simpleData}
-                                    onStart={() => console.log("Starting routine", routine.id)}
+                                    onStart={() => handleStartRoutine(routine)}
                                     onViewRoutine={() => handleOpenRoutineModal(routine)}
                                     onMenuClick={() => console.log("Menu clicked", routine.id)}
                                 />
@@ -346,20 +425,110 @@ export const MyRoutinesView = () => {
                     isOpen={isRoutineModalOpen}
                     onClose={handleCloseRoutineModal}
                     routine={built.routineData}
+                    exercisesByDay={built.exercisesByDayForModal}
                     exerciseDtos={built.exerciseDtos}
-                    onStart={() => {
-                        console.log("Starting routine", selectedRoutine.id)
+                    onStart={(opts) => {
+                        if (selectedRoutine) {
+                            const dto = (routinesFromStore ?? []).find(r => String(r.id) === selectedRoutine.id)
+                            if (dto) {
+                                ;(dispatch as any)(startRoutineFromDto({ routine: dto, dayOfWeek: opts?.dayOfWeek }))
+                                navigate('/training')
+                            }
+                        }
                         handleCloseRoutineModal()
                     }}
                     onEdit={() => {
-                        console.log("Editing routine", selectedRoutine.id)
                         handleCloseRoutineModal()
+                        prepareEditAndNavigate(selectedRoutine)
                     }}
                 />) })()}
             <ConfigRoutineModal
                 isOpen={isConfigRoutineModalOpen}
-                onClose={() => setIsConfigRoutineModalOpen(false)}
-                onContinueToSelection={handleContinueToSelection}
+                onClose={() => {
+                    setIsConfigRoutineModalOpen(false)
+                    setEditPrefill(null)
+                }}
+                initialFormData={editPrefill ?? undefined}
+                showSaveChanges={!!editPrefill}
+                categoriesOptions={categoriesFromStore.map(c => ({ value: c.name, label: c.name }))}
+                difficultiesOptions={[
+                    { value: 'Principiante', label: 'Principiante' },
+                    { value: 'Intermedio', label: 'Intermedio' },
+                    { value: 'Avanzado', label: 'Avanzado' },
+                ]}
+                onSaveChanges={async (data) => {
+                    // Update only routine metadata
+                    if (!editRoutineId) return
+                    const dto = (routinesFromStore ?? []).find(r => r.id === editRoutineId)
+                    if (!dto) return
+                    // build a minimal payload using existing sessions
+                    // map difficulty label back to enum; resolve categoryId by label
+                    const mapDiff = (label: string) => {
+                        const l = (label || '').toLowerCase()
+                        if (l === 'principiante') return 'PRINCIPIANTE'
+                        if (l === 'intermedio') return 'INTERMEDIO'
+                        if (l === 'avanzado') return 'AVANZADO'
+                        return dto.difficulty
+                    }
+                    // Asegurar categorías cargadas antes de resolver categoryId
+                    let categoriesList = categoriesFromStore
+                    if (!categoriesList || categoriesList.length === 0) {
+                        try {
+                            const result: any = await (dispatch as any)(fetchCategories())
+                            categoriesList = (result?.payload as any[]) ?? categoriesList
+                        } catch {
+                            // si falla, usamos las existentes
+                        }
+                    }
+                    const resolvedCategoryId = (() => {
+                        const name = (data.category || '').toLowerCase()
+                        const found = (categoriesList || []).find((c: any) => (c.name || '').toLowerCase() === name)
+                        return found?.id ?? dto.category.id
+                    })()
+                    const minimal = {
+                        name: data.name,
+                        description: data.description,
+                        categoryId: resolvedCategoryId,
+                        difficulty: mapDiff(data.difficulty),
+                        isPublic: data.publishToCommunity ?? dto.isPublic,
+                        userId: dto.user.id,
+                        sessions: dto.sessions.map(s => ({
+                            name: s.name,
+                            description: s.description,
+                            dayOfWeek: s.dayOfWeek,
+                            // if category changed, propagate it; otherwise keep original session.category.id
+                            categoryId: (typeof resolvedCategoryId === 'number' ? resolvedCategoryId : s.category.id),
+                            sessionExercises: s.sessionExercises.map(se => ({
+                                sets: se.sets,
+                                reps: se.reps,
+                                restBetweenSets: se.restBetweenSets,
+                                comment: se.comment,
+                                exerciseId: se.exercise.id,
+                            }))
+                        }))
+                    }
+                    try {
+                        await (dispatch as any)(updateRoutine({ id: dto.id, routineData: minimal }))
+                        await (dispatch as any)(fetchRoutines())
+                        setIsConfigRoutineModalOpen(false)
+                        setEditPrefill(null)
+                        setEditRoutineId(null)
+                    } catch (e) {
+                        console.error('Error al guardar cambios:', e)
+                    }
+                }}
+                onContinueToSelection={(data) => {
+                    setIsConfigRoutineModalOpen(false)
+                    if (editPrefill) {
+                        const fn = afterConfigRef.current
+                        if (typeof fn === 'function') fn(data)
+                        setEditPrefill(null)
+                        setEditRoutineId(null)
+                        afterConfigRef.current = null
+                        return
+                    }
+                    handleContinueToSelection(data)
+                }}
             />
         </PrivateLayout>
     )

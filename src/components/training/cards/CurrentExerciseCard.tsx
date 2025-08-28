@@ -55,20 +55,7 @@ export const CurrentExerciseCard = ({
 
             </div>
 
-            {/* Exercise Details */}
-            <div className="flex justify-between gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                    <LuWeight className="text-quaternary" size={16} />
-                    <span className="text-quaternary text-sm">Peso:</span>
-                    <span className="text-white font-medium">{weight} kg</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <LuClock className="text-quaternary" size={16} />
-                    <span className="text-quaternary text-sm">Descanso:</span>
-                    <span className="text-white font-medium">{restTime}s</span>
-                </div>
-            </div>
+           
 
             {/* Notes */}
             {notes && (

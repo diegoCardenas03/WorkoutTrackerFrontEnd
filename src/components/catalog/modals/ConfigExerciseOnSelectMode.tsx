@@ -193,6 +193,7 @@ export const ConfigExerciseOnSelectMode = ({
               isWidthFull={true}
               lgPaddingLine=""
               mdPaddingLine=""
+              isBlocked={!reps || reps.trim() === ''}
               onlyMobileText
             >
               Agregar ejercicio
