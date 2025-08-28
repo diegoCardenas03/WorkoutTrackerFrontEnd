@@ -1,9 +1,13 @@
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { Button } from "../../components/Button"
-import image from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\mancuerna.jpg"
 import { ExerciseAdminModal } from "../../components/admin/Exercises/ExerciseAdminModal"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
+import { useDispatch, useSelector } from "react-redux"
+import type { RootState } from "../../store"
+import { createExercise, fetchExercises, updateExercise, fetchExerciseById } from "../../store/slices/exerciseSlice"
+import type { EjercicioRequestDTO } from "../../types/ejercicio/EjercicioRequestDTO"
+import { Toast } from "../../components/Toast"
 
 
 interface Exercise {
@@ -16,58 +20,114 @@ interface Exercise {
 }
 
 export const ExercisesAdminView = () => {
+  const dispatch = useDispatch()
+  const { exercises } = useSelector((s: RootState) => s.exercises)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
+  const [editingDetails, setEditingDetails] = useState<any | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
   const [searchTerm, setSearchTerm] = useState("")
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  
+  useEffect(() => {
+    ;(dispatch as any)(fetchExercises())
+  }, [dispatch])
 
-  // Datos de ejemplo
-  const exercises: Exercise[] = [
-    {
-      id: "1",
-      image: image,
-      name: "Peso muerto",
-      description: "Ejercicio para cuádriceps, isquiotibiales y glúteos...",
-      targetZone: "Glúteos, isquiotibiales",
-      status: "active"
-    },
-    {
-      id: "2",
-      image: image,
-      name: "Curl predicador",
-      description: "Ejercicio de aislamiento para bíceps, donde se realiza el flexionar el codo...",
-      targetZone: "Bíceps",
-      status: "active"
-    },
-    {
-      id: "3",
-      image: image,
-      name: "Peso muerto",
-      description: "Ejercicio para cuádriceps, isquiotibiales y glúteos...",
-      targetZone: "Glúteos, isquiotibiales",
-      status: "inactive"
+  const filtered = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+    if (!term) return exercises
+    return exercises.filter((e) =>
+      e.name.toLowerCase().includes(term) || e.description?.toLowerCase().includes(term)
+    )
+  }, [exercises, searchTerm])
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filtered.length / pageSize)), [filtered.length])
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filtered.slice(start, start + pageSize)
+  }, [filtered, currentPage])
+
+  // Clamp current page when filters/data change
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages)
+  }, [totalPages])
+
+  // Reset to page 1 when searching
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
+
+  // Build compact page list with ellipses
+  const pageItems = useMemo(() => {
+    const items: (number | '…')[] = []
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) items.push(i)
+      return items
     }
-  ]
+    const add = (n: number) => items.push(n)
+    add(1)
+    const left = Math.max(2, currentPage - 1)
+    const right = Math.min(totalPages - 1, currentPage + 1)
+    if (left > 2) items.push('…')
+    for (let i = left; i <= right; i++) add(i)
+    if (right < totalPages - 1) items.push('…')
+    add(totalPages)
+    return items
+  }, [currentPage, totalPages])
 
   const handleCreateExercise = () => {
     setEditingExercise(null)
     setIsModalOpen(true)
   }
 
-  const handleEditExercise = (exercise: Exercise) => {
+  const handleEditExercise = async (exercise: Exercise) => {
     setEditingExercise(exercise)
+    setEditingDetails(null)
     setIsModalOpen(true)
+    // Cargar detalles desde backend para videos, instrucciones y músculos
+    try {
+      const res = await (dispatch as any)(fetchExerciseById(Number(exercise.id)))
+      const payload = (res as any).payload
+      setEditingDetails(payload ?? null)
+    } catch {}
   }
 
-  const handleToggleStatus = (exerciseId: string) => {
-    console.log("Toggle status for exercise:", exerciseId)
-    // Aquí iría la lógica para cambiar el estado
-  }
+  // TODO: toggle de estado activo cuando haya endpoint
 
-  const handleSaveExercise = (exerciseData: any) => {
-    console.log("Save exercise:", exerciseData)
-    setIsModalOpen(false)
-    setEditingExercise(null)
+  const handleSaveExercise = async (exerciseData: any) => {
+    const payload: EjercicioRequestDTO = {
+      name: exerciseData.name,
+      description: exerciseData.description,
+      active: exerciseData.active ?? true,
+  tips: exerciseData.tips || undefined,
+      instructions: (exerciseData.instructions ?? []).reduce((acc: Record<number, string>, cur: any, idx: number) => {
+        const text = typeof cur === 'string' ? cur : cur?.text
+        if (text != null && String(text).trim() !== '') acc[idx + 1] = String(text)
+        return acc
+      }, {}),
+  sampleVideos: (exerciseData.videoLinks ?? []).filter((x: string) => !!x && x.trim().length > 0),
+  equipmentIds: (exerciseData.equipmentIds ?? []) as number[],
+      targetMuscleIds: (exerciseData.muscleIds ?? []) as number[],
+    }
+
+    try {
+      if (editingExercise) {
+        await (dispatch as any)(updateExercise({ id: Number(editingExercise.id), data: payload }))
+      } else {
+        await (dispatch as any)(createExercise(payload))
+      }
+      setIsModalOpen(false)
+      setEditingExercise(null)
+  setEditingDetails(null)
+      ;(dispatch as any)(fetchExercises())
+  setToast({ msg: editingExercise ? 'Ejercicio actualizado' : 'Ejercicio creado', type: 'success' })
+  setTimeout(() => setToast(null), 3000)
+    } catch (e) {
+      console.error('Error al guardar ejercicio:', e)
+  setToast({ msg: 'Error al guardar ejercicio', type: 'error' })
+  setTimeout(() => setToast(null), 4000)
+    }
   }
 
   return (
@@ -111,8 +171,7 @@ export const ExercisesAdminView = () => {
           {/* Table */}
           <div className="bg-tertiary rounded-lg border border-white/20 overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-6 gap-4 p-4 border-b border-white/10 bg-itemsCard">
-              <div className="text-quaternary text-sm font-medium">Imagen</div>
+            <div className="grid grid-cols-5 gap-4 p-4 border-b border-white/10 bg-itemsCard">
               <div className="text-quaternary text-sm font-medium">Nombre</div>
               <div className="text-quaternary text-sm font-medium">Descripción</div>
               <div className="text-quaternary text-sm font-medium">Zona a trabajar</div>
@@ -122,17 +181,12 @@ export const ExercisesAdminView = () => {
 
             {/* Table Rows */}
             <div className="divide-y divide-white/10">
-              {exercises.map((exercise) => (
-                <div key={exercise.id} className="grid grid-cols-6 gap-4 p-4 items-center">
-                  {/* Image */}
-                  <div>
-                    <img
-                      src={exercise.image}
-                      alt={exercise.name}
-                      className="w-12 h-12 rounded-lg object-cover border border-white/20"
-                    />
-                  </div>
-
+              {paginated.length === 0 && (
+                <div className="p-6 text-quaternary text-sm">No hay ejercicios para mostrar.</div>
+              )}
+              {paginated.map((exercise) => (
+                <div key={exercise.id} className="grid grid-cols-5 gap-4 p-4 items-center">
+        
                   {/* Name */}
                   <div>
                     <p className="text-white text-sm font-medium">{exercise.name}</p>
@@ -140,34 +194,33 @@ export const ExercisesAdminView = () => {
 
                   {/* Description */}
                   <div>
-                    <p className="text-quaternary text-sm line-clamp-2">
-                      {exercise.description}
-                    </p>
+                    <p className="text-quaternary text-sm line-clamp-2">{exercise.description}</p>
                   </div>
 
                   {/* Target Zone */}
                   <div>
-                    <p className="text-white text-sm">{exercise.targetZone}</p>
+                    <p className="text-white text-sm">{(exercise as any).targetMuscles?.map((m: any) => m.name).join(', ')}</p>
                   </div>
 
                   {/* Status Toggle */}
                   <div>
-                    <button
-                      onClick={() => handleToggleStatus(exercise.id)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${exercise.status === 'active' ? 'bg-green-500' : 'bg-red-500'
-                        }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${exercise.status === 'active' ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                      />
-                    </button>
+                    {/* Toggle placeholder: usar exercise.active del backend cuando se implemente */}
+                    <span className={`px-2 py-1 rounded text-xs border ${ (exercise as any).active ? 'border-green-500 text-green-400' : 'border-red-500 text-red-400' }`}>
+                      {(exercise as any).active ? 'Activo' : 'Inactivo'}
+                    </span>
                   </div>
 
                   {/* Actions */}
                   <div>
                     <button
-                      onClick={() => handleEditExercise(exercise)}
+                      onClick={() => handleEditExercise({
+                        id: String(exercise.id),
+                        image: '',
+                        name: exercise.name,
+                        description: exercise.description,
+                        targetZone: (exercise as any).targetMuscles?.map((m: any) => m.name).join(', ') ?? '',
+                        status: (exercise as any).active ? 'active' : 'inactive',
+                      })}
                       className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
                     >
                       Editar
@@ -189,17 +242,29 @@ export const ExercisesAdminView = () => {
             </button>
 
             <div className="flex items-center gap-2">
-              <button className="w-8 h-8 rounded-lg bg-white text-black text-sm font-medium">
-                1
-              </button>
-              <button className="w-8 h-8 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white text-sm transition-colors">
-                2
-              </button>
+              {pageItems.map((it, idx) =>
+                it === '…' ? (
+                  <span key={`dots-${idx}`} className="w-8 h-8 grid place-items-center text-quaternary">…</span>
+                ) : (
+                  <button
+                    key={it}
+                    onClick={() => setCurrentPage(it as number)}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === it
+                        ? 'bg-white text-black'
+                        : 'bg-tertiary border border-white/20 text-quaternary hover:text-white'
+                    }`}
+                  >
+                    {it}
+                  </button>
+                )
+              )}
             </div>
 
             <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white transition-colors"
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <LuChevronRight size={16} />
             </button>
@@ -212,9 +277,19 @@ export const ExercisesAdminView = () => {
           onClose={() => {
             setIsModalOpen(false)
             setEditingExercise(null)
+            setEditingDetails(null)
           }}
           exercise={editingExercise}
+          exerciseDetails={editingDetails}
+          isLoadingDetails={!!editingExercise && !editingDetails}
           onSave={handleSaveExercise}
+  />
+        <Toast
+          open={!!toast}
+          type={toast?.type}
+          message={toast?.msg || ''}
+          onClose={() => setToast(null)}
+          durationMs={toast?.type === 'error' ? 4000 : 3000}
         />
       </div>
     </AdminLayout>

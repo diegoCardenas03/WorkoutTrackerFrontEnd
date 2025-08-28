@@ -32,6 +32,15 @@ body, html {
     min-height: 100vh;
 }
 
+/* Utility to hide scrollbars */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;    /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;            /* Chrome, Safari and Opera */
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -45,4 +54,13 @@ body, html {
   transition: all 0.2s ease-out;
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* Toast entrance animation */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px) translateX(8px); }
+  to { opacity: 1; transform: translateY(0) translateX(0); }
+}
+.toast-in {
+  animation: toastIn 220ms ease-out both;
 }

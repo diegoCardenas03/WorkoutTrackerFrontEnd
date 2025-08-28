@@ -17,7 +17,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
   }
 
   async getById(id: number): Promise<ResponseType | null> {
-    const response = await fetch(`${this.baseUrl}/${id}`);
+  const response = await fetch(`${this.baseUrl}/${id}?relations=true`);
     if (!response.ok) {
       return null;
     }
@@ -55,9 +55,8 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
       const errorText = await response.text();
       throw new Error(errorText);
     }
-    // const newData = await response.json();
-    // return newData as ResponseType;
-    return "objeto creado" as ResponseType;
+  const newData = await response.json();
+  return newData as ResponseType;
   }
 
   async patch(id: number | string, data: RequestType): Promise<ResponseType> {

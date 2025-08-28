@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk} from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { EjercicioResponseDTO } from '../../types/ejercicio/EjercicioResponseDTO'
 import { EjercicioService } from '../../services/EjercicioService'
+import type { EjercicioRequestDTO } from '../../types/ejercicio/EjercicioRequestDTO'
 
 const ejercicioService = new EjercicioService()
 
@@ -37,6 +38,33 @@ export const fetchExerciseById = createAsyncThunk(
     try {
       const data = await ejercicioService.getById(id)
       return data as EjercicioResponseDTO
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
+    }
+  }
+)
+
+export const createExercise = createAsyncThunk(
+  'exercises/createExercise',
+  async (payload: EjercicioRequestDTO, { rejectWithValue }) => {
+    try {
+      const created = await ejercicioService.post(payload)
+      return created as unknown as EjercicioResponseDTO
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
+    }
+  }
+)
+
+export const updateExercise = createAsyncThunk(
+  'exercises/updateExercise',
+  async (
+    { id, data }: { id: number; data: Partial<EjercicioRequestDTO> },
+    { rejectWithValue }
+  ) => {
+    try {
+      const updated = await ejercicioService.patch(id, data as EjercicioRequestDTO)
+      return updated as unknown as EjercicioResponseDTO
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
     }
@@ -82,6 +110,37 @@ const exerciseSlice = createSlice({
         state.selectedExercise = action.payload
       })
       .addCase(fetchExerciseById.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(createExercise.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(createExercise.fulfilled, (state, action) => {
+        state.loading = false
+        const item = action.payload as EjercicioResponseDTO
+        if (item && typeof item === 'object' && 'id' in item) {
+          state.exercises.push(item)
+        }
+      })
+      .addCase(createExercise.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(updateExercise.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateExercise.fulfilled, (state, action) => {
+        state.loading = false
+        const item = action.payload as EjercicioResponseDTO
+        const idx = state.exercises.findIndex(e => e.id === item.id)
+        if (idx !== -1) {
+          state.exercises[idx] = item
+        }
+      })
+      .addCase(updateExercise.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })
