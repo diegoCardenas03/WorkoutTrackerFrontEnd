@@ -45,9 +45,9 @@ export const PrivateHeader = ({ onToggleSidebar, isSidebarOpen, isMessage }: Pri
 
             {/* Notificacion, Foto perfil, Nombre y Icono de apertura */}
             <div className={`flex items-center justify-center transition-all h-full gap-10`}>
-                <div className="flex items-center justify-center">
+                {/* <div className="flex items-center justify-center">
                     <LuBell className="cursor-pointer hover:text-quaternary transition-colors text-[20px] md:text-[20px] lg:text-[20px] 2xl:text-[24px]" />
-                </div>
+                </div> */}
                 <div className="flex items-center justify-between gap-3 cursor-pointer select-none" onClick={toggleMenu}>
                     <img className="w-[25px] h-[25px] md:w-[1.6em] md:h-[1.6em] lg:w-[1.6em] lg:h-[1.6em] 2xl:w-[1.8em] 2xl:h-[1.8em] cursor-pointer hover:text-quaternary transition-colors" src={fotoPerfil} alt="fotoPerfil" />
                     <p className="font-extrabold hidden md:block lg:block 2xl:block md:text-[11px] lg:text-[11px] 2xl:text-[12px] cursor-pointer hover:text-quaternary transition-colors">GERONIMO</p>

@@ -31,10 +31,7 @@ export const DashBoardView = () => {
             <FeaturedExercisesCard />
           </div>
 
-          {/* Tercera fila - Tip del día ocupa todo el ancho disponible */}
-          <div className="col-span-1 lg:col-span-2">
-            <TipDayCard />
-          </div>
+         
         </div>
       </div>
     </PrivateLayout>

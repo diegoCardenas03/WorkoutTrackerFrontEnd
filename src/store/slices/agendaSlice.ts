@@ -21,8 +21,8 @@ export const fetchAgenda = createAsyncThunk(
   "agenda/fetch",
   async (_: void, { rejectWithValue }) => {
     try {
-      // Basic fetch all; optionally could support range filtering via query
-      const data = await service.getAll();
+      // Temporary: fetch agendas only for user id 1 until auth is implemented
+      const data = await service.getByUser(1);
       return data as AgendaResponseDTO[];
     } catch (e: any) {
       return rejectWithValue(e?.message ?? "Error al cargar agenda");
