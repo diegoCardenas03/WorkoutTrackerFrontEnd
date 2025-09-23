@@ -1,6 +1,7 @@
 import { Button } from "../Button"
 import { FcGoogle } from "react-icons/fc"
-import { LuX } from "react-icons/lu"
+import { LuX, LuEye, LuEyeOff } from "react-icons/lu"
+import { useState } from "react"
 
 interface LoginModalProps {
     onClose?: () => void
@@ -8,6 +9,15 @@ interface LoginModalProps {
 }
 
 export const LoginModal = ({ onClose, onSwitchToSignUp }: LoginModalProps) => {
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
+
+    const handleSubmit = (e?: React.FormEvent) => {
+        e?.preventDefault()
+        // Aquí se debería despachar la acción de login cuando se implemente
+    }
+
     return (
 
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"  onClick={onClose} >
@@ -25,16 +35,15 @@ export const LoginModal = ({ onClose, onSwitchToSignUp }: LoginModalProps) => {
                 </h2>
 
 
-                <form className="flex flex-col gap-4">
-
-
-
+                <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
 
                     <div>
                         <label className="block text-white text-[12px] md:text-sm lg:text-sm mb-2">
                             Correo
                         </label>
                         <input
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             type="email"
                             placeholder="Ingrese su email"
                             className="w-full h-10 md:h-10 lg:h-10 px-4 text-[13px] md:text-[0.8em] lg:text-[0.8em] rounded-lg text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors"
@@ -42,24 +51,25 @@ export const LoginModal = ({ onClose, onSwitchToSignUp }: LoginModalProps) => {
                     </div>
 
 
-                    <div>
+                    <div className="relative">
                         <label className="block text-white text-[12px] md:text-sm lg:text-sm mb-2">
                             Contraseña
                         </label>
                         <input
-                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            type={showPassword ? 'text' : 'password'}
                             placeholder="••••••••••••"
-                            className="w-full h-10 md:h-10 lg:h-10 px-4 text-[13px] md:text-[0.8em] lg:text-[0.8em] rounded-lg text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors"
+                            className="w-full h-10 md:h-10 lg:h-10 px-4 pr-10 text-[13px] md:text-[0.8em] lg:text-[0.8em] rounded-lg text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors"
                         />
+                        <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute right-3 top-[38px]   text-gray-300">
+                          {showPassword ? <LuEyeOff size={18} /> : <LuEye size={18} />}
+                        </button>
                     </div>
-
-
-
-
 
                 </form>
                 <div className="mt-8">
-                    <Button isWhite={true} isWidthFull={true} lgHeight="h-10" >
+                    <Button isWhite={true} isWidthFull={true} lgHeight="h-10" action={handleSubmit}>
                         Continuar
                     </Button>
                 </div>

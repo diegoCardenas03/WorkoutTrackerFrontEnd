@@ -7,10 +7,10 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
 
   async getAll(): Promise<ResponseType[]> {
  
-    const response = await fetch(`${this.baseUrl}?relations=true`, {
-    });
+    const response = await fetch(`${this.baseUrl}?relations=true`, {});
     if (!response.ok) {
-    
+      const text = await response.text().catch(() => null)
+      throw new Error(text || `Error fetching ${this.baseUrl}: ${response.status}`)
     }
     const data = await response.json();
     return data as ResponseType[];

@@ -1,10 +1,14 @@
 import { LuArrowRight, LuMenu, LuX } from "react-icons/lu"
 import { Button } from "./Button"
 import logo from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\Logo.png"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { LoginModal } from "./modals/LoginModal"
 import { SignUpModal } from "./modals/SignUpModal"
 import { useNavigate } from "react-router-dom"
+import { Toast } from "./Toast"
+import { useDispatch, useSelector } from 'react-redux'
+import type { AppDispatch, RootState } from '../store'
+import { clearUserError } from '../store/slices/userSlice'
 
 
 export const Header = () => {
@@ -23,6 +27,34 @@ export const Header = () => {
   const closeModal = () => {
     setModalType(null);
   }
+
+  // Toast handling for user errors (signup/login)
+  const dispatch = useDispatch<AppDispatch>()
+  const { error: userError, currentUser } = useSelector((s: RootState) => s.user)
+
+  const [toast, setToast] = useState<{ open: boolean; type: 'success' | 'error' | 'info'; message: string }>({
+    open: false,
+    type: 'info',
+    message: '',
+  })
+
+  // ref to detect transition of currentUser from null -> non-null
+  const prevUserRef = useRef<any>(null)
+
+  // when userError changes, open error toast
+  useEffect(() => {
+    if (userError) {
+      setToast({ open: true, type: 'error', message: userError })
+    }
+  }, [userError])
+
+  // when currentUser transitions from null to non-null, show success toast
+  useEffect(() => {
+    if (prevUserRef.current == null && currentUser != null) {
+      setToast({ open: true, type: 'success', message: 'Usuario creado correctamente' })
+    }
+    prevUserRef.current = currentUser
+  }, [currentUser])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -77,6 +109,17 @@ export const Header = () => {
           onSwitchToLogin={openLoginModal}  // 
         />
       )}
+      {/* Global toast for auth events (errors / success) */}
+      <Toast
+        open={toast.open}
+        type={toast.type}
+        message={toast.message}
+        onClose={() => {
+          setToast((t) => ({ ...t, open: false }))
+          // only clear slice error when closing an error toast
+          if (toast.type === 'error') dispatch(clearUserError())
+        }}
+      />
     </header>
   )
 }

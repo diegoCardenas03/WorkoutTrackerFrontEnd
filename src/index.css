@@ -64,3 +64,12 @@ body, html {
 .toast-in {
   animation: toastIn 220ms ease-out both;
 }
+
+/* Toast exit animation */
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0) translateX(0); }
+  to { opacity: 0; transform: translateY(8px) translateX(8px); }
+}
+.toast-out {
+  animation: toastOut 220ms ease-in both;
+}

@@ -51,17 +51,28 @@ export const MyRoutinesView = () => {
     // const [routineFormData, setRoutineFormData] = useState(null)
     const dispatch = useDispatch()
     const routinesFromStore: RutinaResponseDTO[] = useSelector((state: any) => state.routines?.routines ?? [])
-    const routinesLoading: boolean = useSelector((state: any) => state.routines?.loading ?? false)
     const categoriesFromStore: { id: number; name: string; active?: boolean }[] = useSelector((state: any) => state.categories?.categories ?? [])
     const navigate = useNavigate()
 
+    // Load routines once when needed
+    const fetchedRoutinesRef = useRef(false)
     useEffect(() => {
-        if (!routinesLoading && routinesFromStore.length === 0) {
+        if (fetchedRoutinesRef.current) return
+        if (routinesFromStore.length === 0) {
+            fetchedRoutinesRef.current = true
             dispatch(fetchRoutines() as any)
         }
-        // fetch categories
-        dispatch(fetchCategories() as any)
-    }, [dispatch, routinesFromStore.length, routinesLoading])
+    }, [dispatch, routinesFromStore.length])
+
+    // Load categories only if not present to avoid repeated calls
+    const fetchedCategoriesRef = useRef(false)
+    useEffect(() => {
+        if (fetchedCategoriesRef.current) return
+        if (!categoriesFromStore || categoriesFromStore.length === 0) {
+            fetchedCategoriesRef.current = true
+            dispatch(fetchCategories() as any)
+        }
+    }, [dispatch, categoriesFromStore?.length])
 
     const handleOpenRoutineModal = (routine: RoutineData) => {
         setSelectedRoutine(routine)

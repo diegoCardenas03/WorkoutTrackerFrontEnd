@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { LuCheck, LuX } from 'react-icons/lu'
 
 type ToastType = 'success' | 'error' | 'info'
@@ -12,17 +12,37 @@ interface ToastProps {
 }
 
 export const Toast = ({ open, type = 'info', message, onClose, durationMs = 3000 }: ToastProps) => {
+  const [visible, setVisible] = useState(open)
+  const [exiting, setExiting] = useState(false)
+
   useEffect(() => {
-    if (!open) return
-    const t = setTimeout(() => {
-      onClose?.()
-    }, durationMs)
-    return () => clearTimeout(t)
+    if (open) {
+      setVisible(true)
+      setExiting(false)
+      const t = setTimeout(() => {
+        // start exit animation
+        setExiting(true)
+        // then call onClose after animation duration
+        setTimeout(() => {
+          setVisible(false)
+          onClose?.()
+        }, 220)
+      }, durationMs)
+      return () => clearTimeout(t)
+    } else {
+      // if open turned false externally, trigger exit animation
+      if (visible) {
+        setExiting(true)
+        setTimeout(() => {
+          setVisible(false)
+        }, 220)
+      }
+    }
   }, [open, durationMs, onClose])
 
-  if (!open) return null
+  if (!visible) return null
 
-  const base = 'fixed right-4 bottom-4 z-[60] max-w-md rounded-xl border px-4 py-3 shadow-lg bg-itemsCard border-white/15 text-white toast-in'
+  const base = `fixed right-4 bottom-4 z-[60] max-w-md rounded-xl border px-4 py-3 shadow-lg bg-itemsCard border-white/15 text-white ${exiting ? 'toast-out' : 'toast-in'}`
 
   const icon = type === 'error' ? (
     <LuX className="text-white" size={16} />
@@ -33,7 +53,7 @@ export const Toast = ({ open, type = 'info', message, onClose, durationMs = 3000
   return (
     <div className={base}>
       <div className="flex items-center gap-3">
-  <div className="shrink-0 w-7 h-7 rounded-full border border-white/30 flex items-center justify-center bg-black/20">
+        <div className="shrink-0 w-7 h-7 rounded-full border border-white/30 flex items-center justify-center bg-black/20">
           {icon}
         </div>
         <div className="text-sm leading-snug">
