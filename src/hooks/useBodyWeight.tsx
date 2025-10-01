@@ -43,6 +43,19 @@ export const useBodyWeight = () => {
     fetchBodyWeights();
   }, [isAuthenticated, auth0Loading]);
 
+  // Escuchar eventos de actualización de peso
+  useEffect(() => {
+    const handleWeightUpdate = () => {
+      fetchBodyWeights();
+    };
+
+    window.addEventListener('bodyWeightUpdated', handleWeightUpdate);
+
+    return () => {
+      window.removeEventListener('bodyWeightUpdated', handleWeightUpdate);
+    };
+  }, [isAuthenticated, auth0Loading]);
+
   const addBodyWeight = async (bodyWeight: number): Promise<boolean> => {
     try {
       const token = await getAccessTokenSilently({
@@ -54,6 +67,10 @@ export const useBodyWeight = () => {
 
       const newWeight = await pesoService.createBodyWeight(token, { bodyWeight });
       setBodyWeights(prev => [...prev, newWeight]);
+      
+      // Emitir evento para actualizar todos los componentes
+      window.dispatchEvent(new Event('bodyWeightUpdated'));
+      
       return true;
     } catch (err: any) {
       console.error("Error al agregar peso:", err);
@@ -79,6 +96,10 @@ export const useBodyWeight = () => {
         newArray[newArray.length - 1] = updatedWeight;
         return newArray;
       });
+      
+      // Emitir evento para actualizar todos los componentes
+      window.dispatchEvent(new Event('bodyWeightUpdated'));
+      
       return true;
     } catch (err: any) {
       console.error("Error al actualizar peso:", err);

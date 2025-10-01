@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { fetchRoutines, updateRoutine } from "../store/slices/routineSlice"
 import { fetchCategories } from "../store/slices/categorySlice"
 import { startRoutineFromDto } from "../store/slices/trainingSlice"
+import { useAuth0 } from "@auth0/auth0-react"
 
 interface RoutineData {
     id: string
@@ -54,19 +55,48 @@ export const MyRoutinesView = () => {
     const routinesLoading: boolean = useSelector((state: any) => state.routines?.loading ?? false)
     const categoriesFromStore: { id: number; name: string; active?: boolean }[] = useSelector((state: any) => state.categories?.categories ?? [])
     const navigate = useNavigate()
+    const { getAccessTokenSilently } = useAuth0()
 
     useEffect(() => {
-        if (!routinesLoading && routinesFromStore.length === 0) {
-            dispatch(fetchRoutines() as any)
+        const loadRoutines = async () => {
+            if (!routinesLoading && routinesFromStore.length === 0) {
+                try {
+                    const token = await getAccessTokenSilently({
+                        authorizationParams: {
+                            audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                            scope: "openid profile email",
+                        },
+                    });
+                    dispatch(fetchRoutines(token) as any)
+                } catch (error) {
+                    console.error("Error al obtener token:", error)
+                }
+            }
         }
-    }, [dispatch, routinesFromStore.length, routinesLoading])
+        loadRoutines()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dispatch])
 
     useEffect(() => {
         // Fetch categories solo una vez al montar el componente
-        if (categoriesFromStore.length === 0) {
-            dispatch(fetchCategories() as any)
+        const loadCategories = async () => {
+            if (categoriesFromStore.length === 0) {
+                try {
+                    const token = await getAccessTokenSilently({
+                        authorizationParams: {
+                            audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                            scope: "openid profile email",
+                        },
+                    });
+                    dispatch(fetchCategories(token) as any)
+                } catch (error) {
+                    console.error("Error al obtener token para categorías:", error)
+                }
+            }
         }
-    }, [dispatch, categoriesFromStore.length])
+        loadCategories()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dispatch])
 
     const handleOpenRoutineModal = (routine: RoutineData) => {
         setSelectedRoutine(routine)
@@ -479,7 +509,13 @@ export const MyRoutinesView = () => {
                     let categoriesList = categoriesFromStore
                     if (!categoriesList || categoriesList.length === 0) {
                         try {
-                            const result: any = await (dispatch as any)(fetchCategories())
+                            const token = await getAccessTokenSilently({
+                                authorizationParams: {
+                                    audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                                    scope: "openid profile email",
+                                },
+                            });
+                            const result: any = await (dispatch as any)(fetchCategories(token))
                             categoriesList = (result?.payload as any[]) ?? categoriesList
                         } catch {
                             // si falla, usamos las existentes
@@ -513,8 +549,14 @@ export const MyRoutinesView = () => {
                         }))
                     }
                     try {
-                        await (dispatch as any)(updateRoutine({ id: dto.id, routineData: minimal }))
-                        await (dispatch as any)(fetchRoutines())
+                        const token = await getAccessTokenSilently({
+                            authorizationParams: {
+                                audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                                scope: "openid profile email",
+                            },
+                        });
+                        await (dispatch as any)(updateRoutine({ token, id: dto.id, routineData: minimal }))
+                        await (dispatch as any)(fetchRoutines(token))
                         setIsConfigRoutineModalOpen(false)
                         setEditPrefill(null)
                         setEditRoutineId(null)

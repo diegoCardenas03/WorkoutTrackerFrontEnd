@@ -29,8 +29,9 @@ const initialState: RoutineState = {
 // Async thunks
 export const fetchRoutines = createAsyncThunk(
   'routines/fetchRoutines',
-  async (_, { rejectWithValue }) => {
+  async (token: string, { rejectWithValue }) => {
     try {
+      rutinaService.setToken(token)
       const data = await rutinaService.getAll()
       return data as RutinaResponseDTO[]
     } catch (error) {
@@ -41,8 +42,9 @@ export const fetchRoutines = createAsyncThunk(
 
 export const fetchRoutineById = createAsyncThunk(
   'routines/fetchRoutineById',
-  async (id: number, { rejectWithValue }) => {
+  async ({ token, id }: { token: string; id: number }, { rejectWithValue }) => {
     try {
+      rutinaService.setToken(token)
       const data = await rutinaService.getById(id)
       return data as RutinaResponseDTO
     } catch (error) {
@@ -53,8 +55,9 @@ export const fetchRoutineById = createAsyncThunk(
 
 export const createRoutine = createAsyncThunk(
   'routines/createRoutine',
-  async (routineData: RutinaRequestDTO, { rejectWithValue }) => {
+  async ({ token, routineData }: { token: string; routineData: RutinaRequestDTO }, { rejectWithValue }) => {
     try {
+      rutinaService.setToken(token)
       const data = await rutinaService.post(routineData)
       return data as RutinaResponseDTO
     } catch (error) {
@@ -65,9 +68,10 @@ export const createRoutine = createAsyncThunk(
 
 export const updateRoutine = createAsyncThunk(
   'routines/updateRoutine',
-  async ({ id, routineData }: { id: number; routineData: RutinaRequestDTO }, { rejectWithValue }) => {
+  async ({ token, id, routineData }: { token: string; id: number; routineData: RutinaRequestDTO }, { rejectWithValue }) => {
     try {
-  const data = await rutinaService.patch(id, routineData as any)
+      rutinaService.setToken(token)
+      const data = await rutinaService.patch(id, routineData as any)
       return data as RutinaResponseDTO
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Error al actualizar rutina')
@@ -77,8 +81,9 @@ export const updateRoutine = createAsyncThunk(
 
 export const deleteRoutine = createAsyncThunk(
   'routines/deleteRoutine',
-  async (id: number, { rejectWithValue }) => {
+  async ({ token, id }: { token: string; id: number }, { rejectWithValue }) => {
     try {
+      rutinaService.setToken(token)
       await rutinaService.delete(id)
       return id
     } catch (error) {

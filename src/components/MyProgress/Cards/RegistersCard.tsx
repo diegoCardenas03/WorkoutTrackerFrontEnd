@@ -107,7 +107,7 @@ export const RegistersCard = () => {
                 <div key={peso.id} className="bg-linksNavbar p-3 rounded-lg flex items-center justify-between">
                   <div>
                     <div className="text-white text-sm font-medium">{peso.bodyWeight.toFixed(1)}kg</div>
-                    <div className="text-quaternary text-xs">{formatDate(peso.id)}</div>
+                    <div className="text-quaternary text-xs">{formatDate(peso.createdAt)}</div>
                   </div>
                   
                   <div className="flex items-center gap-2">

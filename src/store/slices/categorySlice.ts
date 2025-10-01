@@ -14,11 +14,12 @@ const initialState: CategoryState = {
   error: null,
 }
 
-export const fetchCategories = createAsyncThunk<CategoriaResponseDTO[]>(
+export const fetchCategories = createAsyncThunk<CategoriaResponseDTO[], string>(
   'categories/fetchAll',
-  async (_, { rejectWithValue }) => {
+  async (token: string, { rejectWithValue }) => {
     try {
       const service = new CategoriaService()
+      service.setToken(token)
       const data = await service.getAll()
       return data
     } catch (e: any) {
