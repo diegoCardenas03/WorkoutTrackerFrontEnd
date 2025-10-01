@@ -21,6 +21,9 @@ import { ExercisesAdminView } from './views/admin/ExercisesAdminView'
 import { StatsAdminView } from './views/admin/StatsAdminView'
 import { Provider } from 'react-redux'
 import { store } from './store'
+import { Auth0Provider } from '@auth0/auth0-react'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { CallbackView } from './views/CallbackView'
 
 
 
@@ -28,29 +31,44 @@ import { store } from './store'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Provider store={store}>
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<DashBoardView />} />
-          <Route path="/routines" element={<MyRoutinesView />} />
-          <Route path="/calendar" element={<CalendarView />} />
-          <Route path="/catalog" element={<CatalogView />} />
-          <Route path="/progress" element={<MyProgressView />} />
-          <Route path="/community" element={<CommunityView />} />
-          <Route path="/myProfile" element={<MyProfileView />} />
-          <Route path="/training" element={<TrainingView />} />
+    <Auth0Provider
+      domain={import.meta.env.VITE_AUTH0_DOMAIN}
+      clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
+      authorizationParams={{
+        redirect_uri: import.meta.env.VITE_AUTH0_CALLBACK_URL,
+        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        scope: "openid profile email",
+      }}
+    >
+      <Provider store={store}>
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            {/* Rutas públicas */}
+            <Route path='/about' element={<AboutUsView />} />
+            <Route path='/landing' element={<LandingView />} />
+            <Route path='/contact' element={<ContactUsView />} />
+            <Route path='/callback' element={<CallbackView />} />
 
-          <Route path='/about' element={<AboutUsView />} />
-          <Route path='/landing' element={<LandingView />} />
-          <Route path='/contact' element={<ContactUsView />} />
-          <Route path="/admin/profile" element={<MyProfileAdminView />} />
-          <Route path="/admin/employees" element={<EmployeesAdminView />} />
-          <Route path="/admin/members" element={<MembersAdminView />} />
-          <Route path="/admin/exercises" element={<ExercisesAdminView />} />
-          <Route path="/admin/stats" element={<StatsAdminView />} />
-        </Routes>
-      </BrowserRouter>
-    </Provider>
+            {/* Rutas privadas - requieren autenticación */}
+            <Route path="/" element={<ProtectedRoute><DashBoardView /></ProtectedRoute>} />
+            <Route path="/routines" element={<ProtectedRoute><MyRoutinesView /></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
+            <Route path="/catalog" element={<ProtectedRoute><CatalogView /></ProtectedRoute>} />
+            <Route path="/progress" element={<ProtectedRoute><MyProgressView /></ProtectedRoute>} />
+            <Route path="/community" element={<ProtectedRoute><CommunityView /></ProtectedRoute>} />
+            <Route path="/myProfile" element={<ProtectedRoute><MyProfileView /></ProtectedRoute>} />
+            <Route path="/training" element={<ProtectedRoute><TrainingView /></ProtectedRoute>} />
+            
+            {/* Rutas de administración - privadas */}
+            <Route path="/admin/profile" element={<ProtectedRoute><MyProfileAdminView /></ProtectedRoute>} />
+            <Route path="/admin/employees" element={<ProtectedRoute><EmployeesAdminView /></ProtectedRoute>} />
+            <Route path="/admin/members" element={<ProtectedRoute><MembersAdminView /></ProtectedRoute>} />
+            <Route path="/admin/exercises" element={<ProtectedRoute><ExercisesAdminView /></ProtectedRoute>} />
+            <Route path="/admin/stats" element={<ProtectedRoute><StatsAdminView /></ProtectedRoute>} />
+          </Routes>
+        </BrowserRouter>
+      </Provider>
+    </Auth0Provider>
   </StrictMode>,
 )

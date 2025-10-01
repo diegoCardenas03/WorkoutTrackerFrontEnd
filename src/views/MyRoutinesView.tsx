@@ -59,9 +59,14 @@ export const MyRoutinesView = () => {
         if (!routinesLoading && routinesFromStore.length === 0) {
             dispatch(fetchRoutines() as any)
         }
-        // fetch categories
-        dispatch(fetchCategories() as any)
     }, [dispatch, routinesFromStore.length, routinesLoading])
+
+    useEffect(() => {
+        // Fetch categories solo una vez al montar el componente
+        if (categoriesFromStore.length === 0) {
+            dispatch(fetchCategories() as any)
+        }
+    }, [dispatch, categoriesFromStore.length])
 
     const handleOpenRoutineModal = (routine: RoutineData) => {
         setSelectedRoutine(routine)

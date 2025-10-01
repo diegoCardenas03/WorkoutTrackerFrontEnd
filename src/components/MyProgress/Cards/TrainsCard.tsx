@@ -3,7 +3,7 @@ import { LuActivity } from "react-icons/lu"
 
 export const TrainsCard = () => {
   return (
-    <div className="bg-tertiary w-full rounded-lg p-6 2xl:p-10 text-white border border-white/20">
+    <div className="bg-tertiary w-full rounded-lg p-6 2xl:p-10 text-white border border-white/20 min-h-[160px]">
       {/* Header con título y icono */}
       <div className="flex items-center justify-between mb-3">
         <div>

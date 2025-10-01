@@ -2,27 +2,14 @@ import { LuArrowRight, LuMenu, LuX } from "react-icons/lu"
 import { Button } from "./Button"
 import logo from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\Logo.png"
 import { useState } from "react"
-import { LoginModal } from "./modals/LoginModal"
-import { SignUpModal } from "./modals/SignUpModal"
+import { useAuth0 } from "@auth0/auth0-react"
 import { useNavigate } from "react-router-dom"
 
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [modalType, setModalType] = useState<'login' | 'signup' | null>(null);  
   const navigate = useNavigate();
-
-  const openLoginModal = () => {
-    setModalType('login');
-  }
-
-  const openSignUpModal = () => {
-    setModalType('signup');
-  }
-
-  const closeModal = () => {
-    setModalType(null);
-  }
+  const { loginWithRedirect, logout, isAuthenticated, isLoading } = useAuth0();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -40,8 +27,22 @@ export const Header = () => {
         <div className="hidden lg:flex items-center gap-[5em]">
           <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/about')}>Sobre nosotros</div>
           <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/contact')}>Contacto</div>
-          <Button isWhite={false}  action={openLoginModal} >Iniciar Sesion</Button>
-          <Button action={() => navigate('/')} icon={<LuArrowRight />}>Demo Gratis</Button>
+          {isLoading ? (
+            <Button isWhite={false} isBlocked={true}>Cargando...</Button>
+          ) : isAuthenticated ? (
+            <Button isWhite={false} action={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
+              Cerrar Sesión
+            </Button>
+          ) : (
+            <Button isWhite={false} action={() => loginWithRedirect()}>
+              Iniciar Sesión
+            </Button>
+          )}
+          {isAuthenticated ? (
+            <Button action={() => navigate('/')} icon={<LuArrowRight />}>Ir al Dashboard</Button>
+          ) : (
+            <Button action={() => navigate('/')} icon={<LuArrowRight />}>Demo Gratis</Button>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -59,24 +60,22 @@ export const Header = () => {
         <div className="flex flex-col items-start gap-6 py-6 px-6 bg-primary">
           <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors">Sobre nosotros</div>
           <div className="text-quaternary font-medium cursor-pointer hover:text-white transition-colors">Contacto</div>
-          <Button isWhite={false} isWidthFull={true}  action={openLoginModal}>Iniciar Sesion</Button>
-          <Button isWidthFull={true} icon={<LuArrowRight />}>Demo Gratis</Button>
+          {isLoading ? (
+            <Button isWhite={false} isWidthFull={true} isBlocked={true}>Cargando...</Button>
+          ) : isAuthenticated ? (
+            <Button isWhite={false} isWidthFull={true} action={() => logout({ logoutParams: { returnTo: window.location.origin } })}>Cerrar Sesión</Button>
+          ) : (
+            <Button isWhite={false} isWidthFull={true} action={() => loginWithRedirect()}>Iniciar Sesión</Button>
+          )}
+          {isAuthenticated ? (
+            <Button isWidthFull={true} icon={<LuArrowRight />} action={() => navigate('/')}>Ir al Dashboard</Button>
+          ) : (
+            <Button isWidthFull={true} icon={<LuArrowRight />}>Demo Gratis</Button>
+          )}
         </div>
       </div>
 
-       {modalType === 'login' && (
-        <LoginModal 
-          onClose={closeModal} 
-          onSwitchToSignUp={openSignUpModal}  // 
-        />
-      )}
-      
-      {modalType === 'signup' && (
-        <SignUpModal 
-          onClose={closeModal} 
-          onSwitchToLogin={openLoginModal}  // 
-        />
-      )}
+      {/* Eliminados los modales de login y signup, ahora se usa Auth0 Universal Login */}
     </header>
   )
 }

@@ -2,8 +2,12 @@ import { LuArrowRight, LuChartColumn, LuCheck, LuCirclePlay, LuShield, LuUsers, 
 import { Button } from "../components/Button"
 import { Header } from "../components/PublicHeader"
 import { Footer } from "../components/Footer"
+import { useAuth0 } from "@auth0/auth0-react"
+import { useNavigate } from "react-router-dom"
 
 export const LandingView = () => {
+  const { isAuthenticated } = useAuth0();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -21,10 +25,14 @@ export const LandingView = () => {
           </div>
 
           <div className="w-full flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row flex justify-center items-center gap-6">
-
-            <Button icon={<LuArrowRight />}> Comenzar Demo Gratis </Button>
-            <Button isWhite={false} icon={<LuCirclePlay />} iconPosition={false}> Ver Video Demo </Button>
-
+            {isAuthenticated ? (
+              <Button icon={<LuArrowRight />} action={() => navigate('/')}> Ir al Dashboard </Button>
+            ) : (
+              <>
+                <Button icon={<LuArrowRight />}> Comenzar Demo Gratis </Button>
+                <Button isWhite={false} icon={<LuCirclePlay />} iconPosition={false}> Ver Video Demo </Button>
+              </>
+            )}
           </div>
 
           <div className="w-full grid grid-flow-col grid-rows-2 md:flex lg:flex xl:flex 2xl:flex justify-center items-center gap-12 py-8">
@@ -122,7 +130,7 @@ export const LandingView = () => {
                 <li className="flex items-center text-white text-[15px] font-light gap-2.5"><LuCheck color="green" /> Analytics básicos</li>
               </ul>
 
-              <Button isWhite={false} isWidthFull={true}>Comenzar prueba</Button>
+              <Button isWhite={false} isWidthFull={true} isBlocked={isAuthenticated}>Comenzar prueba</Button>
             </div>
 
             <div className="bg-tertiary w-full md:w-[25em] lg:w-[25em] lg:h-[35em] pb-[2em] flex flex-col items-center justify-center rounded-lg shadow-2xl px-8 lg:pt-0 md:pt-0 pt-3">
@@ -140,7 +148,7 @@ export const LandingView = () => {
                 <li className="flex items-center text-white text-[15px] font-light gap-2.5"><LuCheck color="green" /> Multi-ubicación</li>
               </ul>
 
-              <Button isWidthFull={true}>Comenzar prueba</Button>
+              <Button isWidthFull={true} isBlocked={isAuthenticated}>Comenzar prueba</Button>
             </div>
 
             <div className="bg-tertiary w-full md:w-[25em] lg:w-[25em] lg:h-[35em] pb-[2em] flex flex-col items-center justify-center rounded-lg shadow-2xl px-8 lg:pt-0 md:pt-0 pt-3">
@@ -158,7 +166,7 @@ export const LandingView = () => {
                 <li className="flex items-center text-white text-[15px] font-light gap-2.5"><LuCheck color="green" /> Capacitación presencial</li>
               </ul>
 
-              <Button isWhite={false} isWidthFull={true}>Contactar Ventas</Button>
+              <Button isWhite={false} isWidthFull={true} isBlocked={isAuthenticated}>Contactar Ventas</Button>
             </div>
           </div>
 
@@ -175,10 +183,14 @@ export const LandingView = () => {
           </div>
           
           <div className="w-full flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row flex justify-center items-center gap-6">
-
-            <Button icon={<LuArrowRight />} > Solicitar Demo Personalizada </Button>
-            <Button isWhite={false}> Acceder a la Plataforma </Button>
-
+            {isAuthenticated ? (
+              <Button icon={<LuArrowRight />} action={() => navigate('/')}> Ir al Dashboard </Button>
+            ) : (
+              <>
+                <Button icon={<LuArrowRight />} > Solicitar Demo Personalizada </Button>
+                <Button isWhite={false}> Acceder a la Plataforma </Button>
+              </>
+            )}
           </div>
 
           <div className="flex text-[13px] items-center justify-center gap-1 pt-3">

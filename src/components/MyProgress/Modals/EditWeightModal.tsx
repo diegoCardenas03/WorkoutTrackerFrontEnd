@@ -1,28 +1,37 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { IoClose } from "react-icons/io5"
 import { Button } from "../../Button"
 import { LuSave } from "react-icons/lu"
+import { useBodyWeight } from "../../../hooks/useBodyWeight"
 
-interface WeightRegisterModalProps {
+interface EditWeightModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (weight: string) => Promise<void> | void
+  currentWeight: number
 }
 
-export const WeightRegisterModal = ({ isOpen, onClose, onSave }: WeightRegisterModalProps) => {
+export const EditWeightModal = ({ isOpen, onClose, currentWeight }: EditWeightModalProps) => {
   const [weight, setWeight] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const { updateLastBodyWeight, refetch } = useBodyWeight()
+
+  useEffect(() => {
+    if (isOpen && currentWeight) {
+      setWeight(currentWeight.toString())
+    }
+  }, [isOpen, currentWeight])
 
   const handleSave = async () => {
-    const weightValue = parseFloat(weight)
-    if (weight && weightValue > 0) {
+    if (weight && Number(weight) > 0) {
       setIsSaving(true)
       try {
-        await onSave(weight)
-        setWeight("")
-        onClose()
+        const success = await updateLastBodyWeight(Number(weight))
+        if (success) {
+          await refetch()
+          onClose()
+        }
       } catch (error) {
-        console.error('Error al guardar peso:', error)
+        console.error('Error al actualizar peso:', error)
       } finally {
         setIsSaving(false)
       }
@@ -30,7 +39,7 @@ export const WeightRegisterModal = ({ isOpen, onClose, onSave }: WeightRegisterM
   }
 
   const handleCancel = () => {
-    setWeight("")
+    setWeight(currentWeight.toString())
     onClose()
   }
 
@@ -48,7 +57,7 @@ export const WeightRegisterModal = ({ isOpen, onClose, onSave }: WeightRegisterM
       <div className="relative bg-primary rounded-lg w-full max-w-md mx-auto p-6 shadow-2xl border border-white/20">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-white  md:text-xl font-medium">Registrar nuevo peso</h2>
+          <h2 className="text-white  md:text-xl font-medium">Editar último peso</h2>
           <button 
             onClick={onClose}
             className="text-quaternary hover:text-white transition-colors cursor-pointer"
@@ -68,7 +77,6 @@ export const WeightRegisterModal = ({ isOpen, onClose, onSave }: WeightRegisterM
               id="weight"
               type="number"
               step="0.1"
-              min="0.1"
               placeholder="78.5"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
@@ -76,7 +84,7 @@ export const WeightRegisterModal = ({ isOpen, onClose, onSave }: WeightRegisterM
               className="w-full h-12 px-4 bg-itemsCard rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <p className="text-quaternary text-xs mt-2">
-              Se registrará con la fecha actual
+              Solo puedes editar tu último registro de peso
             </p>
           </div>
         </div>
@@ -88,11 +96,11 @@ export const WeightRegisterModal = ({ isOpen, onClose, onSave }: WeightRegisterM
             icon={<LuSave size={16} />}
             iconPosition={false}
             action={handleSave}
-            isBlocked={!weight || parseFloat(weight) <= 0 || isSaving}
+            isBlocked={!weight || isSaving || Number(weight) <= 0}
             mobileText="text-sm"
             lgPaddingLine="lg:px-10"
           >
-            {isSaving ? 'Guardando...' : 'Guardar'}
+            {isSaving ? 'Guardando...' : 'Actualizar'}
           </Button>
           
           <Button

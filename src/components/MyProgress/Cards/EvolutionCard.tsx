@@ -3,9 +3,11 @@ import { Button } from "../../Button"
 import { LuPlus } from "react-icons/lu"
 import { useState } from "react"
 import { WeightRegisterModal } from "../Modals/WeightRegisterModal"
+import { useBodyWeight } from "../../../hooks/useBodyWeight"
 
 export const EvolutionCard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { bodyWeights, isLoading, addBodyWeight, refetch } = useBodyWeight()
 
    const handleOpenModal = () => {
     setIsModalOpen(true)
@@ -15,36 +17,100 @@ export const EvolutionCard = () => {
     setIsModalOpen(false)
   }
 
-  const handleSaveWeight = (weight: string, date: string) => {
-    // Aquí puedes manejar el guardado del peso
-    console.log("Nuevo peso:", weight, "Fecha:", date)
-    // Agregar lógica para actualizar el estado o hacer API call
+  const handleSaveWeight = async (weight: string) => {
+    const success = await addBodyWeight(Number(weight))
+    if (success) {
+      await refetch()
+    }
   }
 
-  const weightData = [
-    { month: "Ene", weight: 83 },
-    { month: "Feb", weight: 81.3 },
-    { month: "Mar", weight: 80 },
-    { month: "Abr", weight: 79.3 },
-    { month: "May", weight: 77.5 },
-    { month: "Jun", weight: 77 }
-  ]
+  // Obtener últimos 6 registros de peso
+  const weightData = bodyWeights
+    .slice(-6) // Últimos 6 registros
+    .map((peso, index) => ({
+      month: `Reg ${index + 1}`,
+      weight: peso.bodyWeight
+    }))
+
+  // Si no hay datos, mostrar mensaje
+  if (isLoading) {
+    return (
+      <>
+        <div className="bg-tertiary rounded-lg p-6 text-white w-full md:h-[36em] border border-white/20 flex items-center justify-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-quaternary"></div>
+        </div>
+        <WeightRegisterModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSaveWeight}
+        />
+      </>
+    )
+  }
+
+  if (weightData.length === 0) {
+    return (
+      <>
+        <div className="bg-tertiary rounded-lg p-6 text-white w-full md:h-[36em] border border-white/20">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <TbTrendingUp className="text-white" size={20} />
+              <h3 className="text-white text-[15px] md:text-[1.2em] 2xl:text-[1.5em] font-medium">Evolución del peso</h3>
+            </div>
+            <Button 
+              isWhite={true} 
+              paddingLine="px-2"
+              mdHeight="h-8"
+              lgHeight="h-10"
+              mobileHeight="h-8"
+              mobileText="text-[11px]"
+              iconPosition={false}
+              icon={<LuPlus className="text-[12px]"/>}
+              action={handleOpenModal}
+            >
+            Registrar peso
+            </Button>
+          </div>
+          <div className="flex items-center justify-center h-[20em]">
+            <div className="text-center">
+              <p className="text-white/60 text-lg mb-2">Sin registros de peso</p>
+              <p className="text-quaternary text-sm">Registra tu primer peso para ver tu evolución</p>
+            </div>
+          </div>
+        </div>
+        <WeightRegisterModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSaveWeight}
+        />
+      </>
+    )
+  }
 
   // Calcular posiciones basadas en datos reales
   const minWeight = Math.min(...weightData.map(d => d.weight))
   const maxWeight = Math.max(...weightData.map(d => d.weight))
-  const weightRange = maxWeight - minWeight
+  // Si solo hay un registro, usar un rango artificial para evitar división por 0
+  const weightRange = maxWeight - minWeight || 10
   
   const chartHeight = 200
   const chartWidth = 600
   const padding = { top: 20, right: 40, bottom: 40, left: 40 }
   
   const getYPosition = (weight: number) => {
+    if (weightRange === 10 && maxWeight === minWeight) {
+      // Si solo hay un peso, centrarlo en el gráfico
+      return chartHeight / 2
+    }
     const ratio = (maxWeight - weight) / weightRange
     return ratio * (chartHeight - padding.top - padding.bottom) + padding.top
   }
 
   const getXPosition = (index: number) => {
+    if (weightData.length === 1) {
+      // Si solo hay un registro, centrarlo horizontalmente
+      return chartWidth / 2
+    }
     return (index / (weightData.length - 1)) * (chartWidth - padding.left - padding.right) + padding.left
   }
 
