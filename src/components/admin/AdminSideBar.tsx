@@ -1,19 +1,25 @@
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { LuUsers, LuDumbbell, LuUserCog, LuChartNoAxesCombined, LuLogOut } from "react-icons/lu"
+import { LuUsers, LuDumbbell, LuUserCog, LuLogOut, LuBicepsFlexed, LuBoxes, LuWrench } from "react-icons/lu"
 import logo from "../../assets/Logo.png"
+import { useAuth0 } from "@auth0/auth0-react"
 
 export const AdminSideBar = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const { logout } = useAuth0();
+
 
   const menuItems = [
     { id: "profile", label: "Mi perfil", icon: LuUserCog, path: "/admin/profile" },
     { id: "employees", label: "Empleados", icon: LuUsers, path: "/admin/employees" },
     { id: "members", label: "Usuarios", icon: LuUsers, path: "/admin/members" },
     { id: "exercises", label: "Ejercicios", icon: LuDumbbell, path: "/admin/exercises" },
-    { id: "statistics", label: "Estadísticas", icon: LuChartNoAxesCombined, path: "/admin/stats" }
+    { id: "muscles", label: "Músculos", icon: LuBicepsFlexed, path: "/admin/muscles" },
+    { id: "muscle-zones", label: "Zonas Musculares", icon: LuBoxes, path: "/admin/muscle-zones" },
+    { id: "equipment", label: "Equipamiento", icon: LuWrench, path: "/admin/equipment" },
+    // { id: "statistics", label: "Estadísticas", icon: LuChartNoAxesCombined, path: "/admin/stats" }
   ]
 
   const handleNavigation = (path: string) => {
@@ -21,10 +27,8 @@ export const AdminSideBar = () => {
   }
 
   const handleLogout = () => {
-    // Lógica de logout
-    console.log("Cerrar sesión")
-    navigate("/landing")
-  }
+        logout({ logoutParams: { returnTo: window.location.origin } });
+    };
 
   const isActiveRoute = (path: string) => {
     return location.pathname === path

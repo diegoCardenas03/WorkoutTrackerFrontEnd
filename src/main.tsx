@@ -5,7 +5,6 @@ import { MyRoutinesView } from './views/MyRoutinesView'
 import { CommunityView } from './views/CommunityView'
 import { CatalogView } from './views/CatalogView'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
-import { DashBoardView } from './views/DashBoardView'
 import { CalendarView } from './views/CalendarView'
 import { MyProgressView } from './views/MyProgressView'
 import { MyProfileView } from './views/MyProfileView'
@@ -18,11 +17,14 @@ import { MyProfileAdminView } from './views/admin/MyProfileAdminView'
 import { EmployeesAdminView } from './views/admin/EmployeesAdminView'
 import { MembersAdminView } from './views/admin/MembersAdminView'
 import { ExercisesAdminView } from './views/admin/ExercisesAdminView'
-import { StatsAdminView } from './views/admin/StatsAdminView'
+import { MusclesAdminView } from './views/admin/MusclesAdminView'
+import { MuscleZonesAdminView } from './views/admin/MuscleZonesAdminView'
+import { EquipmentAdminView } from './views/admin/EquipmentAdminView'
 import { Provider } from 'react-redux'
 import { store } from './store'
 import { Auth0Provider } from '@auth0/auth0-react'
 import { RoleProtectedRoute } from './components/RoleProtectedRoute'
+import { RootRedirect } from './components/RootRedirect'
 import { CallbackView } from './views/CallbackView'
 
 
@@ -65,7 +67,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path='/callback' element={<CallbackView />} />
 
             {/* Rutas de usuario - solo para rol USUARIO */}
-            <Route path="/" element={<RoleProtectedRoute allowedRoles={['USUARIO']}><DashBoardView /></RoleProtectedRoute>} />
+            <Route path="/" element={<RootRedirect />} />
             <Route path="/routines" element={<RoleProtectedRoute allowedRoles={['USUARIO']}><MyRoutinesView /></RoleProtectedRoute>} />
             <Route path="/calendar" element={<RoleProtectedRoute allowedRoles={['USUARIO']}><CalendarView /></RoleProtectedRoute>} />
             <Route path="/catalog" element={<RoleProtectedRoute allowedRoles={['USUARIO']}><CatalogView /></RoleProtectedRoute>} />
@@ -75,11 +77,13 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/training" element={<RoleProtectedRoute allowedRoles={['USUARIO']}><TrainingView /></RoleProtectedRoute>} />
             
             {/* Rutas de administración - solo para rol ADMIN */}
-            <Route path="/admin/profile" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><MyProfileAdminView /></RoleProtectedRoute>} />
-            <Route path="/admin/employees" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><EmployeesAdminView /></RoleProtectedRoute>} />
-            <Route path="/admin/members" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><MembersAdminView /></RoleProtectedRoute>} />
-            <Route path="/admin/exercises" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><ExercisesAdminView /></RoleProtectedRoute>} />
-            <Route path="/admin/stats" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><StatsAdminView /></RoleProtectedRoute>} />
+            <Route path="/admin/profile" element={<RoleProtectedRoute allowedRoles={['ROLE_ADMIN']}><MyProfileAdminView /></RoleProtectedRoute>} />
+            <Route path="/admin/employees" element={<RoleProtectedRoute allowedRoles={['ROLE_ADMIN']}><EmployeesAdminView /></RoleProtectedRoute>} />
+            <Route path="/admin/members" element={<RoleProtectedRoute allowedRoles={['ROLE_ADMIN']}><MembersAdminView /></RoleProtectedRoute>} />
+            <Route path="/admin/exercises" element={<RoleProtectedRoute allowedRoles={['ROLE_ADMIN']}><ExercisesAdminView /></RoleProtectedRoute>} />
+            <Route path="/admin/muscles" element={<RoleProtectedRoute allowedRoles={['ROLE_ADMIN']}><MusclesAdminView /></RoleProtectedRoute>} />
+            <Route path="/admin/muscle-zones" element={<RoleProtectedRoute allowedRoles={['ROLE_ADMIN']}><MuscleZonesAdminView /></RoleProtectedRoute>} />
+            <Route path="/admin/equipment" element={<RoleProtectedRoute allowedRoles={['ROLE_ADMIN']}><EquipmentAdminView /></RoleProtectedRoute>} />
             
             {/* Ruta catch-all: redirige cualquier ruta inexistente al dashboard */}
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,6 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react";
 
-export type UserRole = 'USUARIO' | 'ADMIN' | 'EMPLEADO';
+export type UserRole = 'USUARIO' | 'ROLE_ADMIN' | 'EMPLEADO';
 
 const VITE_AUTH0_AUDIENCE = import.meta.env.VITE_AUTH0_AUDIENCE;
 
@@ -28,7 +28,7 @@ export const useUserRole = () => {
     return allowedRoles.some(role => roles.includes(role));
   };
 
-  const isAdmin = hasRole('ADMIN');
+  const isAdmin = hasRole('ROLE_ADMIN');
   const isEmployee = hasRole('EMPLEADO');
   const isUser = hasRole('USUARIO');
 

@@ -2,48 +2,74 @@
 @import "tailwindcss";
 
 @theme {
-    --color-primary: #101112;
-    --color-secondary: #18191B;
-    --color-tertiary: #1A1B1E;
-    --color-quaternary: #AFAFAF;
-    --color-navbar: #161718;
-    --color-linksNavbar: #212325;
-    --color-itemsCard: #2A2B2F;
-    --color-iconUser: #666666;
-    --color-bgbar: #363636;
-    --font-primary: "Open Sans", sans-serif;
-    --font-weight-light: 300;
-    --font-weight-normal: 400;
-    --font-weight-medium: 500;
-    --font-weight-semibold: 600;
-    --font-weight-bold: 700;
-    --font-weight-extrabold: 800;
+  --color-primary: #101112;
+  --color-secondary: #18191B;
+  --color-tertiary: #1A1B1E;
+  --color-quaternary: #AFAFAF;
+  --color-navbar: #161718;
+  --color-linksNavbar: #212325;
+  --color-itemsCard: #2A2B2F;
+  --color-iconUser: #666666;
+  --color-bgbar: #363636;
+  --font-primary: "Open Sans", sans-serif;
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
 }
 
-body, html {
-    margin: 0;
-    padding: 0;
-    background-color: #101112;
-    font-family: 'Open Sans', sans-serif;
+* {
+  -ms-overflow-style: none;
+  /* IE y Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari y Opera */
+}
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+  background-color: #101112;
+  font-family: 'Open Sans', sans-serif;
 }
 
 #root {
-    width: 100%;
-    min-height: 100vh;
+  width: 100%;
+  min-height: 100vh;
 }
 
 /* Utility to hide scrollbars */
-.no-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none;    /* Firefox */
+.no-scrollbar,
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
-.no-scrollbar::-webkit-scrollbar {
-  display: none;            /* Chrome, Safari and Opera */
+
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .menu-appear {
@@ -58,9 +84,17 @@ body, html {
 
 /* Toast entrance animation */
 @keyframes toastIn {
-  from { opacity: 0; transform: translateY(8px) translateX(8px); }
-  to { opacity: 1; transform: translateY(0) translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px) translateX(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
 }
+
 .toast-in {
   animation: toastIn 220ms ease-out both;
 }

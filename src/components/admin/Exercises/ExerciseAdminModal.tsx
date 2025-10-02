@@ -7,6 +7,7 @@ import type { RootState } from "../../../store"
 import { fetchMuscles } from "../../../store/slices/muscleSlice"
 import type { EjercicioResponseDTO } from "../../../types/ejercicio/EjercicioResponseDTO"
 import { fetchEquipments } from "../../../store/slices/equipmentSlice"
+import { useAuth0 } from "@auth0/auth0-react"
 
 interface Exercise {
   id: string
@@ -35,6 +36,7 @@ export const ExerciseAdminModal = ({
   onSave
 }: ExerciseAdminModalProps) => {
   const dispatch = useDispatch()
+  const { getAccessTokenSilently } = useAuth0()
   const { muscles } = useSelector((s: RootState) => s.muscles)
   const { equipments } = useSelector((s: RootState) => s.equipments)
   const [formData, setFormData] = useState({
@@ -58,9 +60,22 @@ export const ExerciseAdminModal = ({
   const isEditing = !!exercise
 
   useEffect(() => {
-    ;(dispatch as any)(fetchMuscles());
-    ;(dispatch as any)(fetchEquipments());
-  }, [dispatch])
+    const loadData = async () => {
+      try {
+        const token = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+            scope: "openid profile email",
+          },
+        })
+        ;(dispatch as any)(fetchMuscles(token));
+        ;(dispatch as any)(fetchEquipments(token));
+      } catch (error) {
+        console.error('Error loading data:', error)
+      }
+    }
+    loadData()
+  }, [dispatch, getAccessTokenSilently])
 
   const muscleOptions = useMemo(() => muscles.map(m => ({ id: m.id, name: m.name })), [muscles])
   const equipmentOptions = useMemo(() => equipments.map(e => ({ id: e.id, name: e.name })), [equipments])

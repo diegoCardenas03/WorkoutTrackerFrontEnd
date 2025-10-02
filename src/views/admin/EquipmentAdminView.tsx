@@ -1,37 +1,38 @@
 import { useEffect, useMemo, useState } from "react"
-import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight } from "react-icons/lu"
+import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight, LuTrash2 } from "react-icons/lu"
 import { Button } from "../../components/Button"
-import { ExerciseAdminModal } from "../../components/admin/Exercises/ExerciseAdminModal"
+import { EquipmentAdminModal } from "../../components/admin/Equipment/EquipmentAdminModal"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../../store"
-import { createExercise, fetchExercises, updateExercise, fetchExerciseById } from "../../store/slices/exerciseSlice"
-import type { EjercicioRequestDTO } from "../../types/ejercicio/EjercicioRequestDTO"
+import { 
+  fetchEquipments, 
+  createEquipment, 
+  toggleEquipmentActive,
+  hardDeleteEquipment 
+} from "../../store/slices/equipmentSlice"
+import type { EquipamientoRequestDTO } from "../../types/equipamiento/EquipamientoRequestDTO"
 import { Toast } from "../../components/Toast"
 import { useAuth0 } from "@auth0/auth0-react"
 
-
-interface Exercise {
+interface Equipment {
   id: string
-  image: string
   name: string
-  description: string
-  targetZone: string
-  status: 'active' | 'inactive'
+  active: boolean
 }
 
-export const ExercisesAdminView = () => {
+export const EquipmentAdminView = () => {
   const dispatch = useDispatch()
   const { getAccessTokenSilently } = useAuth0()
-  const { exercises } = useSelector((s: RootState) => s.exercises)
+  const { equipments } = useSelector((s: RootState) => s.equipments)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
-  const [editingDetails, setEditingDetails] = useState<any | null>(null)
+  const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 10
   const [searchTerm, setSearchTerm] = useState("")
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
-  
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -41,9 +42,9 @@ export const ExercisesAdminView = () => {
             scope: "openid profile email",
           },
         })
-        ;(dispatch as any)(fetchExercises(token))
+        ;(dispatch as any)(fetchEquipments(token))
       } catch (error) {
-        console.error('Error loading exercises:', error)
+        console.error('Error loading data:', error)
       }
     }
     loadData()
@@ -51,11 +52,9 @@ export const ExercisesAdminView = () => {
 
   const filtered = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
-    if (!term) return exercises
-    return exercises.filter((e) =>
-      e.name.toLowerCase().includes(term) || e.description?.toLowerCase().includes(term)
-    )
-  }, [exercises, searchTerm])
+    if (!term) return equipments
+    return equipments.filter((e) => e.name.toLowerCase().includes(term))
+  }, [equipments, searchTerm])
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(filtered.length / pageSize)), [filtered.length])
   const paginated = useMemo(() => {
@@ -63,17 +62,14 @@ export const ExercisesAdminView = () => {
     return filtered.slice(start, start + pageSize)
   }, [filtered, currentPage])
 
-  // Clamp current page when filters/data change
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages)
   }, [totalPages])
 
-  // Reset to page 1 when searching
   useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm])
 
-  // Build compact page list with ellipses
   const pageItems = useMemo(() => {
     const items: (number | '…')[] = []
     if (totalPages <= 5) {
@@ -91,39 +87,66 @@ export const ExercisesAdminView = () => {
     return items
   }, [currentPage, totalPages])
 
-  const handleCreateExercise = () => {
-    setEditingExercise(null)
+  const handleCreateEquipment = () => {
+    setEditingEquipment(null)
     setIsModalOpen(true)
   }
 
-  const handleEditExercise = async (exercise: Exercise) => {
-    setEditingExercise(exercise)
-    setEditingDetails(null)
+  const handleEditEquipment = (equipment: Equipment) => {
+    setEditingEquipment(equipment)
     setIsModalOpen(true)
-    // Cargar detalles desde backend para videos, instrucciones y músculos
+  }
+
+  const handleToggleActive = async (id: number, currentStatus: boolean) => {
     try {
-      const res = await (dispatch as any)(fetchExerciseById(Number(exercise.id)))
-      const payload = (res as any).payload
-      setEditingDetails(payload ?? null)
-    } catch {}
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+          scope: "openid profile email",
+        },
+      })
+      await (dispatch as any)(toggleEquipmentActive({ token, id }))
+      setToast({ 
+        msg: `Equipamiento ${currentStatus ? 'desactivado' : 'activado'} exitosamente`, 
+        type: 'success' 
+      })
+      setTimeout(() => setToast(null), 3000)
+    } catch (error) {
+      console.error('Error toggling equipment status:', error)
+      setToast({ msg: 'Error al cambiar el estado del equipamiento', type: 'error' })
+      setTimeout(() => setToast(null), 4000)
+    }
   }
 
-  // TODO: toggle de estado activo cuando haya endpoint
+  const handleDeleteEquipment = async (id: number) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+          scope: "openid profile email",
+        },
+      })
+      
+      const result = await (dispatch as any)(hardDeleteEquipment({ token, id }))
+      
+      if (result.type.endsWith('/rejected')) {
+        throw new Error(result.payload || 'Error al eliminar equipamiento')
+      }
+      
+      setToast({ msg: 'Equipamiento eliminado permanentemente', type: 'success' })
+      setTimeout(() => setToast(null), 3000)
+      setShowDeleteConfirm(null)
+    } catch (error) {
+      console.error('Error deleting equipment:', error)
+      setToast({ msg: 'Error al eliminar equipamiento', type: 'error' })
+      setTimeout(() => setToast(null), 4000)
+    }
+  }
 
-  const handleSaveExercise = async (exerciseData: any) => {
-    const payload: EjercicioRequestDTO = {
-      name: exerciseData.name,
-      description: exerciseData.description,
-      active: exerciseData.active ?? true,
-  tips: exerciseData.tips || undefined,
-      instructions: (exerciseData.instructions ?? []).reduce((acc: Record<number, string>, cur: any, idx: number) => {
-        const text = typeof cur === 'string' ? cur : cur?.text
-        if (text != null && String(text).trim() !== '') acc[idx + 1] = String(text)
-        return acc
-      }, {}),
-  sampleVideos: (exerciseData.videoLinks ?? []).filter((x: string) => !!x && x.trim().length > 0),
-  equipmentIds: (exerciseData.equipmentIds ?? []) as number[],
-      targetMuscleIds: (exerciseData.muscleIds ?? []) as number[],
+  const handleSaveEquipment = async (equipmentData: { name: string; active: boolean }) => {
+    const payload: EquipamientoRequestDTO = {
+      name: equipmentData.name,
+      active: equipmentData.active,
     }
 
     try {
@@ -133,39 +156,35 @@ export const ExercisesAdminView = () => {
           scope: "openid profile email",
         },
       })
-      
-      console.log('🔑 [ExercisesAdminView] Token obtenido');
-      
-      let result;
-      if (editingExercise) {
-        console.log('📝 [ExercisesAdminView] Actualizando ejercicio...');
-        result = await (dispatch as any)(updateExercise({ token, id: Number(editingExercise.id), data: payload }))
+
+      console.log('🔑 [EquipmentAdminView] Token obtenido');
+
+      if (editingEquipment) {
+        // TODO: Implementar update cuando esté disponible en el backend
+        setToast({ msg: 'La edición de equipamiento estará disponible próximamente', type: 'error' })
+        setTimeout(() => setToast(null), 4000)
+        return;
       } else {
-        console.log('🆕 [ExercisesAdminView] Creando ejercicio...');
-        result = await (dispatch as any)(createExercise({ token, data: payload }))
+        console.log('🚀 [EquipmentAdminView] Llamando a createEquipment...');
+        const result = await (dispatch as any)(createEquipment({ token, data: payload }))
+        
+        if (result.type.endsWith('/rejected')) {
+          console.error('❌ [EquipmentAdminView] Acción rechazada:', result);
+          throw new Error(result.payload || 'Error al crear equipamiento');
+        }
+        
+        console.log('✅ [EquipmentAdminView] Equipamiento creado exitosamente');
+        setToast({ msg: 'Equipamiento creado exitosamente', type: 'success' })
+        setTimeout(() => setToast(null), 3000)
       }
-      
-      // Verificar si la acción fue rechazada
-      if (result.type.endsWith('/rejected')) {
-        console.error('❌ [ExercisesAdminView] Acción rechazada:', result);
-        throw new Error(result.payload || 'Error al guardar ejercicio');
-      }
-      
-      console.log('✅ [ExercisesAdminView] Ejercicio guardado exitosamente');
       
       setIsModalOpen(false)
-      setEditingExercise(null)
-      setEditingDetails(null)
-      
-      // Recargar ejercicios
-      ;(dispatch as any)(fetchExercises(token))
-      
-      setToast({ msg: editingExercise ? 'Ejercicio actualizado exitosamente' : 'Ejercicio creado exitosamente', type: 'success' })
-      setTimeout(() => setToast(null), 3000)
+      setEditingEquipment(null)
+      ;(dispatch as any)(fetchEquipments(token))
     } catch (e: any) {
-      console.error('❌ [ExercisesAdminView] Error al guardar ejercicio:', e)
+      console.error('❌ [EquipmentAdminView] Error al guardar equipamiento:', e)
       
-      let errorMessage = 'Error al guardar ejercicio';
+      let errorMessage = 'Error al guardar equipamiento';
       if (e?.message?.includes('403') || e?.message?.includes('Forbidden')) {
         errorMessage = 'No tienes permisos de administrador. Verifica tu rol en Auth0.';
       } else if (e?.message?.includes('401') || e?.message?.includes('Unauthorized')) {
@@ -186,17 +205,17 @@ export const ExercisesAdminView = () => {
         <div className="bg-tertiary border-b border-white/10 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-white text-2xl font-semibold mb-2">Gestionar Ejercicios</h1>
-              <p className="text-quaternary text-sm">Administra la biblioteca de ejercicios</p>
+              <h1 className="text-white text-2xl font-semibold mb-2">Gestionar Equipamiento</h1>
+              <p className="text-quaternary text-sm">Administra el equipamiento disponible para ejercicios</p>
             </div>
 
             <Button
               icon={<LuPlus size={16} />}
               iconPosition={false}
               isWhite={true}
-              action={handleCreateExercise}
+              action={handleCreateEquipment}
             >
-              Crear Ejercicio
+              Crear Equipamiento
             </Button>
           </div>
         </div>
@@ -209,7 +228,7 @@ export const ExercisesAdminView = () => {
               <LuSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-quaternary" size={20} />
               <input
                 type="text"
-                placeholder="Buscar ejercicio..."
+                placeholder="Buscar equipamiento..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-tertiary border border-white/20 rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40"
@@ -220,10 +239,8 @@ export const ExercisesAdminView = () => {
           {/* Table */}
           <div className="bg-tertiary rounded-lg border border-white/20 overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-5 gap-4 p-4 border-b border-white/10 bg-itemsCard">
-              <div className="text-quaternary text-sm font-medium">Nombre</div>
-              <div className="text-quaternary text-sm font-medium">Descripción</div>
-              <div className="text-quaternary text-sm font-medium">Zona a trabajar</div>
+            <div className="grid grid-cols-4 gap-4 p-4 border-b border-white/10 bg-itemsCard">
+              <div className="text-quaternary text-sm font-medium col-span-2">Nombre</div>
               <div className="text-quaternary text-sm font-medium">Estado</div>
               <div className="text-quaternary text-sm font-medium">Acciones</div>
             </div>
@@ -231,49 +248,66 @@ export const ExercisesAdminView = () => {
             {/* Table Rows */}
             <div className="divide-y divide-white/10">
               {paginated.length === 0 && (
-                <div className="p-6 text-quaternary text-sm">No hay ejercicios para mostrar.</div>
+                <div className="p-6 text-quaternary text-sm">No hay equipamiento para mostrar.</div>
               )}
-              {paginated.map((exercise) => (
-                <div key={exercise.id} className="grid grid-cols-5 gap-4 p-4 items-center">
-        
+              {paginated.map((equipment) => (
+                <div key={equipment.id} className="grid grid-cols-4 gap-4 p-4 items-center">
                   {/* Name */}
-                  <div>
-                    <p className="text-white text-sm font-medium">{exercise.name}</p>
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <p className="text-quaternary text-sm line-clamp-2">{exercise.description}</p>
-                  </div>
-
-                  {/* Target Zone */}
-                  <div>
-                    <p className="text-white text-sm">{(exercise as any).targetMuscles?.map((m: any) => m.name).join(', ')}</p>
+                  <div className="col-span-2">
+                    <p className="text-white text-sm font-medium">{equipment.name}</p>
                   </div>
 
                   {/* Status Toggle */}
                   <div>
-                    {/* Toggle placeholder: usar exercise.active del backend cuando se implemente */}
-                    <span className={`px-2 py-1 rounded text-xs border ${ (exercise as any).active ? 'border-green-500 text-green-400' : 'border-red-500 text-red-400' }`}>
-                      {(exercise as any).active ? 'Activo' : 'Inactivo'}
-                    </span>
+                    <button
+                      onClick={() => handleToggleActive(equipment.id, equipment.active)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                        equipment.active
+                          ? 'border-green-500 text-green-400 hover:bg-green-500/10'
+                          : 'border-red-500 text-red-400 hover:bg-red-500/10'
+                      }`}
+                    >
+                      {equipment.active ? 'Activo' : 'Inactivo'}
+                    </button>
                   </div>
 
                   {/* Actions */}
-                  <div>
+                  <div className="flex items-center gap-3">
                     <button
-                      onClick={() => handleEditExercise({
-                        id: String(exercise.id),
-                        image: '',
-                        name: exercise.name,
-                        description: exercise.description,
-                        targetZone: (exercise as any).targetMuscles?.map((m: any) => m.name).join(', ') ?? '',
-                        status: (exercise as any).active ? 'active' : 'inactive',
+                      onClick={() => handleEditEquipment({
+                        id: String(equipment.id),
+                        name: equipment.name,
+                        active: equipment.active,
                       })}
                       className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
                     >
                       Editar
                     </button>
+                    
+                    {showDeleteConfirm === equipment.id ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleDeleteEquipment(equipment.id)}
+                          className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors"
+                        >
+                          Confirmar
+                        </button>
+                        <button
+                          onClick={() => setShowDeleteConfirm(null)}
+                          className="text-quaternary hover:text-white text-xs font-medium transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setShowDeleteConfirm(equipment.id)}
+                        className="text-red-400 hover:text-red-300 transition-colors"
+                        title="Eliminar permanentemente"
+                      >
+                        <LuTrash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -321,18 +355,16 @@ export const ExercisesAdminView = () => {
         </div>
 
         {/* Modal */}
-        <ExerciseAdminModal
+        <EquipmentAdminModal
           isOpen={isModalOpen}
           onClose={() => {
             setIsModalOpen(false)
-            setEditingExercise(null)
-            setEditingDetails(null)
+            setEditingEquipment(null)
           }}
-          exercise={editingExercise}
-          exerciseDetails={editingDetails}
-          isLoadingDetails={!!editingExercise && !editingDetails}
-          onSave={handleSaveExercise}
-  />
+          equipment={editingEquipment}
+          onSave={handleSaveEquipment}
+        />
+        
         <Toast
           open={!!toast}
           type={toast?.type}

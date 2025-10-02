@@ -36,23 +36,48 @@ export const CallbackView = () => {
           let userData;
           let userWasCreated = false;
           
+          console.log('📋 [CallbackView] Verificando si usuario ya existe en backend...');
           try {
             userData = await usuarioService.getCurrentUser(token);
-            console.log('Usuario existente encontrado:', userData);
+            
+            console.log('✅ [CallbackView] Usuario YA EXISTE en backend:', userData);
           } catch (error) {
             // Usuario no existe, crear uno nuevo
-            console.log('Usuario no existe, procediendo a registrar...');
+            console.log('❌ [CallbackView] Usuario NO EXISTE en backend, procediendo a registrar...');
+            console.log('🚀 [CallbackView] Llamando a usuarioService.signupUser()...');
             userData = await usuarioService.signupUser(token);
             userWasCreated = true;
-            console.log('Usuario registrado exitosamente:', userData);
+            console.log('✅ [CallbackView] Usuario CREADO exitosamente:', userData);
+            console.log('📊 [CallbackView] userWasCreated =', userWasCreated);
+
+            // IMPORTANTE: Cuando se crea un usuario nuevo, Auth0 necesita tiempo para asignar roles
+            // Esperamos un momento y luego forzamos la renovación del token para obtener los roles
+            console.log('⏱️ [CallbackView] Usuario NUEVO creado - esperando 2s para que Auth0 asigne roles...');
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2 segundos
+
+            // Forzar renovación del token sin caché para obtener los claims con roles
+            console.log('🔄 [CallbackView] Renovando token con cacheMode: off para obtener roles actualizados...');
+            const refreshedToken = await getAccessTokenSilently({
+              authorizationParams: {
+                audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                scope: "openid profile email",
+              },
+              cacheMode: 'off', // No usar caché, forzar renovación
+            });
+            console.log('✅ [CallbackView] Token renovado exitosamente');
+            console.log('🔍 [CallbackView] Nuevo token obtenido (primeros 50 chars):', refreshedToken.substring(0, 50) + '...');
           }
 
           // Si es un usuario nuevo y no tiene name (username), mostrar modal
+          console.log('🔍 [CallbackView] Verificando si mostrar modal de username...');
+          console.log('📊 [CallbackView] userWasCreated:', userWasCreated, '| userData.name:', userData.name);
           if (userWasCreated && !userData.name) {
+            console.log('📝 [CallbackView] Mostrando modal de username para usuario nuevo');
             setShowUsernameModal(true);
           } else {
             // Si no es nuevo o ya tiene name, ir al dashboard
-            console.log("✅ Proceso completado - Usuario:", userData);
+            console.log("✅ [CallbackView] Proceso completado - Navegando a /");
+            console.log("📊 [CallbackView] Usuario final:", userData);
             navigate("/", { replace: true });
           }
         } catch (err: any) {

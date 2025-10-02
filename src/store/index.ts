@@ -6,6 +6,7 @@ import categoryReducer from './slices/categorySlice'
 import trainingReducer from './slices/trainingSlice'
 import agendaReducer from './slices/agendaSlice'
 import muscleReducer from './slices/muscleSlice'
+import muscleZoneReducer from './slices/muscleZoneSlice'
 
 
 
@@ -18,6 +19,7 @@ export const store = configureStore({
   training: trainingReducer,
   agenda: agendaReducer,
   muscles: muscleReducer,
+  muscleZones: muscleZoneReducer,
   }
 })
 

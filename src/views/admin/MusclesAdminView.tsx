@@ -1,37 +1,35 @@
 import { useEffect, useMemo, useState } from "react"
 import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { Button } from "../../components/Button"
-import { ExerciseAdminModal } from "../../components/admin/Exercises/ExerciseAdminModal"
+import { MuscleAdminModal } from "../../components/admin/Muscles/MuscleAdminModal"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../../store"
-import { createExercise, fetchExercises, updateExercise, fetchExerciseById } from "../../store/slices/exerciseSlice"
-import type { EjercicioRequestDTO } from "../../types/ejercicio/EjercicioRequestDTO"
+import { fetchMuscles, createMuscle, toggleMuscleActive } from "../../store/slices/muscleSlice"
+import { fetchMuscleZones } from "../../store/slices/muscleZoneSlice"
+import type { MusculoRequestDTO } from "../../types/musculo/MusculoRequestDTO"
 import { Toast } from "../../components/Toast"
 import { useAuth0 } from "@auth0/auth0-react"
 
-
-interface Exercise {
+interface Muscle {
   id: string
-  image: string
   name: string
-  description: string
-  targetZone: string
-  status: 'active' | 'inactive'
+  muscleGroupId: number
+  muscleGroupName: string
+  active: boolean
 }
 
-export const ExercisesAdminView = () => {
+export const MusclesAdminView = () => {
   const dispatch = useDispatch()
   const { getAccessTokenSilently } = useAuth0()
-  const { exercises } = useSelector((s: RootState) => s.exercises)
+  const { muscles } = useSelector((s: RootState) => s.muscles)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
-  const [editingDetails, setEditingDetails] = useState<any | null>(null)
+  const [editingMuscle, setEditingMuscle] = useState<Muscle | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 10
   const [searchTerm, setSearchTerm] = useState("")
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
-  
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -41,9 +39,10 @@ export const ExercisesAdminView = () => {
             scope: "openid profile email",
           },
         })
-        ;(dispatch as any)(fetchExercises(token))
+        ;(dispatch as any)(fetchMuscles(token))
+        ;(dispatch as any)(fetchMuscleZones(token))
       } catch (error) {
-        console.error('Error loading exercises:', error)
+        console.error('Error loading data:', error)
       }
     }
     loadData()
@@ -51,11 +50,12 @@ export const ExercisesAdminView = () => {
 
   const filtered = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
-    if (!term) return exercises
-    return exercises.filter((e) =>
-      e.name.toLowerCase().includes(term) || e.description?.toLowerCase().includes(term)
+    if (!term) return muscles
+    return muscles.filter((m) =>
+      m.name.toLowerCase().includes(term) || 
+      m.muscleGroup?.name?.toLowerCase().includes(term)
     )
-  }, [exercises, searchTerm])
+  }, [muscles, searchTerm])
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(filtered.length / pageSize)), [filtered.length])
   const paginated = useMemo(() => {
@@ -91,39 +91,42 @@ export const ExercisesAdminView = () => {
     return items
   }, [currentPage, totalPages])
 
-  const handleCreateExercise = () => {
-    setEditingExercise(null)
+  const handleCreateMuscle = () => {
+    setEditingMuscle(null)
     setIsModalOpen(true)
   }
 
-  const handleEditExercise = async (exercise: Exercise) => {
-    setEditingExercise(exercise)
-    setEditingDetails(null)
+  const handleEditMuscle = (muscle: Muscle) => {
+    setEditingMuscle(muscle)
     setIsModalOpen(true)
-    // Cargar detalles desde backend para videos, instrucciones y músculos
+  }
+
+  const handleToggleActive = async (id: number, currentStatus: boolean) => {
     try {
-      const res = await (dispatch as any)(fetchExerciseById(Number(exercise.id)))
-      const payload = (res as any).payload
-      setEditingDetails(payload ?? null)
-    } catch {}
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+          scope: "openid profile email",
+        },
+      })
+      await (dispatch as any)(toggleMuscleActive({ token, id }))
+      setToast({ 
+        msg: `Músculo ${currentStatus ? 'desactivado' : 'activado'} exitosamente`, 
+        type: 'success' 
+      })
+      setTimeout(() => setToast(null), 3000)
+    } catch (error) {
+      console.error('Error toggling muscle status:', error)
+      setToast({ msg: 'Error al cambiar el estado del músculo', type: 'error' })
+      setTimeout(() => setToast(null), 4000)
+    }
   }
 
-  // TODO: toggle de estado activo cuando haya endpoint
-
-  const handleSaveExercise = async (exerciseData: any) => {
-    const payload: EjercicioRequestDTO = {
-      name: exerciseData.name,
-      description: exerciseData.description,
-      active: exerciseData.active ?? true,
-  tips: exerciseData.tips || undefined,
-      instructions: (exerciseData.instructions ?? []).reduce((acc: Record<number, string>, cur: any, idx: number) => {
-        const text = typeof cur === 'string' ? cur : cur?.text
-        if (text != null && String(text).trim() !== '') acc[idx + 1] = String(text)
-        return acc
-      }, {}),
-  sampleVideos: (exerciseData.videoLinks ?? []).filter((x: string) => !!x && x.trim().length > 0),
-  equipmentIds: (exerciseData.equipmentIds ?? []) as number[],
-      targetMuscleIds: (exerciseData.muscleIds ?? []) as number[],
+  const handleSaveMuscle = async (muscleData: { name: string; muscleGroupId: number; active: boolean }) => {
+    const payload: MusculoRequestDTO = {
+      name: muscleData.name,
+      muscleGroupId: muscleData.muscleGroupId,
+      active: muscleData.active,
     }
 
     try {
@@ -133,39 +136,37 @@ export const ExercisesAdminView = () => {
           scope: "openid profile email",
         },
       })
-      
-      console.log('🔑 [ExercisesAdminView] Token obtenido');
-      
-      let result;
-      if (editingExercise) {
-        console.log('📝 [ExercisesAdminView] Actualizando ejercicio...');
-        result = await (dispatch as any)(updateExercise({ token, id: Number(editingExercise.id), data: payload }))
+
+      console.log('🔑 [MusclesAdminView] Token obtenido, procediendo a guardar...');
+
+      if (editingMuscle) {
+        // TODO: Implementar update cuando esté disponible en el backend
+        setToast({ msg: 'La edición de músculos estará disponible próximamente', type: 'error' })
+        setTimeout(() => setToast(null), 4000)
+        return; // Importante: salir aquí
       } else {
-        console.log('🆕 [ExercisesAdminView] Creando ejercicio...');
-        result = await (dispatch as any)(createExercise({ token, data: payload }))
+        console.log('🚀 [MusclesAdminView] Llamando a createMuscle...');
+        const result = await (dispatch as any)(createMuscle({ token, data: payload }))
+        
+        // Verificar si la acción fue rechazada
+        if (result.type.endsWith('/rejected')) {
+          console.error('❌ [MusclesAdminView] Acción rechazada:', result);
+          throw new Error(result.payload || 'Error al crear músculo');
+        }
+        
+        console.log('✅ [MusclesAdminView] Músculo creado exitosamente');
+        setToast({ msg: 'Músculo creado exitosamente', type: 'success' })
+        setTimeout(() => setToast(null), 3000)
       }
-      
-      // Verificar si la acción fue rechazada
-      if (result.type.endsWith('/rejected')) {
-        console.error('❌ [ExercisesAdminView] Acción rechazada:', result);
-        throw new Error(result.payload || 'Error al guardar ejercicio');
-      }
-      
-      console.log('✅ [ExercisesAdminView] Ejercicio guardado exitosamente');
       
       setIsModalOpen(false)
-      setEditingExercise(null)
-      setEditingDetails(null)
-      
-      // Recargar ejercicios
-      ;(dispatch as any)(fetchExercises(token))
-      
-      setToast({ msg: editingExercise ? 'Ejercicio actualizado exitosamente' : 'Ejercicio creado exitosamente', type: 'success' })
-      setTimeout(() => setToast(null), 3000)
+      setEditingMuscle(null)
+      ;(dispatch as any)(fetchMuscles(token))
     } catch (e: any) {
-      console.error('❌ [ExercisesAdminView] Error al guardar ejercicio:', e)
+      console.error('❌ [MusclesAdminView] Error al guardar músculo:', e)
       
-      let errorMessage = 'Error al guardar ejercicio';
+      // Mensajes de error específicos según el tipo
+      let errorMessage = 'Error al guardar músculo';
       if (e?.message?.includes('403') || e?.message?.includes('Forbidden')) {
         errorMessage = 'No tienes permisos de administrador. Verifica tu rol en Auth0.';
       } else if (e?.message?.includes('401') || e?.message?.includes('Unauthorized')) {
@@ -186,17 +187,17 @@ export const ExercisesAdminView = () => {
         <div className="bg-tertiary border-b border-white/10 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-white text-2xl font-semibold mb-2">Gestionar Ejercicios</h1>
-              <p className="text-quaternary text-sm">Administra la biblioteca de ejercicios</p>
+              <h1 className="text-white text-2xl font-semibold mb-2">Gestionar Músculos</h1>
+              <p className="text-quaternary text-sm">Administra la biblioteca de músculos</p>
             </div>
 
             <Button
               icon={<LuPlus size={16} />}
               iconPosition={false}
               isWhite={true}
-              action={handleCreateExercise}
+              action={handleCreateMuscle}
             >
-              Crear Ejercicio
+              Crear Músculo
             </Button>
           </div>
         </div>
@@ -209,7 +210,7 @@ export const ExercisesAdminView = () => {
               <LuSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-quaternary" size={20} />
               <input
                 type="text"
-                placeholder="Buscar ejercicio..."
+                placeholder="Buscar músculo o zona muscular..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-tertiary border border-white/20 rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40"
@@ -220,10 +221,9 @@ export const ExercisesAdminView = () => {
           {/* Table */}
           <div className="bg-tertiary rounded-lg border border-white/20 overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-5 gap-4 p-4 border-b border-white/10 bg-itemsCard">
+            <div className="grid grid-cols-4 gap-4 p-4 border-b border-white/10 bg-itemsCard">
               <div className="text-quaternary text-sm font-medium">Nombre</div>
-              <div className="text-quaternary text-sm font-medium">Descripción</div>
-              <div className="text-quaternary text-sm font-medium">Zona a trabajar</div>
+              <div className="text-quaternary text-sm font-medium">Zona Muscular</div>
               <div className="text-quaternary text-sm font-medium">Estado</div>
               <div className="text-quaternary text-sm font-medium">Acciones</div>
             </div>
@@ -231,44 +231,43 @@ export const ExercisesAdminView = () => {
             {/* Table Rows */}
             <div className="divide-y divide-white/10">
               {paginated.length === 0 && (
-                <div className="p-6 text-quaternary text-sm">No hay ejercicios para mostrar.</div>
+                <div className="p-6 text-quaternary text-sm">No hay músculos para mostrar.</div>
               )}
-              {paginated.map((exercise) => (
-                <div key={exercise.id} className="grid grid-cols-5 gap-4 p-4 items-center">
-        
+              {paginated.map((muscle) => (
+                <div key={muscle.id} className="grid grid-cols-4 gap-4 p-4 items-center">
                   {/* Name */}
                   <div>
-                    <p className="text-white text-sm font-medium">{exercise.name}</p>
+                    <p className="text-white text-sm font-medium">{muscle.name}</p>
                   </div>
 
-                  {/* Description */}
+                  {/* Muscle Group */}
                   <div>
-                    <p className="text-quaternary text-sm line-clamp-2">{exercise.description}</p>
-                  </div>
-
-                  {/* Target Zone */}
-                  <div>
-                    <p className="text-white text-sm">{(exercise as any).targetMuscles?.map((m: any) => m.name).join(', ')}</p>
+                    <p className="text-quaternary text-sm">{muscle.muscleGroup?.name || 'N/A'}</p>
                   </div>
 
                   {/* Status Toggle */}
                   <div>
-                    {/* Toggle placeholder: usar exercise.active del backend cuando se implemente */}
-                    <span className={`px-2 py-1 rounded text-xs border ${ (exercise as any).active ? 'border-green-500 text-green-400' : 'border-red-500 text-red-400' }`}>
-                      {(exercise as any).active ? 'Activo' : 'Inactivo'}
-                    </span>
+                    <button
+                      onClick={() => handleToggleActive(muscle.id, muscle.active)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                        muscle.active
+                          ? 'border-green-500 text-green-400 hover:bg-green-500/10'
+                          : 'border-red-500 text-red-400 hover:bg-red-500/10'
+                      }`}
+                    >
+                      {muscle.active ? 'Activo' : 'Inactivo'}
+                    </button>
                   </div>
 
                   {/* Actions */}
-                  <div>
+                  <div className="flex items-center gap-3">
                     <button
-                      onClick={() => handleEditExercise({
-                        id: String(exercise.id),
-                        image: '',
-                        name: exercise.name,
-                        description: exercise.description,
-                        targetZone: (exercise as any).targetMuscles?.map((m: any) => m.name).join(', ') ?? '',
-                        status: (exercise as any).active ? 'active' : 'inactive',
+                      onClick={() => handleEditMuscle({
+                        id: String(muscle.id),
+                        name: muscle.name,
+                        muscleGroupId: muscle.muscleGroup?.id || 0,
+                        muscleGroupName: muscle.muscleGroup?.name || '',
+                        active: muscle.active,
                       })}
                       className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
                     >
@@ -321,18 +320,16 @@ export const ExercisesAdminView = () => {
         </div>
 
         {/* Modal */}
-        <ExerciseAdminModal
+        <MuscleAdminModal
           isOpen={isModalOpen}
           onClose={() => {
             setIsModalOpen(false)
-            setEditingExercise(null)
-            setEditingDetails(null)
+            setEditingMuscle(null)
           }}
-          exercise={editingExercise}
-          exerciseDetails={editingDetails}
-          isLoadingDetails={!!editingExercise && !editingDetails}
-          onSave={handleSaveExercise}
-  />
+          muscle={editingMuscle}
+          onSave={handleSaveMuscle}
+        />
+        
         <Toast
           open={!!toast}
           type={toast?.type}

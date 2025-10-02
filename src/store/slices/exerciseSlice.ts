@@ -47,11 +47,15 @@ export const fetchExerciseById = createAsyncThunk(
 
 export const createExercise = createAsyncThunk(
   'exercises/createExercise',
-  async (payload: EjercicioRequestDTO, { rejectWithValue }) => {
+  async ({ token, data }: { token: string; data: EjercicioRequestDTO }, { rejectWithValue }) => {
     try {
-      const created = await ejercicioService.post(payload)
+      console.log('🚀 [exerciseSlice] Creando ejercicio...')
+      ejercicioService.setToken(token)
+      const created = await ejercicioService.post(data)
+      console.log('✅ [exerciseSlice] Ejercicio creado:', created)
       return created as unknown as EjercicioResponseDTO
     } catch (error) {
+      console.error('❌ [exerciseSlice] Error al crear ejercicio:', error)
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
     }
   }
@@ -60,13 +64,17 @@ export const createExercise = createAsyncThunk(
 export const updateExercise = createAsyncThunk(
   'exercises/updateExercise',
   async (
-    { id, data }: { id: number; data: Partial<EjercicioRequestDTO> },
+    { token, id, data }: { token: string; id: number; data: Partial<EjercicioRequestDTO> },
     { rejectWithValue }
   ) => {
     try {
+      console.log('🔄 [exerciseSlice] Actualizando ejercicio:', id)
+      ejercicioService.setToken(token)
       const updated = await ejercicioService.patch(id, data as EjercicioRequestDTO)
+      console.log('✅ [exerciseSlice] Ejercicio actualizado:', updated)
       return updated as unknown as EjercicioResponseDTO
     } catch (error) {
+      console.error('❌ [exerciseSlice] Error al actualizar ejercicio:', error)
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
     }
   }

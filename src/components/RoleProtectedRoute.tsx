@@ -16,7 +16,7 @@ export const RoleProtectedRoute = ({
   redirectTo = "/" 
 }: RoleProtectedRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth0();
-  const { hasAnyRole, roles } = useUserRole();
+  const { hasAnyRole, roles, isAdmin } = useUserRole();
 
   if (isLoading) {
     return (
@@ -38,6 +38,12 @@ export const RoleProtectedRoute = ({
     console.warn(`❌ Usuario sin permisos para acceder a esta ruta`);
     console.warn(`📋 Roles del usuario: [${roles.join(', ') || 'NINGUNO'}]`);
     console.warn(`✅ Roles permitidos: [${allowedRoles.join(', ')}]`);
+    
+    // Si es ADMIN intentando acceder a rutas de usuario, redirigir a /admin/profile
+    if (isAdmin) {
+      console.log('🔄 Admin redirigido a /admin/profile');
+      return <Navigate to="/admin/profile" replace />;
+    }
     
     // En desarrollo, mostrar mensaje de ayuda
     if (import.meta.env.DEV) {

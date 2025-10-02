@@ -25,6 +25,8 @@ class UsuarioService {
    * @returns Usuario registrado o existente
    */
   async signupUser(token: string): Promise<UsuarioResponseDTO> {
+    console.log('🔵 [UsuarioService.signupUser] Iniciando registro de usuario...');
+    console.log('🔵 [UsuarioService.signupUser] URL:', `${this.BASE_URL}${this.BASE_PATH}/signup`);
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/signup`, {
       method: 'POST',
       headers: {
@@ -38,7 +40,9 @@ class UsuarioService {
       throw new Error(errorData.message || `Error al registrar usuario: ${response.statusText}`);
     }
 
-    return response.json();
+    const userData = await response.json();
+    console.log('✅ [UsuarioService.signupUser] Usuario registrado exitosamente:', userData);
+    return userData;
   }
 
   /**
@@ -92,6 +96,8 @@ class UsuarioService {
    * @throws Error si el usuario no existe
    */
   async getCurrentUser(token: string): Promise<UsuarioResponseDTO> {
+    console.log('🟡 [UsuarioService.getCurrentUser] Obteniendo usuario actual...');
+    console.log('🟡 [UsuarioService.getCurrentUser] URL:', `${this.BASE_URL}${this.BASE_PATH}/me`);
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/me`, {
       method: 'GET',
       headers: {
@@ -101,11 +107,14 @@ class UsuarioService {
     });
 
     if (!response.ok) {
+      console.log('❌ [UsuarioService.getCurrentUser] Usuario no encontrado (404) - procederá a crear');
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `Error al obtener usuario actual: ${response.statusText}`);
     }
 
-    return response.json();
+    const userData = await response.json();
+    console.log('✅ [UsuarioService.getCurrentUser] Usuario encontrado:', userData);
+    return userData;
   }
 
   /**
