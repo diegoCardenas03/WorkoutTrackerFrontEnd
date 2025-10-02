@@ -1,5 +1,5 @@
 import { LuBell, LuPanelLeft } from "react-icons/lu"
-import fotoPerfil from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\FotoPerfil.png"
+import fotoPerfil from "../assets/FotoPerfil.png"
 import { IoCaretDownSharp } from "react-icons/io5"
 import { useState } from "react"
 import { MenuProfile } from "./MenuProfile"

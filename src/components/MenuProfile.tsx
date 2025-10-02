@@ -1,5 +1,5 @@
 import { LuLogOut, LuUser } from "react-icons/lu"
-import fotoPerfil from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\FotoPerfil.png"
+import fotoPerfil from "../assets/FotoPerfil.png"
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../hooks/useUser";
 import { useAuth0 } from "@auth0/auth0-react";

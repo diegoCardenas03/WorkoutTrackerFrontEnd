@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import logo from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\Logo.png"
+import logo from "../assets/Logo.png"
 
 export const Footer = () => {
 

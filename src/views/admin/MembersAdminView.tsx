@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { LuSearch, LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { MemberDataModal } from "../../components/admin/Members/MemberDataModal"
-import image from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\benavides-geronimo.png"
+import image from "../../assets/benavides-geronimo.png"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 
 interface Member {

@@ -2,7 +2,7 @@ import { useState } from "react"
 import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { Button } from "../../components/Button"
 import { EmployeeModal } from "../../components/admin/Employees/EmployeeModal"
-import image from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\benavides-geronimo.png"
+import image from "../../assets/benavides-geronimo.png"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 
 interface Employee {

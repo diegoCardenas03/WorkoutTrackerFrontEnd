@@ -1,7 +1,7 @@
 import { LuSave } from 'react-icons/lu'
 import { Button } from '../components/Button'
 import { PrivateLayout } from '../layouts/PrivateLayout'
-import fotoPerfil from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\FotoPerfil.png"
+import fotoPerfil from "../assets/FotoPerfil.png"
 import { SubHeader } from '../components/SubHeader'
 import { useUser } from '../hooks/useUser'
 import { useState, useEffect } from 'react'

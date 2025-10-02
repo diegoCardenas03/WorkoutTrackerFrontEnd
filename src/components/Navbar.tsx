@@ -1,4 +1,4 @@
-import logo from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\Logo.png"
+import logo from "../assets/Logo.png"
 import { IoCalendarClearOutline, IoGridOutline, IoHomeOutline, IoListCircleOutline, IoStatsChartOutline } from "react-icons/io5"
 import { LuUsers } from "react-icons/lu"
 import { useNavigate, useLocation } from "react-router-dom"

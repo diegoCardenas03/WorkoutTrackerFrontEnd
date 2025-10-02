@@ -1,6 +1,6 @@
 import { LuArrowRight, LuMenu, LuX } from "react-icons/lu"
 import { Button } from "./Button"
-import logo from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\Logo.png"
+import logo from "../assets/Logo.png"
 import { useState } from "react"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useNavigate } from "react-router-dom"
