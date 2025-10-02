@@ -42,6 +42,28 @@ class UsuarioService {
   }
 
   /**
+   * Registra o obtiene un usuario en el backend usando el token JWT de Auth0
+   * @param token - Token de acceso de Auth0
+   * @returns Usuario registrado o existente
+   */
+  async signupAdminUser(token: string): Promise<UsuarioResponseDTO> {
+    const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/admin/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Error al registrar usuario: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
    * Obtiene el perfil del usuario autenticado
    * @param token - Token de acceso de Auth0
    * @returns Perfil del usuario

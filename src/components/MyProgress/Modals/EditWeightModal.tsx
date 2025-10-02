@@ -8,9 +8,10 @@ interface EditWeightModalProps {
   isOpen: boolean
   onClose: () => void
   currentWeight: number
+  onSuccess?: () => void
 }
 
-export const EditWeightModal = ({ isOpen, onClose, currentWeight }: EditWeightModalProps) => {
+export const EditWeightModal = ({ isOpen, onClose, currentWeight, onSuccess }: EditWeightModalProps) => {
   const [weight, setWeight] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const { updateLastBodyWeight, refetch } = useBodyWeight()
@@ -28,6 +29,7 @@ export const EditWeightModal = ({ isOpen, onClose, currentWeight }: EditWeightMo
         const success = await updateLastBodyWeight(Number(weight))
         if (success) {
           await refetch()
+          onSuccess?.() // Llamar callback de éxito
           onClose()
         }
       } catch (error) {

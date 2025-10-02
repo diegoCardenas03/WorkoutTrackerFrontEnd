@@ -19,6 +19,7 @@ import { createRoutine, fetchRoutines, updateRoutine } from "../store/slices/rou
 import type { RutinaRequestDTO } from "../types/rutina/RutinaRequestDTO"
 import { buildRutinaRequest } from "../utils/buildRutinaRequest"
 import { useNavigate } from "react-router-dom"
+import { useAuth0 } from "@auth0/auth0-react"
 
 export const CatalogView = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -33,6 +34,7 @@ export const CatalogView = () => {
     const categoriesFromStore = useSelector((state: RootState) => state.categories?.categories ?? []) as { id: number; name: string }[]
     const navigate = useNavigate()
     const [editingRoutineId, setEditingRoutineId] = useState<number | null>(null)
+    const { getAccessTokenSilently } = useAuth0()
 
     // Custom hook para modo selección de rutina
     const {
@@ -59,8 +61,23 @@ export const CatalogView = () => {
     } = useRoutineSelection()
 
     useEffect(() => {
-    dispatch(fetchExercises())
-    dispatch(fetchCategories() as any)
+        const loadData = async () => {
+            try {
+                const token = await getAccessTokenSilently({
+                    authorizationParams: {
+                        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                        scope: "openid profile email",
+                    },
+                });
+                
+                dispatch(fetchExercises(token) as any)
+                dispatch(fetchCategories(token) as any)
+            } catch (error) {
+                console.error("Error al obtener token:", error)
+            }
+        }
+
+        loadData()
 
         const pendingRoutineData = localStorage.getItem('pendingRoutineData')
         if (pendingRoutineData) {
@@ -91,11 +108,12 @@ export const CatalogView = () => {
             enterSelectMode(event.detail)
         }
 
-    window.addEventListener('openCatalogSelectMode', handleOpenSelectMode as EventListener)
+        window.addEventListener('openCatalogSelectMode', handleOpenSelectMode as EventListener)
         return () => {
             window.removeEventListener('openCatalogSelectMode', handleOpenSelectMode as EventListener)
         }
-    }, [dispatch, enterSelectMode])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dispatch])
 
 
     const [currentPage, setCurrentPage] = useState(1)
@@ -140,38 +158,45 @@ export const CatalogView = () => {
     const handleFinishRoutine = async () => {
         if (!routineData) return
 
-        // Asegurar categorías cargadas antes de resolver categoryId para evitar caer en "General"
-        let categoriesList = categoriesFromStore as { id: number; name: string; active?: boolean }[]
-        if (!categoriesList || categoriesList.length === 0) {
-            try {
-                const result: any = await (dispatch as any)(fetchCategories())
-                categoriesList = (result?.payload as any[]) ?? categoriesList
-            } catch {
-                // si falla, mantenemos el fallback existente
-            }
-        }
-
-        const resolveCategoryIdLocal = (label: string | undefined): number => {
-            const name = (label || '').trim().toLowerCase()
-            const found = (categoriesList || []).find(c => (c.name || '').toLowerCase() === name)
-            return found?.id ?? ((categoriesList || []).find(c => (c as any).active !== false)?.id ?? 1)
-        }
-
-        const payload: RutinaRequestDTO = buildRutinaRequest(
-            routineData,
-            exercisesByDay,
-            resolveCategoryIdLocal,
-            resolveUserId
-        )
-
         try {
+            const token = await getAccessTokenSilently({
+                authorizationParams: {
+                    audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                    scope: "openid profile email",
+                },
+            });
+
+            // Asegurar categorías cargadas antes de resolver categoryId para evitar caer en "General"
+            let categoriesList = categoriesFromStore as { id: number; name: string; active?: boolean }[]
+            if (!categoriesList || categoriesList.length === 0) {
+                try {
+                    const result: any = await (dispatch as any)(fetchCategories(token))
+                    categoriesList = (result?.payload as any[]) ?? categoriesList
+                } catch {
+                    // si falla, mantenemos el fallback existente
+                }
+            }
+
+            const resolveCategoryIdLocal = (label: string | undefined): number => {
+                const name = (label || '').trim().toLowerCase()
+                const found = (categoriesList || []).find(c => (c.name || '').toLowerCase() === name)
+                return found?.id ?? ((categoriesList || []).find(c => (c as any).active !== false)?.id ?? 1)
+            }
+
+            const payload: RutinaRequestDTO = buildRutinaRequest(
+                routineData,
+                exercisesByDay,
+                resolveCategoryIdLocal,
+                resolveUserId
+            )
+
             if (editingRoutineId) {
-                await dispatch(updateRoutine({ id: editingRoutineId, routineData: payload })).unwrap()
+                await dispatch(updateRoutine({ token, id: editingRoutineId, routineData: payload })).unwrap()
             } else {
-                await dispatch(createRoutine(payload)).unwrap()
+                await dispatch(createRoutine({ token, routineData: payload })).unwrap()
             }
             // refrescar la lista para asegurar datos completos del backend
-            await dispatch(fetchRoutines())
+            await dispatch(fetchRoutines(token))
             // limpiar estado de selección y storage
             exitSelectMode()
             localStorage.removeItem('pendingRoutineData')
@@ -180,7 +205,7 @@ export const CatalogView = () => {
             // navegar a Mis Rutinas
             navigate('/routines', { replace: true })
         } catch (e) {
-            console.error('Error creando rutina:', e)
+            console.error('Error creando/actualizando rutina:', e)
         }
     }
 

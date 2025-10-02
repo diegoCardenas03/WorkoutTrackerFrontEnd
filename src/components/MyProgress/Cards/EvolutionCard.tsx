@@ -4,9 +4,11 @@ import { LuPlus } from "react-icons/lu"
 import { useState } from "react"
 import { WeightRegisterModal } from "../Modals/WeightRegisterModal"
 import { useBodyWeight } from "../../../hooks/useBodyWeight"
+import { Toast } from "../../Toast"
 
 export const EvolutionCard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showToast, setShowToast] = useState(false)
   const { bodyWeights, isLoading, addBodyWeight, refetch } = useBodyWeight()
 
    const handleOpenModal = () => {
@@ -21,6 +23,7 @@ export const EvolutionCard = () => {
     const success = await addBodyWeight(Number(weight))
     if (success) {
       await refetch()
+      setShowToast(true)
     }
   }
 
@@ -204,6 +207,13 @@ export const EvolutionCard = () => {
         onClose={handleCloseModal}
         onSave={handleSaveWeight}
       />
+    <Toast
+      open={showToast}
+      type="success"
+      message="Peso registrado exitosamente"
+      onClose={() => setShowToast(false)}
+      durationMs={3000}
+    />
     </>
   )
 }

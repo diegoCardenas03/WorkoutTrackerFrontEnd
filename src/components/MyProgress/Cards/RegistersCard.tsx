@@ -4,10 +4,12 @@ import { TbTrendingDown, TbTrendingUp } from "react-icons/tb"
 import { useBodyWeight } from "../../../hooks/useBodyWeight"
 import { useState } from "react"
 import { EditWeightModal } from "../../MyProgress/Modals/EditWeightModal"
+import { Toast } from "../../Toast"
 
 export const RegistersCard = () => {
   const { bodyWeights, isLoading, getCurrentWeight, getWeightDifference, getInitialWeight, getTotalWeightChange } = useBodyWeight();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const currentWeight = getCurrentWeight();
   const initialWeight = getInitialWeight();
@@ -131,6 +133,14 @@ export const RegistersCard = () => {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         currentWeight={currentWeight?.bodyWeight || 0}
+        onSuccess={() => setShowToast(true)}
+      />
+      <Toast
+        open={showToast}
+        type="success"
+        message="Peso actualizado exitosamente"
+        onClose={() => setShowToast(false)}
+        durationMs={3000}
       />
     </>
   )

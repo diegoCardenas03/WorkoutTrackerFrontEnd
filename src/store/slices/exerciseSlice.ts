@@ -22,8 +22,9 @@ const initialState: ExerciseState = {
 
 export const fetchExercises = createAsyncThunk(
   'exercises/fetchExercises',
-  async (_, { rejectWithValue }) => {
+  async (token: string, { rejectWithValue }) => {
     try {
+      ejercicioService.setToken(token)
       const data = await ejercicioService.getAll()
       return data as EjercicioResponseDTO[]
     } catch (error) {
