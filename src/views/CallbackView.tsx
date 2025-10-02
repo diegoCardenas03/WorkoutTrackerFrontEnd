@@ -27,6 +27,8 @@ export const CallbackView = () => {
           });
 
           console.log("Token obtenido correctamente");
+          console.log("🔍 [CallbackView] Token (primeros 50 chars):", token.substring(0, 50) + "...");
+          console.log("🔍 [CallbackView] Audience configurado:", import.meta.env.VITE_AUTH0_AUDIENCE);
           console.log("Usuario de Auth0:", user);
 
           // Guardar el token para uso posterior

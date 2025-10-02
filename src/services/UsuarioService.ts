@@ -16,7 +16,7 @@ export interface UpdateUsuarioDTO {
 }
 
 class UsuarioService {
-  private readonly BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+  private readonly BASE_URL = import.meta.env.VITE_API_BASEURL || 'http://localhost:8080';
   private readonly BASE_PATH = '/api/users';
 
   /**
@@ -27,6 +27,8 @@ class UsuarioService {
   async signupUser(token: string): Promise<UsuarioResponseDTO> {
     console.log('🔵 [UsuarioService.signupUser] Iniciando registro de usuario...');
     console.log('🔵 [UsuarioService.signupUser] URL:', `${this.BASE_URL}${this.BASE_PATH}/signup`);
+    console.log('🔵 [UsuarioService.signupUser] Token (primeros 50 chars):', token.substring(0, 50) + '...');
+    
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/signup`, {
       method: 'POST',
       headers: {
@@ -35,9 +37,16 @@ class UsuarioService {
       },
     });
 
+    console.log('🔵 [UsuarioService.signupUser] Respuesta del servidor:', response.status, response.statusText);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error al registrar usuario: ${response.statusText}`);
+      console.error('❌ [UsuarioService.signupUser] Error del servidor:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData
+      });
+      throw new Error(errorData.message || `Error al registrar usuario: ${response.status} ${response.statusText}`);
     }
 
     const userData = await response.json();
@@ -98,6 +107,8 @@ class UsuarioService {
   async getCurrentUser(token: string): Promise<UsuarioResponseDTO> {
     console.log('🟡 [UsuarioService.getCurrentUser] Obteniendo usuario actual...');
     console.log('🟡 [UsuarioService.getCurrentUser] URL:', `${this.BASE_URL}${this.BASE_PATH}/me`);
+    console.log('🟡 [UsuarioService.getCurrentUser] Token (primeros 50 chars):', token.substring(0, 50) + '...');
+    
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/me`, {
       method: 'GET',
       headers: {
@@ -106,10 +117,17 @@ class UsuarioService {
       },
     });
 
+    console.log('🟡 [UsuarioService.getCurrentUser] Respuesta del servidor:', response.status, response.statusText);
+
     if (!response.ok) {
-      console.log('❌ [UsuarioService.getCurrentUser] Usuario no encontrado (404) - procederá a crear');
+      console.log('❌ [UsuarioService.getCurrentUser] Usuario no encontrado - Status:', response.status);
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error al obtener usuario actual: ${response.statusText}`);
+      console.error('❌ [UsuarioService.getCurrentUser] Error del servidor:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData
+      });
+      throw new Error(errorData.message || `Error al obtener usuario actual: ${response.status} ${response.statusText}`);
     }
 
     const userData = await response.json();
