@@ -1,4 +1,4 @@
-import { LuDumbbell, LuCalendarDays, LuPlay, LuEllipsisVertical, LuTrash2 } from "react-icons/lu"
+import { LuDumbbell, LuCalendarDays, LuPlay, LuEllipsisVertical, LuTrash2, LuPencil } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
 import { useState, useRef, useEffect } from "react"
@@ -22,6 +22,7 @@ interface RoutineCardProps {
   }
   onStart?: () => void
   onViewRoutine?: () => void
+  onEdit?: () => void
   onDelete?: () => void
   className?: string
 }
@@ -36,6 +37,7 @@ export const RoutineCard = ({
   simpleData,
   onStart,
   onViewRoutine,
+  onEdit,
   onDelete,
   className = ""
 }: RoutineCardProps) => {
@@ -63,6 +65,13 @@ export const RoutineCard = ({
     setIsMenuOpen(false)
     if (onDelete) {
       onDelete()
+    }
+  }
+
+  const handleEditClick = () => {
+    setIsMenuOpen(false)
+    if (onEdit) {
+      onEdit()
     }
   }
 
@@ -108,6 +117,13 @@ export const RoutineCard = ({
           {/* Dropdown Menu */}
           {isMenuOpen && (
             <div className="absolute right-0 top-8 bg-tertiary border border-white/20 rounded-lg shadow-lg z-10 min-w-[160px]">
+              <button
+                onClick={handleEditClick}
+                className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-itemsCard transition-colors border-b border-white/10 cursor-pointer text-blue-400 hover:text-blue-300"
+              >
+                <LuPencil size={16} />
+                <span className="text-sm font-medium">Editar rutina</span>
+              </button>
               <button
                 onClick={handleDeleteClick}
                 className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-itemsCard transition-colors rounded-lg cursor-pointer text-red-400 hover:text-red-300"

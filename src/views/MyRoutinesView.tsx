@@ -488,6 +488,7 @@ export const MyRoutinesView = () => {
                                     simpleData={routine.simpleData}
                                     onStart={() => handleStartRoutine(routine)}
                                     onViewRoutine={() => handleOpenRoutineModal(routine)}
+                                    onEdit={() => prepareEditAndNavigate(routine)}
                                     onDelete={() => handleDeleteRoutine(routine)}
                                 />
                             ))}
@@ -523,6 +524,7 @@ export const MyRoutinesView = () => {
                 onClose={() => {
                     setIsConfigRoutineModalOpen(false)
                     setEditPrefill(null)
+                    setEditRoutineId(null)
                 }}
                 initialFormData={editPrefill ?? undefined}
                 showSaveChanges={!!editPrefill}
@@ -532,6 +534,19 @@ export const MyRoutinesView = () => {
                     { value: 'Intermedio', label: 'Intermedio' },
                     { value: 'Avanzado', label: 'Avanzado' },
                 ]}
+                onDelete={editRoutineId ? async () => {
+                    // Cerrar el modal primero
+                    setIsConfigRoutineModalOpen(false)
+                    setEditPrefill(null)
+                    
+                    // Encontrar la rutina completa para pasar a handleDeleteRoutine
+                    const routine = allRoutines.find(r => String(r.id) === String(editRoutineId))
+                    if (routine) {
+                        await handleDeleteRoutine(routine)
+                    }
+                    
+                    setEditRoutineId(null)
+                } : undefined}
                 onSaveChanges={async (data) => {
                     // Update only routine metadata
                     if (!editRoutineId) return

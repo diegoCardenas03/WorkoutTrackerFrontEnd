@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { IoClose } from "react-icons/io5"
-import { LuDumbbell } from "react-icons/lu"
+import { LuDumbbell, LuTrash2 } from "react-icons/lu"
 import { Button } from "../../Button"
 import { CustomSelect } from "../../CustomSelect"
 
@@ -11,6 +11,7 @@ interface ConfigRoutineModalProps {
   initialFormData?: Partial<RoutineFormData>
   showSaveChanges?: boolean
   onSaveChanges?: (routineData: RoutineFormData) => void
+  onDelete?: () => void
   categoriesOptions?: { value: string; label: string }[]
   difficultiesOptions?: { value: string; label: string }[]
 }
@@ -30,6 +31,7 @@ export const ConfigRoutineModal = ({
   initialFormData,
   showSaveChanges,
   onSaveChanges,
+  onDelete,
   categoriesOptions,
   difficultiesOptions,
 }: ConfigRoutineModalProps) => {
@@ -227,7 +229,7 @@ export const ConfigRoutineModal = ({
             </Button>
           </div>
           {showSaveChanges && (
-            <div className="mt-3">
+            <div className="mt-3 space-y-3">
               <Button
                 isWhite={false}
                 isWidthFull={true}
@@ -236,6 +238,16 @@ export const ConfigRoutineModal = ({
               >
                 Guardar cambios
               </Button>
+              
+              {onDelete && (
+                <button
+                  onClick={onDelete}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-transparent border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/10 hover:border-red-500 transition-all cursor-pointer"
+                >
+                  <LuTrash2 size={16} />
+                  <span className="text-sm font-medium">Eliminar rutina</span>
+                </button>
+              )}
             </div>
           )}
         </div>
