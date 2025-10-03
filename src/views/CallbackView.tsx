@@ -68,15 +68,15 @@ export const CallbackView = () => {
             console.log('🔍 [CallbackView] Nuevo token obtenido (primeros 50 chars):', refreshedToken.substring(0, 50) + '...');
           }
 
-          // Si es un usuario nuevo y no tiene name (username), mostrar modal
+          // Si es un usuario nuevo, mostrar modal para establecer username
           console.log('🔍 [CallbackView] Verificando si mostrar modal de username...');
-          console.log('📊 [CallbackView] userWasCreated:', userWasCreated, '| userData.name:', userData.name);
-          if (userWasCreated && !userData.name) {
+          console.log('📊 [CallbackView] userWasCreated:', userWasCreated);
+          if (userWasCreated) {
             console.log('📝 [CallbackView] Mostrando modal de username para usuario nuevo');
             setShowUsernameModal(true);
           } else {
-            // Si no es nuevo o ya tiene name, ir al dashboard
-            console.log("✅ [CallbackView] Proceso completado - Navegando a /");
+            // Si no es nuevo, ir directo al dashboard
+            console.log("✅ [CallbackView] Usuario existente - Navegando a /");
             console.log("📊 [CallbackView] Usuario final:", userData);
             navigate("/", { replace: true });
           }

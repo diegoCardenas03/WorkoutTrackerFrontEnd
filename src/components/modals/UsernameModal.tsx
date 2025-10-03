@@ -19,34 +19,34 @@ export const UsernameModal = ({ isOpen, onSubmit, onSkip, isLoading = false }: U
     
     // Validaciones
     if (!username.trim()) {
-      setError('El nombre de usuario es requerido');
+      setError('El nombre es requerido');
       return;
     }
 
-    if (username.length < 3) {
-      setError('El nombre de usuario debe tener al menos 3 caracteres');
+    if (username.trim().length < 2) {
+      setError('El nombre debe tener al menos 2 caracteres');
       return;
     }
 
-    if (username.length > 20) {
-      setError('El nombre de usuario no puede tener más de 20 caracteres');
+    if (username.length > 50) {
+      setError('El nombre no puede tener más de 50 caracteres');
       return;
     }
 
-    // Solo letras, números, guiones y guiones bajos
-    const usernameRegex = /^[a-zA-Z0-9_-]+$/;
-    if (!usernameRegex.test(username)) {
-      setError('El nombre de usuario solo puede contener letras, números, guiones y guiones bajos');
+    // Solo letras, espacios, acentos y apóstrofes
+    const nameRegex = /^[a-zA-ZÀ-ÿ\s'.-]+$/;
+    if (!nameRegex.test(username)) {
+      setError('El nombre solo puede contener letras, espacios y caracteres válidos');
       return;
     }
 
     setError('');
-    onSubmit(username);
+    onSubmit(username.trim());
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-itemsCard border border-white/10 rounded-xl shadow-2xl w-[90%] max-w-md p-6 md:p-8 relative animate-fadeIn">
+      <div className="bg-primary border border-white/10 rounded-xl shadow-2xl w-[90%] max-w-md p-6 md:p-8 relative animate-fadeIn">
         {/* Botón de saltar (cerrar) */}
         <button
           onClick={onSkip}
@@ -66,7 +66,7 @@ export const UsernameModal = ({ isOpen, onSubmit, onSkip, isLoading = false }: U
             Bienvenido a WorkoutTracker
           </h2>
           <p className="text-quaternary text-sm">
-            Elige un nombre de usuario único para tu cuenta
+            ¿Cómo te llamas?
           </p>
         </div>
 
@@ -74,7 +74,7 @@ export const UsernameModal = ({ isOpen, onSubmit, onSkip, isLoading = false }: U
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="username" className="block text-white font-light mb-2">
-              Nombre de usuario
+              Tu nombre
             </label>
             <input
               id="username"
@@ -84,7 +84,7 @@ export const UsernameModal = ({ isOpen, onSubmit, onSkip, isLoading = false }: U
                 setUsername(e.target.value);
                 setError('');
               }}
-              placeholder="tu_username"
+              placeholder="Juan Pérez"
               disabled={isLoading}
               className="w-full h-11 px-4 text-[15px] rounded-[5px] text-white placeholder-gray-500 border border-white/30 focus:border-quaternary focus:outline-none transition-colors bg-black/20 disabled:opacity-50 disabled:cursor-not-allowed"
               autoFocus
@@ -93,7 +93,7 @@ export const UsernameModal = ({ isOpen, onSubmit, onSkip, isLoading = false }: U
               <p className="text-red-400 text-sm mt-2">{error}</p>
             )}
             <p className="text-gray-400 text-xs mt-2">
-              3-20 caracteres. Solo letras, números, guiones y guiones bajos.
+              2-50 caracteres. Puedes usar tu nombre completo.
             </p>
           </div>
 
@@ -104,7 +104,7 @@ export const UsernameModal = ({ isOpen, onSubmit, onSkip, isLoading = false }: U
               className="w-full h-11 px-6 rounded-lg bg-white text-primary font-bold hover:bg-white/90 transition-colors flex justify-center items-center gap-2 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
             >
               {!isLoading && <LuUser size={20} />}
-              {isLoading ? 'Guardando...' : 'Establecer nombre de usuario'}
+              {isLoading ? 'Guardando...' : 'Guardar nombre'}
             </button>
 
             <button

@@ -1,19 +1,42 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { LuUsers, LuDumbbell, LuUserCog, LuLogOut, LuBicepsFlexed, LuBoxes, LuWrench } from "react-icons/lu"
 import logo from "../../assets/Logo.png"
 import { useAuth0 } from "@auth0/auth0-react"
+import { useUser } from "../../hooks/useUser"
 
 export const AdminSideBar = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const { logout } = useAuth0();
+  const { logout } = useAuth0()
+  const { userData, auth0User, refetch } = useUser()
+
+  // Escuchar evento de actualización de perfil
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      console.log('🔄 [AdminSideBar] Perfil actualizado, recargando datos...')
+      refetch()
+    }
+
+    window.addEventListener('userProfileUpdated', handleProfileUpdate)
+    
+    return () => {
+      window.removeEventListener('userProfileUpdated', handleProfileUpdate)
+    }
+  }, [refetch])
+
+  // Obtener nombre y rol del usuario
+  const userName = userData?.name || auth0User?.name || "Usuario"
+  const userRole = userData?.role?.name || "ADMINISTRADOR"
+  
+  // Obtener inicial del nombre
+  const userInitial = userName.charAt(0).toUpperCase()
 
 
   const menuItems = [
     { id: "profile", label: "Mi perfil", icon: LuUserCog, path: "/admin/profile" },
-    { id: "employees", label: "Empleados", icon: LuUsers, path: "/admin/employees" },
+    { id: "employees", label: "Administradores", icon: LuUsers, path: "/admin/employees" },
     { id: "members", label: "Usuarios", icon: LuUsers, path: "/admin/members" },
     { id: "exercises", label: "Ejercicios", icon: LuDumbbell, path: "/admin/exercises" },
     { id: "muscles", label: "Músculos", icon: LuBicepsFlexed, path: "/admin/muscles" },
@@ -69,11 +92,11 @@ export const AdminSideBar = () => {
             className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-linksNavbar transition-colors cursor-pointer"
           >
             <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold text-sm">G</span>
+              <span className="text-white font-semibold text-sm">{userInitial}</span>
             </div>
             <div className="flex-1 text-left">
-              <p className="text-white text-sm font-medium">GERONIMO</p>
-              <p className="text-quaternary text-xs">ADMINISTRADOR</p>
+              <p className="text-white text-sm font-medium">{userName.toUpperCase()}</p>
+              <p className="text-quaternary text-xs">{userRole.toUpperCase()}</p>
             </div>
           </button>
 

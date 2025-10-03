@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight } from "react-icons/lu"
+import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight, LuPencil } from "react-icons/lu"
 import { Button } from "../../components/Button"
 import { EmployeeModal } from "../../components/admin/Employees/EmployeeModal"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
@@ -15,6 +15,7 @@ export const EmployeesAdminView = () => {
   const { getAccessTokenSilently } = useAuth0()
   const { userData: currentUser } = useUser() // Usuario actual logueado
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingEmployee, setEditingEmployee] = useState<UsuarioResponseDTO | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
   const [employees, setEmployees] = useState<UsuarioResponseDTO[]>([])
@@ -57,6 +58,12 @@ export const EmployeesAdminView = () => {
   }
 
   const handleCreateEmployee = () => {
+    setEditingEmployee(null)
+    setIsModalOpen(true)
+  }
+
+  const handleEditEmployee = (employee: UsuarioResponseDTO) => {
+    setEditingEmployee(employee)
     setIsModalOpen(true)
   }
 
@@ -98,17 +105,26 @@ export const EmployeesAdminView = () => {
         },
       })
 
-      await usuarioService.registerAdmin(token, employeeData)
-      
-      setToastMessage("Administrador creado exitosamente")
-      setShowSuccessToast(true)
-      setIsModalOpen(false)
-      
-      // Recargar la lista
-      loadEmployees()
+      if (editingEmployee) {
+        // Editar empleado existente
+        // TODO: Implementar cuando el backend tenga el endpoint
+        // await usuarioService.updateAdmin(token, editingEmployee.id, employeeData)
+        console.log('Editar empleado:', editingEmployee.id, employeeData)
+        setToastMessage("Funcionalidad de edición pendiente en el backend")
+        setShowErrorToast(true)
+      } else {
+        // Crear nuevo empleado
+        await usuarioService.registerAdmin(token, employeeData)
+        setToastMessage("Administrador creado exitosamente")
+        setShowSuccessToast(true)
+        setIsModalOpen(false)
+        
+        // Recargar la lista
+        loadEmployees()
+      }
     } catch (err: any) {
-      console.error("Error al crear administrador:", err)
-      setToastMessage(err.message || "Error al crear administrador")
+      console.error("Error al guardar administrador:", err)
+      setToastMessage(err.message || "Error al guardar administrador")
       setShowErrorToast(true)
     } finally {
       setIsSaving(false)
@@ -160,7 +176,7 @@ export const EmployeesAdminView = () => {
       <div className="bg-tertiary border-b border-white/10 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-white text-2xl font-semibold mb-2">Gestionar Empleados</h1>
+            <h1 className="text-white text-2xl font-semibold mb-2">Gestionar administradores</h1>
             <p className="text-quaternary text-sm">Administra el personal del gimnasio</p>
           </div>
           
@@ -257,9 +273,13 @@ export const EmployeesAdminView = () => {
 
                   {/* Actions */}
                   <div>
-                    <span className="text-quaternary text-sm">
-                      -
-                    </span>
+                    <button
+                      onClick={() => handleEditEmployee(employee)}
+                      className="p-2 rounded-lg bg-itemsCard border border-white/20 text-quaternary hover:text-white hover:border-white/40 transition-colors"
+                      title="Editar empleado"
+                    >
+                      <LuPencil size={16} />
+                    </button>
                   </div>
                 </div>
               ))
@@ -325,9 +345,13 @@ export const EmployeesAdminView = () => {
       {/* Modal */}
       <EmployeeModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false)
+          setEditingEmployee(null)
+        }}
         onSave={handleSaveEmployee}
         isSaving={isSaving}
+        employee={editingEmployee}
       />
 
       {/* Toasts */}

@@ -18,7 +18,7 @@ export const ConfigExerciseOnSelectMode = ({
   onAddExercise
 }: ConfigExerciseOnSelectModeProps) => {
   const [series, setSeries] = useState(3)
-  const [reps, setReps] = useState("")
+  const [reps, setReps] = useState(12) // Cambiado a número
   const [restKg, setRestKg] = useState("")
   const [restTime, setRestTime] = useState("60")
   const [notes, setNotes] = useState("")
@@ -28,7 +28,7 @@ export const ConfigExerciseOnSelectMode = ({
       ...exercise,
       config: {
         series,
-        reps,
+        reps: reps.toString(), // Convertir a string para el payload
         restKg,
         restTime,
         notes
@@ -104,20 +104,28 @@ export const ConfigExerciseOnSelectMode = ({
               <label className="text-white text-sm font-medium block mb-2">Repeticiones</label>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setReps(Math.max(0, parseInt(reps || "0") - 1).toString())}
+                  onClick={() => setReps(Math.max(1, reps - 1))}
                   className="w-8 h-8 bg-itemsCard border border-white/20 rounded-lg flex items-center justify-center text-white hover:bg-white/10 transition-colors flex-shrink-0"
                 >
                   <LuMinus size={14} />
                 </button>
                 <input
-                  type="text"
+                  type="number"
                   value={reps}
-                  onChange={(e) => setReps(e.target.value)}
-                  placeholder="8-12"
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value)
+                    if (!isNaN(value) && value >= 1) {
+                      setReps(value)
+                    } else if (e.target.value === '') {
+                      setReps(1)
+                    }
+                  }}
+                  min="1"
+                  placeholder="12"
                   className="flex-1 min-w-0 p-2 bg-itemsCard border border-white/20 rounded-lg text-white text-center placeholder-quaternary focus:outline-none focus:border-white/40 text-sm"
                 />
                 <button
-                  onClick={() => setReps((parseInt(reps || "0") + 1).toString())}
+                  onClick={() => setReps(reps + 1)}
                   className="w-8 h-8 bg-itemsCard border border-white/20 rounded-lg flex items-center justify-center text-white hover:bg-white/10 transition-colors flex-shrink-0"
                 >
                   <LuPlus size={14} />
@@ -140,7 +148,7 @@ export const ConfigExerciseOnSelectMode = ({
             </div>
 
             <div>
-              <label className="text-white text-sm font-medium block mb-2">Descanso (seg)</label>
+              <label className="text-white text-sm font-medium block mb-2">Descanso (min)</label>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setRestTime(Math.max(0, parseInt(restTime) - 15).toString())}
@@ -193,7 +201,7 @@ export const ConfigExerciseOnSelectMode = ({
               isWidthFull={true}
               lgPaddingLine=""
               mdPaddingLine=""
-              isBlocked={!reps || reps.trim() === ''}
+              isBlocked={!reps || reps < 1}
               onlyMobileText
             >
               Agregar ejercicio

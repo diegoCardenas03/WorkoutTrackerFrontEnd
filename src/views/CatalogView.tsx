@@ -8,9 +8,10 @@ import { ExerciseModal } from "../components/catalog/modals/ExerciseModal"
 import { Button } from "../components/Button"
 import { LuArrowLeft, LuCheck } from "react-icons/lu"
 import { ConfigExerciseOnSelectMode } from "../components/catalog/modals/ConfigExerciseOnSelectMode"
+import { Toast } from "../components/Toast"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../store"
-import { fetchExercises } from "../store/slices/exerciseSlice"
+import { fetchActiveExercises } from "../store/slices/exerciseSlice"
 import { fetchCategories } from "../store/slices/categorySlice"
 import { useRoutineSelection } from "../hooks/useRoutineSelection"
 import type { EjercicioResponseDTO } from "../types/ejercicio/EjercicioResponseDTO"
@@ -20,6 +21,7 @@ import type { RutinaRequestDTO } from "../types/rutina/RutinaRequestDTO"
 import { buildRutinaRequest } from "../utils/buildRutinaRequest"
 import { useNavigate } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
+import { useUser } from "../hooks/useUser"
 
 export const CatalogView = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -27,6 +29,9 @@ export const CatalogView = () => {
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedMuscle, setSelectedMuscle] = useState("")
     const [selectedEquipment, setSelectedEquipment] = useState("")
+    const [showSuccessToast, setShowSuccessToast] = useState(false)
+    const [showErrorToast, setShowErrorToast] = useState(false)
+    const [toastMessage, setToastMessage] = useState("")
 
 
     const dispatch = useDispatch<AppDispatch>()
@@ -35,6 +40,7 @@ export const CatalogView = () => {
     const navigate = useNavigate()
     const [editingRoutineId, setEditingRoutineId] = useState<number | null>(null)
     const { getAccessTokenSilently } = useAuth0()
+    const { userData } = useUser()
 
     // Custom hook para modo selección de rutina
     const {
@@ -70,7 +76,7 @@ export const CatalogView = () => {
                     },
                 });
                 
-                dispatch(fetchExercises(token) as any)
+                dispatch(fetchActiveExercises(token) as any)
                 dispatch(fetchCategories(token) as any)
             } catch (error) {
                 console.error("Error al obtener token:", error)
@@ -151,8 +157,12 @@ export const CatalogView = () => {
     // Nota: la resolución de categoría se realiza en handleFinishRoutine con datos frescos
 
     const resolveUserId = (): number => {
-        // TODO: obtener userId desde auth/store; fallback 1
-        return 1
+        // Obtener el ID del usuario autenticado actual
+        if (userData?.id) {
+            return userData.id
+        }
+        console.warn('⚠️ [CatalogView] No se pudo obtener el ID del usuario, usando fallback 1')
+        return 1 // Fallback solo si no hay userData
     }
 
     const handleFinishRoutine = async () => {
@@ -192,9 +202,14 @@ export const CatalogView = () => {
 
             if (editingRoutineId) {
                 await dispatch(updateRoutine({ token, id: editingRoutineId, routineData: payload })).unwrap()
+                setToastMessage('Rutina actualizada exitosamente')
             } else {
                 await dispatch(createRoutine({ token, routineData: payload })).unwrap()
+                setToastMessage('Rutina creada exitosamente')
             }
+            
+            setShowSuccessToast(true)
+            
             // refrescar la lista para asegurar datos completos del backend
             await dispatch(fetchRoutines(token))
             // limpiar estado de selección y storage
@@ -202,10 +217,17 @@ export const CatalogView = () => {
             localStorage.removeItem('pendingRoutineData')
             localStorage.removeItem('pendingExercisesByDay')
             setEditingRoutineId(null)
-            // navegar a Mis Rutinas
-            navigate('/routines', { replace: true })
+            
+            // Esperar un momento para que se vea el toast antes de navegar
+            setTimeout(() => {
+                navigate('/routines', { replace: true })
+            }, 1500)
         } catch (e) {
             console.error('Error creando/actualizando rutina:', e)
+            setToastMessage(editingRoutineId 
+                ? 'Error al actualizar la rutina. Inténtalo de nuevo.' 
+                : 'Error al crear la rutina. Inténtalo de nuevo.')
+            setShowErrorToast(true)
         }
     }
 
@@ -503,6 +525,22 @@ export const CatalogView = () => {
                     onWatchVideo={handleWatchVideo}
                 />
             )}
+
+            {/* Toasts de éxito y error */}
+            <Toast
+                open={showSuccessToast}
+                type="success"
+                message={toastMessage}
+                onClose={() => setShowSuccessToast(false)}
+                durationMs={3000}
+            />
+            <Toast
+                open={showErrorToast}
+                type="error"
+                message={toastMessage}
+                onClose={() => setShowErrorToast(false)}
+                durationMs={4000}
+            />
         </PrivateLayout>
     )
 }

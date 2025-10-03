@@ -157,11 +157,10 @@ export const MembersAdminView = () => {
         {/* Table */}
         <div className="bg-tertiary rounded-lg border border-white/20 overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-6 gap-4 p-4 border-b border-white/10 bg-itemsCard">
+          <div className="grid grid-cols-5 gap-4 p-4 border-b border-white/10 bg-itemsCard">
             <div className="text-quaternary text-sm font-medium">Imagen</div>
             <div className="text-quaternary text-sm font-medium">Nombre</div>
             <div className="text-quaternary text-sm font-medium">Correo electrónico</div>
-            <div className="text-quaternary text-sm font-medium">Rol</div>
             <div className="text-quaternary text-sm font-medium">Estado</div>
             <div className="text-quaternary text-sm font-medium">Acciones</div>
           </div>
@@ -170,7 +169,7 @@ export const MembersAdminView = () => {
           <div className="divide-y divide-white/10">
             {paginatedMembers.length > 0 ? (
               paginatedMembers.map((member) => (
-                <div key={member.id} className="grid grid-cols-6 gap-4 p-4 items-center">
+                <div key={member.id} className="grid grid-cols-5 gap-4 p-4 items-center">
                   {/* Image */}
                   <div>
                     <img
@@ -188,11 +187,6 @@ export const MembersAdminView = () => {
                   {/* Email */}
                   <div>
                     <p className="text-quaternary text-sm">{member.email}</p>
-                  </div>
-
-                  {/* Role */}
-                  <div>
-                    <p className="text-white text-sm capitalize">{member.role?.name || 'Usuario'}</p>
                   </div>
 
                   {/* Status Toggle */}

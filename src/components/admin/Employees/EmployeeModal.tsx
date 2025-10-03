@@ -2,19 +2,22 @@ import { useState, useEffect } from "react"
 import { IoClose } from "react-icons/io5"
 import { Button } from "../../Button"
 import type { SignupRequestDTO } from "../../../types/usuario/auth0/SignupRequestDTO"
+import type { UsuarioResponseDTO } from "../../../types/usuario/UsuarioResponseDTO"
 
 interface EmployeeModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (employeeData: SignupRequestDTO) => void
   isSaving?: boolean
+  employee?: UsuarioResponseDTO | null
 }
 
 export const EmployeeModal = ({
   isOpen,
   onClose,
   onSave,
-  isSaving = false
+  isSaving = false,
+  employee = null
 }: EmployeeModalProps) => {
   const [formData, setFormData] = useState<SignupRequestDTO>({
     name: "",
@@ -29,7 +32,14 @@ export const EmployeeModal = ({
   })
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen && employee) {
+      // Cargar datos del empleado para editar
+      setFormData({
+        name: employee.name || "",
+        email: employee.email || "",
+        password: "" // La contraseña se deja vacía al editar
+      })
+    } else if (!isOpen) {
       // Reset form cuando se cierra el modal
       setFormData({
         name: "",
@@ -42,7 +52,7 @@ export const EmployeeModal = ({
         password: ""
       })
     }
-  }, [isOpen])
+  }, [isOpen, employee])
 
   const handleInputChange = (field: keyof SignupRequestDTO, value: string) => {
     setFormData(prev => ({
@@ -75,10 +85,18 @@ export const EmployeeModal = ({
       newErrors.email = "Email inválido"
     }
 
-    if (!formData.password?.trim()) {
-      newErrors.password = "La contraseña es obligatoria"
-    } else if (formData.password.length < 8) {
-      newErrors.password = "La contraseña debe tener al menos 8 caracteres"
+    // La contraseña solo es obligatoria al crear (no al editar)
+    if (!employee) {
+      if (!formData.password?.trim()) {
+        newErrors.password = "La contraseña es obligatoria"
+      } else if (formData.password.length < 8) {
+        newErrors.password = "La contraseña debe tener al menos 8 caracteres"
+      }
+    } else {
+      // Al editar, si se ingresa contraseña, debe ser válida
+      if (formData.password && formData.password.length < 8) {
+        newErrors.password = "La contraseña debe tener al menos 8 caracteres"
+      }
     }
 
     setErrors(newErrors)
@@ -110,7 +128,7 @@ export const EmployeeModal = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-white text-lg font-semibold">
-            Crear Administrador
+            {employee ? 'Editar Administrador' : 'Crear Administrador'}
           </h2>
           <button 
             onClick={onClose}
@@ -152,7 +170,7 @@ export const EmployeeModal = ({
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
               placeholder="Ingresa el email"
-              disabled={isSaving}
+              disabled={isSaving || !!employee}
               className={`w-full p-3 bg-tertiary border rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.email ? 'border-red-500' : 'border-white/20'
               }`}
@@ -160,18 +178,23 @@ export const EmployeeModal = ({
             {errors.email && (
               <p className="text-red-500 text-xs mt-1">{errors.email}</p>
             )}
+            {employee && (
+              <p className="text-quaternary text-xs mt-1">
+                El email no puede ser modificado
+              </p>
+            )}
           </div>
 
           {/* Contraseña */}
           <div>
             <label className="text-white text-sm font-medium block mb-2">
-              Contraseña
+              Contraseña {employee && '(Opcional)'}
             </label>
             <input
               type="password"
               value={formData.password}
               onChange={(e) => handleInputChange("password", e.target.value)}
-              placeholder="Ingresa la contraseña (mínimo 8 caracteres)"
+              placeholder={employee ? "Dejar vacío para no cambiar" : "Ingresa la contraseña (mínimo 8 caracteres)"}
               disabled={isSaving}
               className={`w-full p-3 bg-tertiary border rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.password ? 'border-red-500' : 'border-white/20'
@@ -181,7 +204,7 @@ export const EmployeeModal = ({
               <p className="text-red-500 text-xs mt-1">{errors.password}</p>
             )}
             <p className="text-quaternary text-xs mt-1">
-              Mínimo 8 caracteres
+              {employee ? 'Dejar en blanco si no deseas cambiar la contraseña' : 'Mínimo 8 caracteres'}
             </p>
           </div>
         </div>
@@ -202,7 +225,10 @@ export const EmployeeModal = ({
             isWidthFull={true}
             isBlocked={isSaving}
           >
-            {isSaving ? 'Creando...' : 'Crear Administrador'}
+            {isSaving 
+              ? (employee ? 'Guardando...' : 'Creando...') 
+              : (employee ? 'Guardar Cambios' : 'Crear Administrador')
+            }
           </Button>
         </div>
       </div>

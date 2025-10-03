@@ -41,29 +41,30 @@ export const MyProfileView = () => {
     
     // Validaciones
     if (!name.trim()) {
-      setToastMessage("El nombre de usuario no puede estar vacío");
+      setToastMessage("El nombre no puede estar vacío");
       setToastType("error");
       setShowToast(true);
       return;
     }
 
-    if (name.length < 3) {
-      setToastMessage("El nombre de usuario debe tener al menos 3 caracteres");
+    if (name.trim().length < 2) {
+      setToastMessage("El nombre debe tener al menos 2 caracteres");
       setToastType("error");
       setShowToast(true);
       return;
     }
 
-    if (name.length > 20) {
-      setToastMessage("El nombre de usuario no puede tener más de 20 caracteres");
+    if (name.length > 50) {
+      setToastMessage("El nombre no puede tener más de 50 caracteres");
       setToastType("error");
       setShowToast(true);
       return;
     }
 
-    const usernameRegex = /^[a-zA-Z0-9_-]+$/;
-    if (!usernameRegex.test(name)) {
-      setToastMessage("El nombre de usuario solo puede contener letras, números, guiones y guiones bajos");
+    // Solo letras, espacios, acentos y apóstrofes
+    const nameRegex = /^[a-zA-Z\u00c0-\u00ff\s'.-]+$/;
+    if (!nameRegex.test(name)) {
+      setToastMessage("El nombre solo puede contener letras, espacios y caracteres válidos");
       setToastType("error");
       setShowToast(true);
       return;
@@ -100,9 +101,9 @@ export const MyProfileView = () => {
       // Preparar datos a enviar
       const updateData: any = {};
       
-      // Incluir name si cambió
-      if (name.trim() && name !== userData?.name) {
-        updateData.name = name;
+      // Incluir name si cambió (con trim para eliminar espacios extra)
+      if (name.trim() && name.trim() !== userData?.name) {
+        updateData.name = name.trim();
       }
       
       // Solo incluir password si se proporcionó y no es usuario de Google
@@ -121,6 +122,9 @@ export const MyProfileView = () => {
       
       // Recargar datos del usuario
       await refetch();
+
+      // Emitir evento personalizado para notificar a otros componentes
+      window.dispatchEvent(new CustomEvent('userProfileUpdated'));
 
       // Limpiar campos de contraseña
       setPassword("");
@@ -172,11 +176,12 @@ export const MyProfileView = () => {
                 type='text'
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ingresa tu nombre de usuario"
-                className="w-full h-11 md:h-11 lg:h-11 2xl:h-12 px-4 text-[15px] md:text-[0.95em] lg:text-[1em] rounded-[5px] 2xl:text-[1.1em] text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors font-bold"
+                placeholder="Ingresa tu nombre"
+                disabled={isSaving}
+                className="w-full h-11 md:h-11 lg:h-11 2xl:h-12 px-4 text-[15px] md:text-[0.95em] lg:text-[1em] rounded-[5px] 2xl:text-[1.1em] text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <p className='font-light text-[11px] text-quaternary'>
-                3-20 caracteres. Solo letras, números, guiones y guiones bajos
+                2-50 caracteres. Puedes usar tu nombre completo.
               </p>
             </div>
             <div className='flex flex-col gap-2'>
@@ -190,16 +195,39 @@ export const MyProfileView = () => {
               <p className='font-light text-[11px] text-quaternary'>El correo no se puede modificar</p>
             </div>
             
-            {/* Mostrar campo de contraseña solo si NO es login de Google */}
-            {auth0User?.sub && !auth0User.sub.includes('google-oauth2') && (
-              <div className='flex flex-col gap-2'>
-                <p className='font-light text-base'>Contraseña</p>
-                <input
-                  type='password'
-                  value='**********'
-                  className="w-full h-11 md:h-11 lg:h-11 2xl:h-12 px-4 text-[15px] md:text-[0.95em] lg:text-[1em] rounded-[5px] 2xl:text-[1.1em] text-quaternary placeholder-gray-400 border border-white/30 cursor-not-allowed bg-white/5"
-                />
-              </div>
+            {/* Mostrar campos de contraseña solo si NO es login de Google */}
+            {!isGoogleUser && (
+              <>
+                <div className='flex flex-col gap-2'>
+                  <p className='font-light text-base'>Contraseña Nueva (opcional)</p>
+                  <input
+                    type='password'
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Ingresa tu nueva contraseña"
+                    disabled={isSaving}
+                    className="w-full h-11 md:h-11 lg:h-11 2xl:h-12 px-4 text-[15px] md:text-[0.95em] lg:text-[1em] rounded-[5px] 2xl:text-[1.1em] text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  <p className='font-light text-[11px] text-quaternary'>
+                    Mínimo 8 caracteres. Debe contener mayúsculas, minúsculas y símbolos.
+                  </p>
+                </div>
+
+                <div className='flex flex-col gap-2'>
+                  <p className='font-light text-base'>Confirmar Contraseña</p>
+                  <input
+                    type='password'
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirma tu nueva contraseña"
+                    disabled={isSaving}
+                    className="w-full h-11 md:h-11 lg:h-11 2xl:h-12 px-4 text-[15px] md:text-[0.95em] lg:text-[1em] rounded-[5px] 2xl:text-[1.1em] text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  <p className='font-light text-[11px] text-quaternary'>
+                    Las contraseñas deben coincidir
+                  </p>
+                </div>
+              </>
             )}
             
             

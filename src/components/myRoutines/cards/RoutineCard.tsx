@@ -1,6 +1,7 @@
-import { LuDumbbell, LuCalendarDays, LuPlay, LuEllipsisVertical } from "react-icons/lu"
+import { LuDumbbell, LuCalendarDays, LuPlay, LuEllipsisVertical, LuTrash2 } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
+import { useState, useRef, useEffect } from "react"
 
 interface RoutineCardProps {
   title: string
@@ -21,7 +22,7 @@ interface RoutineCardProps {
   }
   onStart?: () => void
   onViewRoutine?: () => void
-  onMenuClick?: () => void
+  onDelete?: () => void
   className?: string
 }
 
@@ -35,9 +36,36 @@ export const RoutineCard = ({
   simpleData,
   onStart,
   onViewRoutine,
-  onMenuClick,
+  onDelete,
   className = ""
 }: RoutineCardProps) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Cerrar menú al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isMenuOpen])
+
+  const handleDeleteClick = () => {
+    setIsMenuOpen(false)
+    if (onDelete) {
+      onDelete()
+    }
+  }
+
   const dayAbbreviations: Record<string, string> = {
     'Lunes': 'Lun',
     'Martes': 'Mar', 
@@ -68,13 +96,28 @@ export const RoutineCard = ({
           </div>
         </div>
         
-        {/* Menu Button */}
-        <button
-          onClick={onMenuClick}
-          className="text-white hover:text-white/80 transition-colors p-1 cursor-pointer"
-        >
-          <LuEllipsisVertical size={20} />
-        </button>
+        {/* Menu Button with Dropdown */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="text-white hover:text-white/80 transition-colors p-1 cursor-pointer"
+          >
+            <LuEllipsisVertical size={20} />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isMenuOpen && (
+            <div className="absolute right-0 top-8 bg-tertiary border border-white/20 rounded-lg shadow-lg z-10 min-w-[160px]">
+              <button
+                onClick={handleDeleteClick}
+                className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-itemsCard transition-colors rounded-lg cursor-pointer text-red-400 hover:text-red-300"
+              >
+                <LuTrash2 size={16} />
+                <span className="text-sm font-medium">Eliminar rutina</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content */}

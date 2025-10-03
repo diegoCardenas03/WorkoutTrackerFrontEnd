@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import { IoClose } from "react-icons/io5"
 import { LuPlus, LuX, LuChevronDown, LuChevronUp, LuSearch } from "react-icons/lu"
 import { Button } from "../../Button"
+import { Spinner } from "../../Spinner"
 import { useSelector } from "react-redux"
 import type { RootState } from "../../../store"
 import type { EjercicioResponseDTO } from "../../../types/ejercicio/EjercicioResponseDTO"
@@ -236,9 +237,13 @@ export const ExerciseAdminModal = ({
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {isLoadingDetails && (
-            <div className="mb-2 text-quaternary text-sm">Cargando detalles…</div>
-          )}
+          {isLoadingDetails ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Spinner size="lg" />
+              <p className="mt-4 text-quaternary text-sm">Cargando detalles del ejercicio...</p>
+            </div>
+          ) : (
+            <>
           {/* Nombre */}
           <div>
             <label className="text-white text-sm font-medium block mb-2">
@@ -505,6 +510,8 @@ export const ExerciseAdminModal = ({
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.active ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
+          )}
+            </>
           )}
         </div>
 

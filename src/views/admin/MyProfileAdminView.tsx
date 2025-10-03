@@ -39,6 +39,26 @@ export const MyProfileAdminView = () => {
             return
         }
 
+        if (name.trim().length < 2) {
+            setErrorMessage("El nombre debe tener al menos 2 caracteres")
+            setShowErrorToast(true)
+            return
+        }
+
+        if (name.length > 50) {
+            setErrorMessage("El nombre no puede tener más de 50 caracteres")
+            setShowErrorToast(true)
+            return
+        }
+
+        // Solo letras, espacios, acentos y apóstrofes
+        const nameRegex = /^[a-zA-Z\u00c0-\u00ff\s'.-]+$/
+        if (!nameRegex.test(name)) {
+            setErrorMessage("El nombre solo puede contener letras, espacios y caracteres válidos")
+            setShowErrorToast(true)
+            return
+        }
+
         if (password && password !== confirmPassword) {
             setErrorMessage("Las contraseñas no coinciden")
             setShowErrorToast(true)
@@ -82,6 +102,10 @@ export const MyProfileAdminView = () => {
                 console.log('💾 [MyProfileAdminView] Actualizando perfil con:', updateData);
                 await usuarioService.updateProfile(token, updateData)
                 await refetch() // Recargar datos del usuario
+                
+                // Emitir evento personalizado para notificar a otros componentes
+                window.dispatchEvent(new CustomEvent('userProfileUpdated'));
+                
                 setPassword("")
                 setConfirmPassword("")
                 setShowSuccessToast(true)

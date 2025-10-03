@@ -31,10 +31,13 @@ export const fetchRoutines = createAsyncThunk(
   'routines/fetchRoutines',
   async (token: string, { rejectWithValue }) => {
     try {
+      console.log('🔵 [routineSlice] Obteniendo rutinas del usuario...')
       rutinaService.setToken(token)
       const data = await rutinaService.getAll()
+      console.log('✅ [routineSlice] Rutinas obtenidas:', data.length, data)
       return data as RutinaResponseDTO[]
     } catch (error) {
+      console.error('❌ [routineSlice] Error al cargar rutinas:', error)
       return rejectWithValue(error instanceof Error ? error.message : 'Error al cargar rutinas')
     }
   }

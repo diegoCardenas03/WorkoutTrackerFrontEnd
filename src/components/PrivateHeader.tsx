@@ -1,7 +1,7 @@
 import { LuBell, LuPanelLeft } from "react-icons/lu"
 import fotoPerfil from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\FotoPerfil.png"
 import { IoCaretDownSharp } from "react-icons/io5"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { MenuProfile } from "./MenuProfile"
 import { useUser } from "../hooks/useUser"
 
@@ -20,7 +20,21 @@ const truncateName = (name: string, maxLength: number = 12): string => {
 export const PrivateHeader = ({ onToggleSidebar, isSidebarOpen, isMessage }: PrivateHeaderProps) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [shouldRender, setShouldRender] = useState(false);
-    const { userData, auth0User } = useUser();
+    const { userData, auth0User, refetch } = useUser();
+    
+    // Escuchar evento de actualización de perfil
+    useEffect(() => {
+        const handleProfileUpdate = () => {
+            console.log('🔄 [PrivateHeader] Perfil actualizado, recargando datos...');
+            refetch();
+        };
+
+        window.addEventListener('userProfileUpdated', handleProfileUpdate);
+        
+        return () => {
+            window.removeEventListener('userProfileUpdated', handleProfileUpdate);
+        };
+    }, [refetch]);
     
     const profilePicture = auth0User?.picture || fotoPerfil;
     const userName = userData?.name || auth0User?.name || "Usuario";
@@ -56,9 +70,9 @@ export const PrivateHeader = ({ onToggleSidebar, isSidebarOpen, isMessage }: Pri
 
             {/* Notificacion, Foto perfil, Nombre y Icono de apertura */}
             <div className={`flex items-center justify-center transition-all h-full gap-10`}>
-                <div className="flex items-center justify-center">
+                {/* <div className="flex items-center justify-center">
                     <LuBell className="cursor-pointer hover:text-quaternary transition-colors text-[20px] md:text-[20px] lg:text-[20px] 2xl:text-[24px]" />
-                </div>
+                </div> */}
                 <div className="flex items-center justify-between gap-3 cursor-pointer select-none" onClick={toggleMenu}>
                     <img className="w-[25px] h-[25px] md:w-[1.6em] md:h-[1.6em] lg:w-[1.6em] lg:h-[1.6em] 2xl:w-[1.8em] 2xl:h-[1.8em] rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity" src={profilePicture} alt="fotoPerfil" />
                     <p className="font-extrabold hidden md:block lg:block 2xl:block md:text-[11px] lg:text-[11px] 2xl:text-[12px] cursor-pointer hover:text-quaternary transition-colors uppercase">{displayName}</p>

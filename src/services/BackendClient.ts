@@ -24,13 +24,21 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
   }
 
   async getAll(): Promise<ResponseType[]> {
+    console.log(`🔵 [BackendClient.getAll] GET ${this.baseUrl}?relations=true`)
     const response = await fetch(`${this.baseUrl}?relations=true`, {
       headers: this.getHeaders(),
     });
+    
+    console.log(`🟡 [BackendClient.getAll] Response status: ${response.status}`)
+    
     if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`❌ [BackendClient.getAll] Error: ${response.status} - ${errorText}`)
       throw new Error(`Error al obtener datos: ${response.statusText}`);
     }
+    
     const data = await response.json();
+    console.log(`✅ [BackendClient.getAll] Datos obtenidos:`, data.length, 'elementos')
     return data as ResponseType[];
   }
 
@@ -222,9 +230,9 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ [BackendClient.postAdmin] Error:`, errorText);
-      throw new Error(errorText);
+      const error = await response.json().catch(() => ({ message: 'Error al crear' }));
+      console.error(`❌ [BackendClient.postAdmin] Error:`, error);
+      throw new Error(error.message || 'Error al crear');
     }
     
     const newData = await response.json();
@@ -245,9 +253,9 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ [BackendClient.patchAdmin] Error:`, errorText);
-      throw new Error(errorText);
+      const error = await response.json().catch(() => ({ message: 'Error al actualizar' }));
+      console.error(`❌ [BackendClient.patchAdmin] Error:`, error);
+      throw new Error(error.message || 'Error al actualizar');
     }
     
     const newData = await response.json();

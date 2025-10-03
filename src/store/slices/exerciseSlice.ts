@@ -27,7 +27,25 @@ export const fetchExercises = createAsyncThunk(
       ejercicioService.setToken(token)
       // Delay mínimo para mejor UX del spinner
       const [data] = await Promise.all([
-        ejercicioService.getAllAdmin(true), // relations=true
+        ejercicioService.getAllAdmin(true), // relations=true - ADMIN: incluye inactivos
+        new Promise(resolve => setTimeout(resolve, 600))
+      ])
+      return data as EjercicioResponseDTO[]
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
+    }
+  }
+)
+
+// Nueva acción para usuarios (solo ejercicios activos)
+export const fetchActiveExercises = createAsyncThunk(
+  'exercises/fetchActiveExercises',
+  async (token: string, { rejectWithValue }) => {
+    try {
+      ejercicioService.setToken(token)
+      // Delay mínimo para mejor UX del spinner
+      const [data] = await Promise.all([
+        ejercicioService.getAllActive(), // USUARIO: solo activos
         new Promise(resolve => setTimeout(resolve, 600))
       ])
       return data as EjercicioResponseDTO[]
@@ -128,6 +146,19 @@ const exerciseSlice = createSlice({
         state.exercises = action.payload
       })
       .addCase(fetchExercises.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      // Fetch active exercises (usuarios)
+      .addCase(fetchActiveExercises.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchActiveExercises.fulfilled, (state, action) => {
+        state.loading = false
+        state.exercises = action.payload
+      })
+      .addCase(fetchActiveExercises.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

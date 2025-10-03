@@ -6,6 +6,8 @@ import { AdminLayout } from "../../layouts/admin/AdminLayout"
 import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../../store"
 import { createExercise, fetchExercises, updateExercise, fetchExerciseById, toggleExerciseActive } from "../../store/slices/exerciseSlice"
+import { fetchMuscles } from "../../store/slices/muscleSlice"
+import { fetchEquipments } from "../../store/slices/equipmentSlice"
 import type { EjercicioRequestDTO } from "../../types/ejercicio/EjercicioRequestDTO"
 import { Toast } from "../../components/Toast"
 import { Spinner } from "../../components/Spinner"
@@ -41,9 +43,12 @@ export const ExercisesAdminView = () => {
             scope: "openid profile email",
           },
         })
+        // Cargar ejercicios, músculos y equipamiento
         ;(dispatch as any)(fetchExercises(token))
+        ;(dispatch as any)(fetchMuscles(token))
+        ;(dispatch as any)(fetchEquipments(token))
       } catch (error) {
-        console.error('Error loading exercises:', error)
+        console.error('Error loading data:', error)
       }
     }
     loadData()
@@ -180,7 +185,18 @@ export const ExercisesAdminView = () => {
       console.error('❌ [ExercisesAdminView] Error al guardar ejercicio:', e)
       
       let errorMessage = 'Error al guardar ejercicio';
-      if (e?.message?.includes('403') || e?.message?.includes('Forbidden')) {
+      
+      // Manejar errores de validación del backend
+      if (e?.message?.includes('músculo objetivo activo')) {
+        errorMessage = 'No se puede activar: Debe tener al menos 1 músculo objetivo activo';
+      } else if (e?.message?.includes('Equipamiento') && e?.message?.includes('inactivo')) {
+        // Extraer el mensaje completo del backend
+        errorMessage = e.message.includes('con el ID') 
+          ? `${e.message}. Actívalo primero o quítalo del ejercicio`
+          : 'No se puede usar equipamiento inactivo';
+      } else if (e?.message?.includes('404')) {
+        errorMessage = 'Recurso no encontrado. Verifica que todos los elementos existan';
+      } else if (e?.message?.includes('403') || e?.message?.includes('Forbidden')) {
         errorMessage = 'No tienes permisos de administrador. Verifica tu rol en Auth0.';
       } else if (e?.message?.includes('401') || e?.message?.includes('Unauthorized')) {
         errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
@@ -189,7 +205,7 @@ export const ExercisesAdminView = () => {
       }
       
       setToast({ msg: errorMessage, type: 'error' })
-      setTimeout(() => setToast(null), 4000)
+      setTimeout(() => setToast(null), 5000)
     }
   }
 

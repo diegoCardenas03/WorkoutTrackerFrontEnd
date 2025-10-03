@@ -13,10 +13,11 @@ import { ConfigRoutineModal } from "../components/myRoutines/modals/ConfigRoutin
 import { useNavigate } from "react-router-dom"
 import type { RutinaResponseDTO } from "../types/rutina/RutinaResponseDTO"
 import { useDispatch, useSelector } from "react-redux"
-import { fetchRoutines, updateRoutine } from "../store/slices/routineSlice"
+import { fetchRoutines, updateRoutine, deleteRoutine } from "../store/slices/routineSlice"
 import { fetchCategories } from "../store/slices/categorySlice"
 import { startRoutineFromDto } from "../store/slices/trainingSlice"
 import { useAuth0 } from "@auth0/auth0-react"
+import { Toast } from "../components/Toast"
 
 interface RoutineData {
     id: string
@@ -49,6 +50,9 @@ export const MyRoutinesView = () => {
     const [editPrefill, setEditPrefill] = useState<any | null>(null)
     const [editRoutineId, setEditRoutineId] = useState<number | null>(null)
     const afterConfigRef = useRef<null | ((data: any) => void)>(null)
+    const [showSuccessToast, setShowSuccessToast] = useState(false)
+    const [showErrorToast, setShowErrorToast] = useState(false)
+    const [toastMessage, setToastMessage] = useState("")
     // const [routineFormData, setRoutineFormData] = useState(null)
     const dispatch = useDispatch()
     const routinesFromStore: RutinaResponseDTO[] = useSelector((state: any) => state.routines?.routines ?? [])
@@ -59,18 +63,20 @@ export const MyRoutinesView = () => {
 
     useEffect(() => {
         const loadRoutines = async () => {
-            if (!routinesLoading && routinesFromStore.length === 0) {
-                try {
-                    const token = await getAccessTokenSilently({
-                        authorizationParams: {
-                            audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-                            scope: "openid profile email",
-                        },
-                    });
-                    dispatch(fetchRoutines(token) as any)
-                } catch (error) {
-                    console.error("Error al obtener token:", error)
-                }
+            // Siempre intentar cargar rutinas al montar el componente
+            try {
+                console.log('🔵 [MyRoutinesView] Cargando rutinas...')
+                const token = await getAccessTokenSilently({
+                    authorizationParams: {
+                        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                        scope: "openid profile email",
+                    },
+                });
+                console.log('🔑 [MyRoutinesView] Token obtenido')
+                await (dispatch as any)(fetchRoutines(token))
+                console.log('✅ [MyRoutinesView] Rutinas cargadas desde el store')
+            } catch (error) {
+                console.error("❌ [MyRoutinesView] Error al obtener token:", error)
             }
         }
         loadRoutines()
@@ -119,6 +125,34 @@ export const MyRoutinesView = () => {
         if (!dto) return
         ;(dispatch as any)(startRoutineFromDto({ routine: dto }))
         navigate('/training')
+    }
+
+    const handleDeleteRoutine = async (routine: RoutineData) => {
+        if (!window.confirm(`¿Estás seguro de que deseas eliminar la rutina "${routine.title}"?`)) {
+            return
+        }
+
+        try {
+            const token = await getAccessTokenSilently({
+                authorizationParams: {
+                    audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                    scope: "openid profile email",
+                },
+            })
+
+            const routineId = Number(routine.id)
+            await (dispatch as any)(deleteRoutine({ token, id: routineId })).unwrap()
+            
+            setToastMessage('Rutina eliminada exitosamente')
+            setShowSuccessToast(true)
+            
+            // Recargar rutinas
+            await (dispatch as any)(fetchRoutines(token))
+        } catch (error: any) {
+            console.error('Error al eliminar rutina:', error)
+            setToastMessage(error.message || 'Error al eliminar la rutina. Inténtalo de nuevo.')
+            setShowErrorToast(true)
+        }
     }
 
     
@@ -428,9 +462,17 @@ export const MyRoutinesView = () => {
                 </div>
 
                 {/* Mostrar rutinas filtradas */}
-                {filteredRoutines.length === 0 ? (
+                {routinesLoading ? (
                     <div className="text-center py-12">
-                        <p className="text-quaternary text-lg">No se encontraron rutinas con los filtros seleccionados</p>
+                        <p className="text-quaternary text-lg">Cargando rutinas...</p>
+                    </div>
+                ) : filteredRoutines.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-quaternary text-lg">
+                            {allRoutines.length === 0 
+                                ? 'No tienes rutinas creadas. ¡Crea tu primera rutina!' 
+                                : 'No se encontraron rutinas con los filtros seleccionados'}
+                        </p>
                     </div>
                 ) : (
                     groupedRoutines.map((group, groupIndex) => (
@@ -447,7 +489,7 @@ export const MyRoutinesView = () => {
                                     simpleData={routine.simpleData}
                                     onStart={() => handleStartRoutine(routine)}
                                     onViewRoutine={() => handleOpenRoutineModal(routine)}
-                                    onMenuClick={() => console.log("Menu clicked", routine.id)}
+                                    onDelete={() => handleDeleteRoutine(routine)}
                                 />
                             ))}
                         </div>
@@ -576,6 +618,22 @@ export const MyRoutinesView = () => {
                     }
                     handleContinueToSelection(data)
                 }}
+            />
+
+            {/* Toasts de éxito y error */}
+            <Toast
+                open={showSuccessToast}
+                type="success"
+                message={toastMessage}
+                onClose={() => setShowSuccessToast(false)}
+                durationMs={3000}
+            />
+            <Toast
+                open={showErrorToast}
+                type="error"
+                message={toastMessage}
+                onClose={() => setShowErrorToast(false)}
+                durationMs={4000}
             />
         </PrivateLayout>
     )
