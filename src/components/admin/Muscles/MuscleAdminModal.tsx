@@ -19,8 +19,18 @@ export const MuscleAdminModal = ({ isOpen, onClose, muscle, onSave }: MuscleAdmi
   const [isSaving, setIsSaving] = useState(false)
   const [errors, setErrors] = useState<{ name?: string; muscleGroupId?: string }>({})
 
-  // Filtrar solo zonas activas del estado Redux
-  const activeMuscleZones = useMemo(() => muscleZones.filter(z => z.active), [muscleZones])
+  // Incluir zonas activas + la zona seleccionada (aunque esté inactiva)
+  const availableMuscleZones = useMemo(() => {
+    const activeZones = muscleZones.filter(z => z.active)
+    // Si estamos editando y la zona seleccionada no está en activas, agregarla
+    if (muscle && muscleGroupId) {
+      const selectedZone = muscleZones.find(z => z.id === muscleGroupId)
+      if (selectedZone && !selectedZone.active) {
+        return [...activeZones, selectedZone]
+      }
+    }
+    return activeZones
+  }, [muscleZones, muscle, muscleGroupId])
 
   useEffect(() => {
     if (isOpen) {
@@ -125,9 +135,9 @@ export const MuscleAdminModal = ({ isOpen, onClose, muscle, onSave }: MuscleAdmi
               }`}
             >
               <option value="">Selecciona una zona muscular</option>
-              {activeMuscleZones.map((zone) => (
+              {availableMuscleZones.map((zone) => (
                 <option key={zone.id} value={zone.id}>
-                  {zone.name}
+                  {zone.name}{!zone.active ? ' (Inactivo)' : ''}
                 </option>
               ))}
             </select>

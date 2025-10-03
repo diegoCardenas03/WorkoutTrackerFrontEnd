@@ -30,7 +30,6 @@ export const EquipmentAdminView = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 10
   const [searchTerm, setSearchTerm] = useState("")
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
@@ -58,36 +57,17 @@ export const EquipmentAdminView = () => {
     return equipments.filter((e) => e.name.toLowerCase().includes(term))
   }, [equipments, searchTerm])
 
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(filtered.length / pageSize)), [filtered.length])
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filtered.slice(start, start + pageSize)
-  }, [filtered, currentPage])
+  // Paginación
+  const itemsPerPage = 10
+  const totalPages = Math.ceil(filtered.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginated = filtered.slice(startIndex, endIndex)
 
-  useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(totalPages)
-  }, [totalPages])
-
+  // Reset a página 1 cuando cambia la búsqueda
   useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm])
-
-  const pageItems = useMemo(() => {
-    const items: (number | '…')[] = []
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) items.push(i)
-      return items
-    }
-    const add = (n: number) => items.push(n)
-    add(1)
-    const left = Math.max(2, currentPage - 1)
-    const right = Math.min(totalPages - 1, currentPage + 1)
-    if (left > 2) items.push('…')
-    for (let i = left; i <= right; i++) add(i)
-    if (right < totalPages - 1) items.push('…')
-    add(totalPages)
-    return items
-  }, [currentPage, totalPages])
 
   const handleCreateEquipment = () => {
     setEditingEquipment(null)
@@ -333,43 +313,50 @@ export const EquipmentAdminView = () => {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-center mt-6 gap-2">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <LuChevronLeft size={16} />
-            </button>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center mt-6 gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <LuChevronLeft size={16} />
+              </button>
 
-            <div className="flex items-center gap-2">
-              {pageItems.map((it, idx) =>
-                it === '…' ? (
-                  <span key={`dots-${idx}`} className="w-8 h-8 grid place-items-center text-quaternary">…</span>
-                ) : (
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
-                    key={it}
-                    onClick={() => setCurrentPage(it as number)}
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
                     className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                      currentPage === it
+                      currentPage === page
                         ? 'bg-white text-black'
                         : 'bg-tertiary border border-white/20 text-quaternary hover:text-white'
                     }`}
                   >
-                    {it}
+                    {page}
                   </button>
-                )
-              )}
-            </div>
+                ))}
+              </div>
 
-            <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <LuChevronRight size={16} />
-            </button>
-          </div>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <LuChevronRight size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* Info de paginación */}
+          {filtered.length > 0 && (
+            <div className="text-center mt-4">
+              <p className="text-quaternary text-sm">
+                Mostrando {startIndex + 1} - {Math.min(endIndex, filtered.length)} de {filtered.length} equipamiento{filtered.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+          )}
             </>
           )}
         </div>

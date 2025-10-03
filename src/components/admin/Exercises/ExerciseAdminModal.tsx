@@ -54,9 +54,30 @@ export const ExerciseAdminModal = ({
 
   const isEditing = !!exercise
 
-  // Filtrar solo elementos activos del estado Redux (ya cargado por la vista admin)
-  const muscleOptions = useMemo(() => muscles.filter(m => m.active).map(m => ({ id: m.id, name: m.name })), [muscles])
-  const equipmentOptions = useMemo(() => equipments.filter(e => e.active).map(e => ({ id: e.id, name: e.name })), [equipments])
+  // Incluir activos + los ya seleccionados (aunque est\u00e9n inactivos)
+  const muscleOptions = useMemo(() => {
+    const activeOnes = muscles.filter(m => m.active).map(m => ({ id: m.id, name: m.name, active: m.active }))
+    // Si estamos editando, agregar m\u00fasculos seleccionados que est\u00e9n inactivos
+    if (isEditing && formData.muscleIds.length > 0) {
+      const selectedInactive = muscles
+        .filter(m => !m.active && formData.muscleIds.includes(m.id))
+        .map(m => ({ id: m.id, name: m.name, active: m.active }))
+      return [...activeOnes, ...selectedInactive]
+    }
+    return activeOnes
+  }, [muscles, isEditing, formData.muscleIds])
+
+  const equipmentOptions = useMemo(() => {
+    const activeOnes = equipments.filter(e => e.active).map(e => ({ id: e.id, name: e.name, active: e.active }))
+    // Si estamos editando, agregar equipamiento seleccionado que est\u00e9 inactivo
+    if (isEditing && formData.equipmentIds.length > 0) {
+      const selectedInactive = equipments
+        .filter(e => !e.active && formData.equipmentIds.includes(e.id))
+        .map(e => ({ id: e.id, name: e.name, active: e.active }))
+      return [...activeOnes, ...selectedInactive]
+    }
+    return activeOnes
+  }, [equipments, isEditing, formData.equipmentIds])
 
   // Close muscle dropdown on outside click
   useEffect(() => {
@@ -273,7 +294,7 @@ export const ExerciseAdminModal = ({
                             onClick={() => toggleEquip(eq.id)}
                             className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${selected ? 'bg-blue-500/10 text-blue-300' : 'hover:bg-white/5 text-quaternary'}`}
                           >
-                            {eq.name}
+                            {eq.name}{!eq.active ? ' (Inactivo)' : ''}
                           </button>
                         )
                       })}
@@ -284,10 +305,12 @@ export const ExerciseAdminModal = ({
             {formData.equipmentIds.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {formData.equipmentIds.map(id => {
-                  const name = equipmentOptions.find(e => e.id === id)?.name || `#${id}`
+                  const equipment = equipmentOptions.find(e => e.id === id)
+                  const name = equipment?.name || `#${id}`
+                  const isInactive = equipment && !equipment.active
                   return (
                     <span key={id} className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-xs flex items-center gap-1">
-                      {name}
+                      {name}{isInactive ? ' (Inactivo)' : ''}
                       <button onClick={() => toggleEquip(id)} className="hover:text-blue-200"><LuX size={12} /></button>
                     </span>
                   )
@@ -336,7 +359,7 @@ export const ExerciseAdminModal = ({
                             onClick={() => toggleMuscle(m.id)}
                             className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${selected ? 'bg-blue-500/10 text-blue-300' : 'hover:bg-white/5 text-quaternary'}`}
                           >
-                            {m.name}
+                            {m.name}{!m.active ? ' (Inactivo)' : ''}
                           </button>
                         )
                       })}
@@ -348,10 +371,12 @@ export const ExerciseAdminModal = ({
             {formData.muscleIds.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {formData.muscleIds.map(id => {
-                  const name = muscleOptions.find(m => m.id === id)?.name || `#${id}`
+                  const muscle = muscleOptions.find(m => m.id === id)
+                  const name = muscle?.name || `#${id}`
+                  const isInactive = muscle && !muscle.active
                   return (
                     <span key={id} className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-xs flex items-center gap-1">
-                      {name}
+                      {name}{isInactive ? ' (Inactivo)' : ''}
                       <button onClick={() => toggleMuscle(id)} className="hover:text-blue-200"><LuX size={12} /></button>
                     </span>
                   )
