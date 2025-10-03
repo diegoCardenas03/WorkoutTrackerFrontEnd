@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { IoChevronBack, IoChevronForward } from "react-icons/io5"
 import { HiCalendarDays } from "react-icons/hi2"
 
@@ -28,22 +28,6 @@ export const Calendar = ({
   const today = new Date()
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
-
-  // Efecto para detectar clics fuera del calendario
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-        if (onDateSelect) {
-          onDateSelect(undefined)
-        }
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [onDateSelect])
   
   // Obtener el primer día del mes y cuántos días tiene
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
@@ -78,16 +62,6 @@ export const Calendar = ({
     const clickedDate = new Date(currentYear, currentMonth, day)
     if (onDateSelect) {
       onDateSelect(clickedDate)
-    }
-  }
-
-  // Función para deseleccionar cuando se hace clic en áreas vacías
-  const handleCalendarClick = (event: React.MouseEvent) => {
-    // Si el clic no es en un botón de fecha, deseleccionar
-    if (!(event.target as HTMLElement).closest('button[data-date]')) {
-      if (onDateSelect) {
-        onDateSelect(undefined)
-      }
     }
   }
   
@@ -144,7 +118,7 @@ export const Calendar = ({
       </div>
 
       {/* Calendar Grid */}
-      <div className="p-3 md:p-6 " onClick={handleCalendarClick}>
+      <div className="p-3 md:p-6 ">
         {/* Day Headers */}
         <div className="grid grid-cols-7 gap-1 md:gap-2  mb-2">
           {dayNames.map((day) => (
@@ -178,7 +152,7 @@ export const Calendar = ({
                       : isToday(day)
                       ? ' text-black bg-white'
                       : isHighlighted(day)
-                      ? 'bg-green-500/20 text-green-400'
+                      ? 'bg-yellow-500/20 text-yellow-400'
                       : 'text-quaternary hover:text-white hover:bg-white/5 transition-colors duration-200'
                     }
                   `}

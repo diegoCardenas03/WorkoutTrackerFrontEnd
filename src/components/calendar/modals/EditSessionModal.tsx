@@ -10,8 +10,9 @@ interface EditSessionModalProps {
   isOpen: boolean
   onClose: () => void
   item: AgendaResponseDTO
-  onSave?: (changes: Partial<AgendaRequestDTO>) => void
+  onSave?: (changes: Partial<AgendaRequestDTO>) => Promise<void>
   routinesOptions?: { value: string; label: string }[]
+  isLoading?: boolean
 }
 
 export const EditSessionModal = ({
@@ -20,6 +21,7 @@ export const EditSessionModal = ({
   item,
   onSave,
   routinesOptions = [],
+  isLoading = false,
 }: EditSessionModalProps) => {
   const [routineId, setRoutineId] = useState("")
   const [date, setDate] = useState("")
@@ -49,7 +51,12 @@ export const EditSessionModal = ({
     { value: "120", label: "2 horas antes" }
   ]
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Validación
+    if (!routineId || !date || !time) {
+      return
+    }
+
     const changes: Partial<AgendaRequestDTO> = {}
     if (routineId) changes.routineId = Number(routineId) || 0
     if (date) {
@@ -59,8 +66,11 @@ export const EditSessionModal = ({
     if (reminderEnabled) changes.reminderMinutes = Number(reminderTime)
     else (changes as any).reminderMinutes = undefined
     changes.comment = notes || undefined
-    if (onSave) onSave(changes)
-    onClose()
+    
+    if (onSave) {
+      await onSave(changes)
+      // El parent cierra el modal después de guardar exitosamente
+    }
   }
 
   if (!isOpen) return null
@@ -137,7 +147,14 @@ export const EditSessionModal = ({
         {/* Footer */}
         <div className="p-6 pt-4 border-t border-white/10">
           <div className="flex flex-col md:flex-row gap-3">
-            <Button isWhite={true} action={handleSave} isWidthFull={true}>Guardar cambios</Button>
+            <Button 
+              isWhite={true} 
+              action={handleSave} 
+              isWidthFull={true}
+              isBlocked={!routineId || !date || !time || isLoading}
+            >
+              {isLoading ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
             <Button isWhite={false} action={onClose} isWidthFull={true}>Cancelar</Button>
           </div>
         </div>

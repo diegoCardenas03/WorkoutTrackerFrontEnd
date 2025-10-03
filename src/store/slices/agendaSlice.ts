@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AgendaRequestDTO } from "../../types/agenda/AgendaRequestDTO";
 import type { AgendaResponseDTO } from "../../types/agenda/AgendaResponseDTO";
-import { AgendaService } from "../../services/AgendaService";
 
 type AgendaState = {
   items: AgendaResponseDTO[];
@@ -15,14 +14,21 @@ const initialState: AgendaState = {
   error: null,
 };
 
-const service = new AgendaService();
-
 export const fetchAgenda = createAsyncThunk(
   "agenda/fetch",
-  async (_: void, { rejectWithValue }) => {
+  async (token: string, { rejectWithValue }) => {
     try {
-      // Basic fetch all; optionally could support range filtering via query
-      const data = await service.getAll();
+      // Usar endpoint específico del usuario: GET /user/me
+      const response = await fetch(`${import.meta.env.VITE_API_BASEURL}/api/schedules/user/me`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Error al cargar agenda');
+      }
+      const data = await response.json();
       return data as AgendaResponseDTO[];
     } catch (e: any) {
       return rejectWithValue(e?.message ?? "Error al cargar agenda");
@@ -32,10 +38,27 @@ export const fetchAgenda = createAsyncThunk(
 
 export const createAgendaItem = createAsyncThunk(
   "agenda/create",
-  async (payload: AgendaRequestDTO, { rejectWithValue }) => {
+  async ({ payload, token }: { payload: AgendaRequestDTO; token: string }, { rejectWithValue }) => {
     try {
-      const data = await service.post(payload);
-      return data as unknown as AgendaResponseDTO;
+      // Remover userId del payload porque el backend lo obtiene del JWT
+      const { userId, ...cleanPayload } = payload;
+      
+      const response = await fetch(`${import.meta.env.VITE_API_BASEURL}/api/schedules`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(cleanPayload),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Error al crear agenda');
+      }
+      
+      const data = await response.json();
+      return data as AgendaResponseDTO;
     } catch (e: any) {
       return rejectWithValue(e?.message ?? "Error al agendar entrenamiento");
     }
@@ -44,9 +67,17 @@ export const createAgendaItem = createAsyncThunk(
 
 export const deleteAgendaItem = createAsyncThunk(
   "agenda/delete",
-  async (id: number, { rejectWithValue }) => {
+  async ({ id, token }: { id: number; token: string }, { rejectWithValue }) => {
     try {
-      await service.delete(id);
+      const response = await fetch(`${import.meta.env.VITE_API_BASEURL}/api/schedules/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Error al eliminar');
+      }
       return id;
     } catch (e: any) {
       return rejectWithValue(e?.message ?? "Error al eliminar elemento de agenda");
@@ -56,10 +87,19 @@ export const deleteAgendaItem = createAsyncThunk(
 
 export const markAgendaCompleted = createAsyncThunk(
   "agenda/markCompleted",
-  async (id: number, { rejectWithValue }) => {
+  async ({ id, token }: { id: number; token: string }, { rejectWithValue }) => {
     try {
-  // Usar endpoint específico del backend para completar
-  const data = await service.complete(id);
+      const response = await fetch(`${import.meta.env.VITE_API_BASEURL}/api/schedules/${id}/complete`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Error al marcar como completada');
+      }
+      const data = await response.json();
       return data as AgendaResponseDTO;
     } catch (e: any) {
       return rejectWithValue(e?.message ?? "Error al marcar como completada");
@@ -70,11 +110,22 @@ export const markAgendaCompleted = createAsyncThunk(
 export const updateAgendaItem = createAsyncThunk(
   "agenda/update",
   async (
-    { id, changes }: { id: number; changes: Partial<AgendaRequestDTO> & Record<string, any> },
+    { id, changes, token }: { id: number; changes: Partial<AgendaRequestDTO> & Record<string, any>; token: string },
     { rejectWithValue }
   ) => {
     try {
-      const data = await service.patch(id, changes as any);
+      const response = await fetch(`${import.meta.env.VITE_API_BASEURL}/api/schedules/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(changes),
+      });
+      if (!response.ok) {
+        throw new Error('Error al actualizar');
+      }
+      const data = await response.json();
       return data as AgendaResponseDTO;
     } catch (e: any) {
       return rejectWithValue(e?.message ?? "Error al actualizar agenda");

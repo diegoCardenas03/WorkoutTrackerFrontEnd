@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "../../Button"
 import { CustomSelect } from "../../CustomSelect"
@@ -8,8 +8,9 @@ interface RegisterSessionModalProps {
   isOpen: boolean
   onClose: () => void
   selectedDate?: Date
-  onRegisterSession?: (sessionData: SessionData) => void
+  onRegisterSession?: (sessionData: SessionData) => Promise<void>
   routinesOptions?: { value: string; label: string }[]
+  isLoading?: boolean
 }
 
 interface SessionData {
@@ -27,6 +28,7 @@ export const RegisterSessionModal = ({
   selectedDate = new Date(),
   onRegisterSession,
   routinesOptions = [],
+  isLoading = false,
 }: RegisterSessionModalProps) => {
   const [routineId, setRoutineId] = useState("")
   const [date, setDate] = useState(selectedDate.toISOString().split('T')[0])
@@ -47,21 +49,50 @@ export const RegisterSessionModal = ({
     { value: "120", label: "2 horas antes" }
   ]
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
+    // Validación
+    if (!routineId) {
+      return
+    }
+    if (!date || !time) {
+      return
+    }
+
     const sessionData: SessionData = {
       routineId,
       date,
-  time,
+      time,
       reminderEnabled,
       reminderTime,
       notes
     }
     
     if (onRegisterSession) {
-      onRegisterSession(sessionData)
+      await onRegisterSession(sessionData)
+      // Reiniciar formulario solo si la operación fue exitosa
+      // (el parent cierra el modal y eso triggerá el useEffect de reset)
     }
-    onClose()
   }
+
+  // Reinicializar el formulario cuando se abre el modal
+  const resetForm = () => {
+    setRoutineId("")
+    setDate(selectedDate.toISOString().split('T')[0])
+    const d = selectedDate || new Date()
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mm = String(d.getMinutes()).padStart(2, '0')
+    setTime(`${hh}:${mm}`)
+    setReminderEnabled(false)
+    setReminderTime("30")
+    setNotes("")
+  }
+
+  // Reiniciar cuando se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      resetForm()
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -196,9 +227,9 @@ export const RegisterSessionModal = ({
               isWidthFull={true}
               icon={<LuCalendar size={16} />}
               iconPosition={false}
-              isBlocked={!routineId}
+              isBlocked={!routineId || !date || !time || isLoading}
             >
-              Programar entrenamiento
+              {isLoading ? 'Programando...' : 'Programar entrenamiento'}
             </Button>
 
             <Button

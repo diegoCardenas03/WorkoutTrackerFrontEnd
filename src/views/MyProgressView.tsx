@@ -5,10 +5,33 @@ import { TrainsCard } from "../components/MyProgress/Cards/TrainsCard"
 import { WeightCard } from "../components/MyProgress/Cards/WeightCard"
 import { SubHeader } from "../components/SubHeader"
 import { PrivateLayout } from "../layouts/PrivateLayout"
-
-
+import { useEffect } from "react"
+import { useDispatch } from "react-redux"
+import { fetchAgenda } from "../store/slices/agendaSlice"
+import { fetchAllWeights } from "../store/slices/pesoSlice"
+import { useAuth0 } from "@auth0/auth0-react"
 
 export const MyProgressView = () => {
+  const dispatch = useDispatch()
+  const { getAccessTokenSilently } = useAuth0()
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const token = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+          }
+        })
+        await (dispatch as any)(fetchAgenda(token))
+        await (dispatch as any)(fetchAllWeights(token))
+      } catch (e) {
+        console.error('Error al cargar datos:', e)
+      }
+    }
+    loadData()
+  }, [dispatch, getAccessTokenSilently])
+
   return (
     <PrivateLayout>
       <SubHeader containOptions={true} />
