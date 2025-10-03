@@ -5,9 +5,10 @@ import { MuscleZoneAdminModal } from "../../components/admin/MuscleZones/MuscleZ
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../../store"
-import { fetchMuscleZones, createMuscleZone, toggleMuscleZoneActive } from "../../store/slices/muscleZoneSlice"
+import { fetchMuscleZones, createMuscleZone, updateMuscleZone, toggleMuscleZoneActive } from "../../store/slices/muscleZoneSlice"
 import type { ZonaMuscularRequestDTO } from "../../types/zonaMuscular/ZonaMuscularRequestDTO"
 import { Toast } from "../../components/Toast"
+import { Spinner } from "../../components/Spinner"
 import { useAuth0 } from "@auth0/auth0-react"
 
 interface MuscleZone {
@@ -19,7 +20,7 @@ interface MuscleZone {
 export const MuscleZonesAdminView = () => {
   const dispatch = useDispatch()
   const { getAccessTokenSilently } = useAuth0()
-  const { muscleZones } = useSelector((s: RootState) => s.muscleZones)
+  const { muscleZones, loading } = useSelector((s: RootState) => s.muscleZones)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMuscleZone, setEditingMuscleZone] = useState<MuscleZone | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -140,10 +141,21 @@ export const MuscleZonesAdminView = () => {
       }
 
       if (editingMuscleZone) {
-        // TODO: Implementar update cuando esté disponible en el backend
-        setToast({ msg: 'La edición de zonas musculares estará disponible próximamente', type: 'error' })
-        setTimeout(() => setToast(null), 4000)
-        return; // Importante: salir aquí
+        console.log('🔄 [MuscleZonesAdminView] Actualizando zona muscular...');
+        const result = await (dispatch as any)(updateMuscleZone({ 
+          token, 
+          id: Number(editingMuscleZone.id), 
+          data: payload 
+        }))
+        
+        if (result.type.endsWith('/rejected')) {
+          console.error('❌ [MuscleZonesAdminView] Acción rechazada:', result);
+          throw new Error(result.payload || 'Error al actualizar zona muscular');
+        }
+        
+        console.log('✅ [MuscleZonesAdminView] Zona muscular actualizada exitosamente');
+        setToast({ msg: 'Zona muscular actualizada exitosamente', type: 'success' })
+        setTimeout(() => setToast(null), 3000)
       } else {
         console.log('🚀 [MuscleZonesAdminView] Llamando a createMuscleZone...');
         const result = await (dispatch as any)(createMuscleZone({ token, data: payload }))
@@ -204,8 +216,13 @@ export const MuscleZonesAdminView = () => {
 
         {/* Content */}
         <div className="p-6">
-          {/* Search Bar */}
-          <div className="mb-6">
+          {/* Loading Spinner */}
+          {loading ? (
+            <Spinner size="lg" message="Cargando zonas musculares..." />
+          ) : (
+            <>
+              {/* Search Bar */}
+              <div className="mb-6">
             <div className="relative max-w-md">
               <LuSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-quaternary" size={20} />
               <input
@@ -309,6 +326,8 @@ export const MuscleZonesAdminView = () => {
               <LuChevronRight size={16} />
             </button>
           </div>
+            </>
+          )}
         </div>
 
         {/* Modal */}

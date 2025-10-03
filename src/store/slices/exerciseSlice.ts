@@ -25,7 +25,11 @@ export const fetchExercises = createAsyncThunk(
   async (token: string, { rejectWithValue }) => {
     try {
       ejercicioService.setToken(token)
-      const data = await ejercicioService.getAll()
+      // Delay mínimo para mejor UX del spinner
+      const [data] = await Promise.all([
+        ejercicioService.getAllAdmin(true), // relations=true
+        new Promise(resolve => setTimeout(resolve, 600))
+      ])
       return data as EjercicioResponseDTO[]
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
@@ -51,7 +55,7 @@ export const createExercise = createAsyncThunk(
     try {
       console.log('🚀 [exerciseSlice] Creando ejercicio...')
       ejercicioService.setToken(token)
-      const created = await ejercicioService.post(data)
+      const created = await ejercicioService.postAdmin(data)
       console.log('✅ [exerciseSlice] Ejercicio creado:', created)
       return created as unknown as EjercicioResponseDTO
     } catch (error) {
@@ -70,12 +74,29 @@ export const updateExercise = createAsyncThunk(
     try {
       console.log('🔄 [exerciseSlice] Actualizando ejercicio:', id)
       ejercicioService.setToken(token)
-      const updated = await ejercicioService.patch(id, data as EjercicioRequestDTO)
+      const updated = await ejercicioService.patchAdmin(id, data)
       console.log('✅ [exerciseSlice] Ejercicio actualizado:', updated)
       return updated as unknown as EjercicioResponseDTO
     } catch (error) {
       console.error('❌ [exerciseSlice] Error al actualizar ejercicio:', error)
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
+    }
+  }
+)
+
+// Toggle estado activo/inactivo
+export const toggleExerciseActive = createAsyncThunk(
+  'exercises/toggleActive',
+  async ({ token, id }: { token: string; id: number }, { rejectWithValue }) => {
+    try {
+      console.log('🔄 [exerciseSlice] Toggle exercise:', id)
+      ejercicioService.setToken(token)
+      const result = await ejercicioService.toggleActiveAdmin(id)
+      console.log('✅ [exerciseSlice] Estado cambiado:', result)
+      return result
+    } catch (error) {
+      console.error('❌ [exerciseSlice] Error al toggle exercise:', error)
+      return rejectWithValue(error instanceof Error ? error.message : 'Error al cambiar estado')
     }
   }
 )
@@ -150,6 +171,21 @@ const exerciseSlice = createSlice({
         }
       })
       .addCase(updateExercise.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      // Toggle active
+      .addCase(toggleExerciseActive.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(toggleExerciseActive.fulfilled, (state, action) => {
+        state.loading = false
+        const index = state.exercises.findIndex((e) => e.id === action.payload.id)
+        if (index !== -1) {
+          state.exercises[index].active = action.payload.active
+        }
+      })
+      .addCase(toggleExerciseActive.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

@@ -4,11 +4,17 @@ export interface UsuarioResponseDTO {
   id: number;
   name: string;
   email: string;
+  bodyWeight?: number;
+  active: boolean;
+  picture?: string;
   createdAt: string;
   updatedAt: string;
-  bodyWeight?: number;
-  completedWorkouts: number;
-  active: boolean;
   lastAccess?: string;
-  roles: RolResponseDTO[];
+  completedWorkouts: number;
+  createdRoutines: number;
+  likedRoutines: number;
+  savedRoutines: number;
+  completedRoutines: number;
+  favoriteExercises: number;
+  role: RolResponseDTO;
 }

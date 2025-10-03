@@ -1,21 +1,11 @@
 import { IoClose } from "react-icons/io5"
 import { Button } from "../../Button"
-
-interface Member {
-  id: string
-  image: string
-  name: string
-  email: string
-  country: string
-  status: 'active' | 'inactive'
-  joinDate: string
-  lastAccess: string
-}
+import type { UsuarioResponseDTO } from "../../../types/usuario/UsuarioResponseDTO"
 
 interface MemberDataModalProps {
   isOpen: boolean
   onClose: () => void
-  member: Member | null
+  member: UsuarioResponseDTO | null
 }
 
 export const MemberDataModal = ({
@@ -24,6 +14,20 @@ export const MemberDataModal = ({
   member
 }: MemberDataModalProps) => {
   if (!isOpen || !member) return null
+
+  // Formatear fecha
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+    } catch {
+      return 'N/A'
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -53,7 +57,7 @@ export const MemberDataModal = ({
           {/* User Image */}
           <div className="flex justify-center">
             <img
-              src={member.image}
+              src={member.picture || 'https://cdn.auth0.com/avatars/default.png'}
               alt={member.name}
               className="w-20 h-20 rounded-full object-cover border-2 border-white/20"
             />
@@ -81,13 +85,25 @@ export const MemberDataModal = ({
               </p>
             </div>
 
-            {/* País */}
+            {/* Rol */}
             <div>
               <label className="text-quaternary text-sm font-medium block mb-1">
-                País
+                Rol
               </label>
-              <p className="text-white text-sm bg-tertiary border border-white/20 rounded-lg p-3">
-                {member.country}
+              <p className="text-white text-sm bg-tertiary border border-white/20 rounded-lg p-3 capitalize">
+                {member.role?.name || 'Usuario'}
+              </p>
+            </div>
+
+            {/* Estado */}
+            <div>
+              <label className="text-quaternary text-sm font-medium block mb-1">
+                Estado
+              </label>
+              <p className={`text-sm border border-white/20 rounded-lg p-3 ${
+                member.active ? 'text-green-500' : 'text-red-500'
+              }`}>
+                {member.active ? 'Activo' : 'Inactivo'}
               </p>
             </div>
 
@@ -97,18 +113,28 @@ export const MemberDataModal = ({
                 Fecha de registro
               </label>
               <p className="text-white text-sm bg-tertiary border border-white/20 rounded-lg p-3">
-                {member.joinDate}
+                {formatDate(member.createdAt)}
               </p>
             </div>
 
-            {/* Último acceso */}
-            <div>
-              <label className="text-quaternary text-sm font-medium block mb-1">
-                Último acceso
-              </label>
-              <p className="text-white text-sm bg-tertiary border border-white/20 rounded-lg p-3">
-                {member.lastAccess}
-              </p>
+            {/* Estadísticas */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-quaternary text-sm font-medium block mb-1">
+                  Rutinas creadas
+                </label>
+                <p className="text-white text-sm bg-tertiary border border-white/20 rounded-lg p-3 text-center">
+                  {member.createdRoutines || 0}
+                </p>
+              </div>
+              <div>
+                <label className="text-quaternary text-sm font-medium block mb-1">
+                  Rutinas completadas
+                </label>
+                <p className="text-white text-sm bg-tertiary border border-white/20 rounded-lg p-3 text-center">
+                  {member.completedRoutines || 0}
+                </p>
+              </div>
             </div>
           </div>
         </div>

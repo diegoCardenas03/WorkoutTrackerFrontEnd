@@ -1,19 +1,5 @@
-export interface UsuarioResponseDTO {
-  id: number;
-  name: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-  bodyWeight?: number;
-  completedWorkouts: number;
-  active: boolean;
-  lastAccess?: string;
-}
-
-export interface UpdateUsuarioDTO {
-  name?: string;
-  password?: string;
-}
+import type { UsuarioResponseDTO } from '../types/usuario/UsuarioResponseDTO';
+import type { UsuarioUpdateRequestDTO } from '../types/usuario/UsuarioUpdateRequestDTO';
 
 class UsuarioService {
   private readonly BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -140,14 +126,18 @@ class UsuarioService {
   }
 
   /**
-   * Actualiza el perfil del usuario autenticado
+   * Actualiza el perfil del usuario autenticado usando PATCH
    * @param token - Token de acceso de Auth0
    * @param data - Datos a actualizar (nombre y/o contraseña)
    * @returns Usuario actualizado
    */
-  async updateProfile(token: string, data: UpdateUsuarioDTO): Promise<UsuarioResponseDTO> {
-    const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/me`, {
-      method: 'PUT',
+  async updateProfile(token: string, data: UsuarioUpdateRequestDTO): Promise<UsuarioResponseDTO> {
+    console.log('🔄 [UsuarioService.updateProfile] Actualizando perfil...');
+    console.log('🔄 [UsuarioService.updateProfile] URL:', `${this.BASE_URL}${this.BASE_PATH}`);
+    console.log('🔄 [UsuarioService.updateProfile] Data:', data);
+    
+    const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}`, {
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -157,10 +147,13 @@ class UsuarioService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('❌ [UsuarioService.updateProfile] Error:', errorData);
       throw new Error(errorData.message || `Error al actualizar perfil: ${response.statusText}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('✅ [UsuarioService.updateProfile] Perfil actualizado:', result);
+    return result;
   }
 
   /**
@@ -172,6 +165,117 @@ class UsuarioService {
   async setUsername(token: string, name: string): Promise<UsuarioResponseDTO> {
     return this.updateProfile(token, { name });
   }
+
+  /**
+   * Obtiene todos los usuarios con rol USER
+   * @param token - Token de acceso de Auth0
+   * @returns Lista de usuarios
+   */
+  async getAllUsers(token: string): Promise<UsuarioResponseDTO[]> {
+    console.log('🔵 [UsuarioService.getAllUsers] Obteniendo usuarios...');
+    const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/admin/users`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('❌ [UsuarioService.getAllUsers] Error:', errorData);
+      throw new Error(errorData.message || `Error al obtener usuarios: ${response.statusText}`);
+    }
+
+    const users = await response.json();
+    console.log('✅ [UsuarioService.getAllUsers] Usuarios obtenidos:', users.length);
+    return users;
+  }
+
+  /**
+   * Obtiene todos los usuarios con rol ADMIN
+   * @param token - Token de acceso de Auth0
+   * @returns Lista de administradores
+   */
+  async getAllAdmins(token: string): Promise<UsuarioResponseDTO[]> {
+    console.log('🔵 [UsuarioService.getAllAdmins] Obteniendo administradores...');
+    const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/admin/admins`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('❌ [UsuarioService.getAllAdmins] Error:', errorData);
+      throw new Error(errorData.message || `Error al obtener administradores: ${response.statusText}`);
+    }
+
+    const admins = await response.json();
+    console.log('✅ [UsuarioService.getAllAdmins] Administradores obtenidos:', admins.length);
+    return admins;
+  }
+
+  /**
+   * Registra un nuevo administrador en Auth0 y en el backend
+   * @param token - Token de acceso de Auth0
+   * @param data - Datos del nuevo administrador (email, password, name)
+   * @returns Administrador registrado
+   */
+  async registerAdmin(token: string, data: { email: string; password: string; name?: string }): Promise<UsuarioResponseDTO> {
+    console.log('🔵 [UsuarioService.registerAdmin] Registrando nuevo administrador...');
+    console.log('🔵 [UsuarioService.registerAdmin] Data:', { email: data.email, name: data.name });
+    
+    const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/admin/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('❌ [UsuarioService.registerAdmin] Error:', errorData);
+      throw new Error(errorData.message || `Error al registrar administrador: ${response.statusText}`);
+    }
+
+    const admin = await response.json();
+    console.log('✅ [UsuarioService.registerAdmin] Administrador registrado:', admin);
+    return admin;
+  }
+
+  /**
+   * Activa o desactiva un usuario (toggle)
+   * @param token - Token de acceso de Auth0
+   * @param userId - ID del usuario
+   * @returns Usuario actualizado
+   */
+  async toggleUserActive(token: string, userId: number): Promise<UsuarioResponseDTO> {
+    console.log('🔵 [UsuarioService.toggleUserActive] Toggle active para usuario:', userId);
+    
+    const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/admin/${userId}/toggle-active`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('❌ [UsuarioService.toggleUserActive] Error:', errorData);
+      throw new Error(errorData.message || `Error al cambiar estado: ${response.statusText}`);
+    }
+
+    const user = await response.json();
+    console.log('✅ [UsuarioService.toggleUserActive] Usuario actualizado:', user);
+    return user;
+  }
 }
 
 export const usuarioService = new UsuarioService();
+export type { UsuarioResponseDTO, UsuarioUpdateRequestDTO };

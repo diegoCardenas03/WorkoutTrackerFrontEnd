@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { LuX, LuSave } from "react-icons/lu"
 import { Button } from "../../Button"
 import { useSelector } from "react-redux"
@@ -18,6 +18,9 @@ export const MuscleAdminModal = ({ isOpen, onClose, muscle, onSave }: MuscleAdmi
   const [active, setActive] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [errors, setErrors] = useState<{ name?: string; muscleGroupId?: string }>({})
+
+  // Filtrar solo zonas activas del estado Redux
+  const activeMuscleZones = useMemo(() => muscleZones.filter(z => z.active), [muscleZones])
 
   useEffect(() => {
     if (isOpen) {
@@ -122,7 +125,7 @@ export const MuscleAdminModal = ({ isOpen, onClose, muscle, onSave }: MuscleAdmi
               }`}
             >
               <option value="">Selecciona una zona muscular</option>
-              {muscleZones.map((zone) => (
+              {activeMuscleZones.map((zone) => (
                 <option key={zone.id} value={zone.id}>
                   {zone.name}
                 </option>

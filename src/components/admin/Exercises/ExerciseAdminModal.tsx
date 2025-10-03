@@ -2,12 +2,9 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import { IoClose } from "react-icons/io5"
 import { LuPlus, LuX, LuChevronDown, LuChevronUp, LuSearch } from "react-icons/lu"
 import { Button } from "../../Button"
-import { useDispatch, useSelector } from "react-redux"
+import { useSelector } from "react-redux"
 import type { RootState } from "../../../store"
-import { fetchMuscles } from "../../../store/slices/muscleSlice"
 import type { EjercicioResponseDTO } from "../../../types/ejercicio/EjercicioResponseDTO"
-import { fetchEquipments } from "../../../store/slices/equipmentSlice"
-import { useAuth0 } from "@auth0/auth0-react"
 
 interface Exercise {
   id: string
@@ -35,8 +32,6 @@ export const ExerciseAdminModal = ({
   isLoadingDetails = false,
   onSave
 }: ExerciseAdminModalProps) => {
-  const dispatch = useDispatch()
-  const { getAccessTokenSilently } = useAuth0()
   const { muscles } = useSelector((s: RootState) => s.muscles)
   const { equipments } = useSelector((s: RootState) => s.equipments)
   const [formData, setFormData] = useState({
@@ -59,26 +54,9 @@ export const ExerciseAdminModal = ({
 
   const isEditing = !!exercise
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const token = await getAccessTokenSilently({
-          authorizationParams: {
-            audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-            scope: "openid profile email",
-          },
-        })
-        ;(dispatch as any)(fetchMuscles(token));
-        ;(dispatch as any)(fetchEquipments(token));
-      } catch (error) {
-        console.error('Error loading data:', error)
-      }
-    }
-    loadData()
-  }, [dispatch, getAccessTokenSilently])
-
-  const muscleOptions = useMemo(() => muscles.map(m => ({ id: m.id, name: m.name })), [muscles])
-  const equipmentOptions = useMemo(() => equipments.map(e => ({ id: e.id, name: e.name })), [equipments])
+  // Filtrar solo elementos activos del estado Redux (ya cargado por la vista admin)
+  const muscleOptions = useMemo(() => muscles.filter(m => m.active).map(m => ({ id: m.id, name: m.name })), [muscles])
+  const equipmentOptions = useMemo(() => equipments.filter(e => e.active).map(e => ({ id: e.id, name: e.name })), [equipments])
 
   // Close muscle dropdown on outside click
   useEffect(() => {

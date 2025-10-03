@@ -110,7 +110,13 @@ export const MyProfileView = () => {
         updateData.password = password;
       }
 
+      // Siempre incluir picture de Auth0 para evitar null
+      if (auth0User?.picture) {
+        updateData.picture = auth0User.picture;
+      }
+
       // Actualizar perfil
+      console.log('📤 Enviando actualización de perfil:', updateData);
       await usuarioService.updateProfile(token, updateData);
       
       // Recargar datos del usuario

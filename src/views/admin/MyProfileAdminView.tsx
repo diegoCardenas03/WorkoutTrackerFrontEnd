@@ -3,6 +3,7 @@ import { Button } from '../../components/Button'
 import { useState, useEffect } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { usuarioService } from '../../services/UsuarioService'
+import type { UsuarioUpdateRequestDTO } from '../../types/usuario/UsuarioUpdateRequestDTO'
 import { Toast } from '../../components/Toast'
 
 import { AdminLayout } from '../../layouts/admin/AdminLayout'
@@ -61,18 +62,24 @@ export const MyProfileAdminView = () => {
             })
 
             // Preparar datos para actualizar
-            const updateData: { name?: string; password?: string } = {}
+            const updateData: UsuarioUpdateRequestDTO = {}
             
-            if (name !== userData?.name) {
-                updateData.name = name
+            if (name.trim() !== userData?.name) {
+                updateData.name = name.trim()
             }
             
             if (password) {
                 updateData.password = password
             }
 
+            // Siempre incluir picture de Auth0 para evitar null en backend
+            if (auth0User?.picture) {
+                updateData.picture = auth0User.picture
+            }
+
             // Solo hacer la petición si hay cambios
             if (Object.keys(updateData).length > 0) {
+                console.log('💾 [MyProfileAdminView] Actualizando perfil con:', updateData);
                 await usuarioService.updateProfile(token, updateData)
                 await refetch() // Recargar datos del usuario
                 setPassword("")

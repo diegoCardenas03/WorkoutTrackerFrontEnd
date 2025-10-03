@@ -5,9 +5,10 @@ import { ExerciseAdminModal } from "../../components/admin/Exercises/ExerciseAdm
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../../store"
-import { createExercise, fetchExercises, updateExercise, fetchExerciseById } from "../../store/slices/exerciseSlice"
+import { createExercise, fetchExercises, updateExercise, fetchExerciseById, toggleExerciseActive } from "../../store/slices/exerciseSlice"
 import type { EjercicioRequestDTO } from "../../types/ejercicio/EjercicioRequestDTO"
 import { Toast } from "../../components/Toast"
+import { Spinner } from "../../components/Spinner"
 import { useAuth0 } from "@auth0/auth0-react"
 
 
@@ -23,7 +24,7 @@ interface Exercise {
 export const ExercisesAdminView = () => {
   const dispatch = useDispatch()
   const { getAccessTokenSilently } = useAuth0()
-  const { exercises } = useSelector((s: RootState) => s.exercises)
+  const { exercises, loading } = useSelector((s: RootState) => s.exercises)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const [editingDetails, setEditingDetails] = useState<any | null>(null)
@@ -108,7 +109,28 @@ export const ExercisesAdminView = () => {
     } catch {}
   }
 
-  // TODO: toggle de estado activo cuando haya endpoint
+  const handleToggleActive = async (id: number, currentStatus: boolean) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+          scope: "openid profile email",
+        },
+      })
+      
+      await (dispatch as any)(toggleExerciseActive({ token, id }))
+      
+      setToast({ 
+        msg: `Ejercicio ${currentStatus ? 'desactivado' : 'activado'} exitosamente`, 
+        type: 'success' 
+      })
+      setTimeout(() => setToast(null), 3000)
+    } catch (error) {
+      console.error('Error toggling exercise status:', error)
+      setToast({ msg: 'Error al cambiar el estado del ejercicio', type: 'error' })
+      setTimeout(() => setToast(null), 4000)
+    }
+  }
 
   const handleSaveExercise = async (exerciseData: any) => {
     const payload: EjercicioRequestDTO = {
@@ -203,8 +225,13 @@ export const ExercisesAdminView = () => {
 
         {/* Content */}
         <div className="p-6">
-          {/* Search Bar */}
-          <div className="mb-6">
+          {/* Loading Spinner */}
+          {loading ? (
+            <Spinner size="lg" message="Cargando ejercicios..." />
+          ) : (
+            <>
+              {/* Search Bar */}
+              <div className="mb-6">
             <div className="relative max-w-md">
               <LuSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-quaternary" size={20} />
               <input
@@ -253,10 +280,16 @@ export const ExercisesAdminView = () => {
 
                   {/* Status Toggle */}
                   <div>
-                    {/* Toggle placeholder: usar exercise.active del backend cuando se implemente */}
-                    <span className={`px-2 py-1 rounded text-xs border ${ (exercise as any).active ? 'border-green-500 text-green-400' : 'border-red-500 text-red-400' }`}>
+                    <button
+                      onClick={() => handleToggleActive(exercise.id, (exercise as any).active)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                        (exercise as any).active
+                          ? 'border-green-500 text-green-400 hover:bg-green-500/10'
+                          : 'border-red-500 text-red-400 hover:bg-red-500/10'
+                      }`}
+                    >
                       {(exercise as any).active ? 'Activo' : 'Inactivo'}
-                    </span>
+                    </button>
                   </div>
 
                   {/* Actions */}
@@ -318,6 +351,8 @@ export const ExercisesAdminView = () => {
               <LuChevronRight size={16} />
             </button>
           </div>
+            </>
+          )}
         </div>
 
         {/* Modal */}

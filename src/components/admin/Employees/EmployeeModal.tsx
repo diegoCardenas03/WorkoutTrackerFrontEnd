@@ -1,65 +1,94 @@
 import { useState, useEffect } from "react"
 import { IoClose } from "react-icons/io5"
 import { Button } from "../../Button"
-
-interface Employee {
-  id: string
-  image: string
-  name: string
-  email: string
-  role: string
-  status: 'active' | 'inactive'
-}
+import type { SignupRequestDTO } from "../../../types/usuario/auth0/SignupRequestDTO"
 
 interface EmployeeModalProps {
   isOpen: boolean
   onClose: () => void
-  employee?: Employee | null
-  onSave: (employeeData: any) => void
+  onSave: (employeeData: SignupRequestDTO) => void
+  isSaving?: boolean
 }
 
 export const EmployeeModal = ({
   isOpen,
   onClose,
-  employee,
-  onSave
+  onSave,
+  isSaving = false
 }: EmployeeModalProps) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SignupRequestDTO>({
     name: "",
     email: "",
-    role: "",
     password: ""
   })
 
-  const isEditing = !!employee
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    password: ""
+  })
 
   useEffect(() => {
-    if (employee) {
-      setFormData({
-        name: employee.name,
-        email: employee.email,
-        role: employee.role,
-        password: ""
-      })
-    } else {
+    if (!isOpen) {
+      // Reset form cuando se cierra el modal
       setFormData({
         name: "",
         email: "",
-        role: "",
+        password: ""
+      })
+      setErrors({
+        name: "",
+        email: "",
         password: ""
       })
     }
-  }, [employee])
+  }, [isOpen])
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof SignupRequestDTO, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }))
+    // Limpiar error del campo cuando el usuario empieza a escribir
+    if (errors[field as keyof typeof errors]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ""
+      }))
+    }
+  }
+
+  const validateForm = (): boolean => {
+    const newErrors = {
+      name: "",
+      email: "",
+      password: ""
+    }
+
+    if (!formData.name?.trim()) {
+      newErrors.name = "El nombre es obligatorio"
+    }
+
+    if (!formData.email?.trim()) {
+      newErrors.email = "El email es obligatorio"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Email inválido"
+    }
+
+    if (!formData.password?.trim()) {
+      newErrors.password = "La contraseña es obligatoria"
+    } else if (formData.password.length < 8) {
+      newErrors.password = "La contraseña debe tener al menos 8 caracteres"
+    }
+
+    setErrors(newErrors)
+    return !newErrors.name && !newErrors.email && !newErrors.password
   }
 
   const handleSave = () => {
-    onSave(formData)
+    if (validateForm()) {
+      onSave(formData)
+    }
   }
 
   const handleCancel = () => {
@@ -81,7 +110,7 @@ export const EmployeeModal = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-white text-lg font-semibold">
-            {isEditing ? "Editar Empleado" : "Crear Empleado"}
+            Crear Administrador
           </h2>
           <button 
             onClick={onClose}
@@ -100,11 +129,17 @@ export const EmployeeModal = ({
             </label>
             <input
               type="text"
-              value={formData.name}
+              value={formData.name || ""}
               onChange={(e) => handleInputChange("name", e.target.value)}
               placeholder="Ingresa el nombre completo"
-              className="w-full p-3 bg-tertiary border border-white/20 rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40"
+              disabled={isSaving}
+              className={`w-full p-3 bg-tertiary border rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed ${
+                errors.name ? 'border-red-500' : 'border-white/20'
+              }`}
             />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
           </div>
 
           {/* Email */}
@@ -117,30 +152,14 @@ export const EmployeeModal = ({
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
               placeholder="Ingresa el email"
-              className="w-full p-3 bg-tertiary border border-white/20 rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40"
+              disabled={isSaving}
+              className={`w-full p-3 bg-tertiary border rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed ${
+                errors.email ? 'border-red-500' : 'border-white/20'
+              }`}
             />
-          </div>
-
-          {/* Rol */}
-          <div>
-            <label className="text-white text-sm font-medium block mb-2">
-              Rol
-            </label>
-            <select
-              value={formData.role}
-              onChange={(e) => handleInputChange("role", e.target.value)}
-              className="w-full p-3 bg-tertiary border border-white/20 rounded-lg text-white focus:outline-none focus:border-white/40"
-            >
-              <option value="" disabled className="bg-tertiary">
-                Selecciona un rol
-              </option>
-              <option value="Administrador" className="bg-tertiary">
-                Administrador
-              </option>
-              <option value="Empleado" className="bg-tertiary">
-                Empleado
-              </option>
-            </select>
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
 
           {/* Contraseña */}
@@ -152,9 +171,18 @@ export const EmployeeModal = ({
               type="password"
               value={formData.password}
               onChange={(e) => handleInputChange("password", e.target.value)}
-              placeholder={isEditing ? "Dejar vacío para mantener actual" : "Ingresa la contraseña"}
-              className="w-full p-3 bg-tertiary border border-white/20 rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40"
+              placeholder="Ingresa la contraseña (mínimo 8 caracteres)"
+              disabled={isSaving}
+              className={`w-full p-3 bg-tertiary border rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed ${
+                errors.password ? 'border-red-500' : 'border-white/20'
+              }`}
             />
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            )}
+            <p className="text-quaternary text-xs mt-1">
+              Mínimo 8 caracteres
+            </p>
           </div>
         </div>
 
@@ -164,6 +192,7 @@ export const EmployeeModal = ({
             isWhite={false}
             action={handleCancel}
             isWidthFull={true}
+            isBlocked={isSaving}
           >
             Cancelar
           </Button>
@@ -171,8 +200,9 @@ export const EmployeeModal = ({
             isWhite={true}
             action={handleSave}
             isWidthFull={true}
+            isBlocked={isSaving}
           >
-            {isEditing ? "Guardar Cambios" : "Crear Empleado"}
+            {isSaving ? 'Creando...' : 'Crear Administrador'}
           </Button>
         </div>
       </div>

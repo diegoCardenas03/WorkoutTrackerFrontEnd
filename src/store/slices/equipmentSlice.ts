@@ -1,5 +1,4 @@
-import { createSlice, createAsyncThunk} from '@reduxjs/toolkit'
-
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { EquipamientoService } from '../../services/EquipamientoService'
 import type { EquipamientoResponseDTO } from '../../types/equipamiento/EquipamientoResponseDTO'
 import type { EquipamientoRequestDTO } from '../../types/equipamiento/EquipamientoRequestDTO'
@@ -24,10 +23,31 @@ export const fetchEquipments = createAsyncThunk(
   async (token: string, { rejectWithValue }) => {
     try {
       console.log('📊 [equipmentSlice] Fetching equipments con token...')
-      const data = await equipamientoService.getAllEquipments(token)
+      equipamientoService.setToken(token)
+      // Delay mínimo para mejor UX del spinner
+      const [data] = await Promise.all([
+        equipamientoService.getAllAdmin(false), // sin relations
+        new Promise(resolve => setTimeout(resolve, 600))
+      ])
       return data
     } catch (error) {
       console.error("❌ [equipmentSlice] Error al traer equipamientos:", error)
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
+    }
+  }
+)
+
+// Obtener solo equipamientos ACTIVOS (para modals de creación)
+export const fetchActiveEquipments = createAsyncThunk(
+  'equipments/fetchActive',
+  async (token: string, { rejectWithValue }) => {
+    try {
+      console.log('📊 [equipmentSlice] Fetching active equipments...')
+      equipamientoService.setToken(token)
+      const data = await equipamientoService.getAll() // Solo activos
+      return data
+    } catch (error) {
+      console.error("❌ [equipmentSlice] Error al traer equipamientos activos:", error)
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error')
     }
   }
@@ -39,11 +59,28 @@ export const createEquipment = createAsyncThunk(
   async ({ token, data }: { token: string; data: EquipamientoRequestDTO }, { rejectWithValue }) => {
     try {
       console.log('🚀 [equipmentSlice] Creando equipamiento...')
-      const result = await equipamientoService.createEquipment(token, data)
+      equipamientoService.setToken(token)
+      const result = await equipamientoService.postAdmin(data)
       return result
     } catch (error) {
       console.error("❌ [equipmentSlice] Error al crear equipamiento:", error)
       return rejectWithValue(error instanceof Error ? error.message : 'Error al crear equipamiento')
+    }
+  }
+)
+
+// Actualizar equipamiento
+export const updateEquipment = createAsyncThunk(
+  'equipments/update',
+  async ({ token, id, data }: { token: string; id: number; data: Partial<EquipamientoRequestDTO> }, { rejectWithValue }) => {
+    try {
+      console.log('🔄 [equipmentSlice] Actualizando equipamiento:', id)
+      equipamientoService.setToken(token)
+      const result = await equipamientoService.patchAdmin(id, data)
+      return result
+    } catch (error) {
+      console.error("❌ [equipmentSlice] Error al actualizar equipamiento:", error)
+      return rejectWithValue(error instanceof Error ? error.message : 'Error al actualizar equipamiento')
     }
   }
 )
@@ -54,7 +91,8 @@ export const toggleEquipmentActive = createAsyncThunk(
   async ({ token, id }: { token: string; id: number }, { rejectWithValue }) => {
     try {
       console.log('🔄 [equipmentSlice] Toggle equipamiento:', id)
-      const result = await equipamientoService.toggleActive(token, id)
+      equipamientoService.setToken(token)
+      const result = await equipamientoService.toggleActiveAdmin(id)
       return result
     } catch (error) {
       console.error("❌ [equipmentSlice] Error al toggle equipamiento:", error)
@@ -68,7 +106,8 @@ export const deactivateEquipment = createAsyncThunk(
   'equipments/deactivate',
   async ({ token, id }: { token: string; id: number }, { rejectWithValue }) => {
     try {
-      const result = await equipamientoService.deactivateEquipment(token, id)
+      equipamientoService.setToken(token)
+      const result = await equipamientoService.deactivateAdmin(id)
       return result
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Error al desactivar')
@@ -81,7 +120,8 @@ export const hardDeleteEquipment = createAsyncThunk(
   'equipments/hardDelete',
   async ({ token, id }: { token: string; id: number }, { rejectWithValue }) => {
     try {
-      await equipamientoService.hardDeleteEquipment(token, id)
+      equipamientoService.setToken(token)
+      await equipamientoService.hardDeleteAdmin(id)
       return id
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Error al eliminar')
@@ -115,7 +155,7 @@ const equipmentSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch all equipments
+      // Fetch all equipments (admin)
       .addCase(fetchEquipments.pending, (state) => {
         state.loading = true
         state.error = null
@@ -128,6 +168,19 @@ const equipmentSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
+      // Fetch active only (para modals)
+      .addCase(fetchActiveEquipments.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchActiveEquipments.fulfilled, (state, action) => {
+        state.loading = false
+        state.equipments = action.payload
+      })
+      .addCase(fetchActiveEquipments.rejected, (state, action) => {
+        state.loading = false
+        state.error = (action.payload as string) ?? 'Error'
+      })
       // Create equipment
       .addCase(createEquipment.pending, (state) => {
         state.loading = true
@@ -138,6 +191,22 @@ const equipmentSlice = createSlice({
         state.equipments.push(action.payload)
       })
       .addCase(createEquipment.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      // Update equipment
+      .addCase(updateEquipment.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateEquipment.fulfilled, (state, action) => {
+        state.loading = false
+        const index = state.equipments.findIndex(e => e.id === action.payload.id)
+        if (index !== -1) {
+          state.equipments[index] = action.payload
+        }
+      })
+      .addCase(updateEquipment.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

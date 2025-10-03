@@ -3,10 +3,23 @@ import type { ZonaMuscularResponseDTO } from "../types/zonaMuscular/ZonaMuscular
 import type { ZonaMuscularSimpleDTO } from "../types/zonaMuscular/ZonaMuscularSimpleDTO";
 import { BackendClient } from "./BackendClient";
 
+/**
+ * Servicio para gestión de zonas musculares
+ * Usa métodos genéricos del BackendClient con endpoints /admin
+ */
 export class ZonaMuscularService extends BackendClient<ZonaMuscularRequestDTO, ZonaMuscularResponseDTO> {
     constructor(){
         super(`${import.meta.env.VITE_API_BASEURL}/api/muscle-groups`)
     }
+
+    // Los métodos admin ya están disponibles desde BackendClient:
+    // - getAllAdmin(relations)
+    // - getByIdAdmin(id, relations)
+    // - postAdmin(data)
+    // - patchAdmin(id, data)
+    // - toggleActiveAdmin(id)
+    // - deactivateAdmin(id)
+    // - hardDeleteAdmin(id)
 
     /**
      * Crear una zona muscular (requiere token de admin)
@@ -43,7 +56,7 @@ export class ZonaMuscularService extends BackendClient<ZonaMuscularRequestDTO, Z
      * Obtener todas las zonas musculares (admin - incluye inactivas)
      */
     async getAllMuscleZones(token: string, relations = false): Promise<ZonaMuscularResponseDTO[] | ZonaMuscularSimpleDTO[]> {
-        const response = await fetch(`${this.baseUrl}?relations=${relations}`, {
+        const response = await fetch(`${this.baseUrl}/admin?relations=${relations}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,

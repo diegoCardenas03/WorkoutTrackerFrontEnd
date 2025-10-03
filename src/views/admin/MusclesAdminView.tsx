@@ -5,10 +5,11 @@ import { MuscleAdminModal } from "../../components/admin/Muscles/MuscleAdminModa
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../../store"
-import { fetchMuscles, createMuscle, toggleMuscleActive } from "../../store/slices/muscleSlice"
+import { fetchMuscles, createMuscle, updateMuscle, toggleMuscleActive } from "../../store/slices/muscleSlice"
 import { fetchMuscleZones } from "../../store/slices/muscleZoneSlice"
 import type { MusculoRequestDTO } from "../../types/musculo/MusculoRequestDTO"
 import { Toast } from "../../components/Toast"
+import { Spinner } from "../../components/Spinner"
 import { useAuth0 } from "@auth0/auth0-react"
 
 interface Muscle {
@@ -22,7 +23,7 @@ interface Muscle {
 export const MusclesAdminView = () => {
   const dispatch = useDispatch()
   const { getAccessTokenSilently } = useAuth0()
-  const { muscles } = useSelector((s: RootState) => s.muscles)
+  const { muscles, loading } = useSelector((s: RootState) => s.muscles)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMuscle, setEditingMuscle] = useState<Muscle | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -140,10 +141,21 @@ export const MusclesAdminView = () => {
       console.log('🔑 [MusclesAdminView] Token obtenido, procediendo a guardar...');
 
       if (editingMuscle) {
-        // TODO: Implementar update cuando esté disponible en el backend
-        setToast({ msg: 'La edición de músculos estará disponible próximamente', type: 'error' })
-        setTimeout(() => setToast(null), 4000)
-        return; // Importante: salir aquí
+        console.log('🔄 [MusclesAdminView] Actualizando músculo...');
+        const result = await (dispatch as any)(updateMuscle({ 
+          token, 
+          id: Number(editingMuscle.id), 
+          data: payload 
+        }))
+        
+        if (result.type.endsWith('/rejected')) {
+          console.error('❌ [MusclesAdminView] Acción rechazada:', result);
+          throw new Error(result.payload || 'Error al actualizar músculo');
+        }
+        
+        console.log('✅ [MusclesAdminView] Músculo actualizado exitosamente');
+        setToast({ msg: 'Músculo actualizado exitosamente', type: 'success' })
+        setTimeout(() => setToast(null), 3000)
       } else {
         console.log('🚀 [MusclesAdminView] Llamando a createMuscle...');
         const result = await (dispatch as any)(createMuscle({ token, data: payload }))
@@ -204,8 +216,13 @@ export const MusclesAdminView = () => {
 
         {/* Content */}
         <div className="p-6">
-          {/* Search Bar */}
-          <div className="mb-6">
+          {/* Loading Spinner */}
+          {loading ? (
+            <Spinner size="lg" message="Cargando músculos..." />
+          ) : (
+            <>
+              {/* Search Bar */}
+              <div className="mb-6">
             <div className="relative max-w-md">
               <LuSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-quaternary" size={20} />
               <input
@@ -317,6 +334,8 @@ export const MusclesAdminView = () => {
               <LuChevronRight size={16} />
             </button>
           </div>
+            </>
+          )}
         </div>
 
         {/* Modal */}

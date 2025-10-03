@@ -165,4 +165,157 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     }
   }
 
+  // ========================================
+  // 🔐 MÉTODOS ADMIN (requieren rol ADMIN)
+  // ========================================
+
+  /**
+   * Obtener todos los elementos (admin - incluye inactivos)
+   * GET /api/{resource}/admin?relations=true
+   */
+  async getAllAdmin(relations = true): Promise<ResponseType[]> {
+    console.log(`🔵 [BackendClient.getAllAdmin] GET ${this.baseUrl}/admin?relations=${relations}`);
+    const response = await fetch(`${this.baseUrl}/admin?relations=${relations}`, {
+      headers: this.getHeaders(),
+    });
+    
+    if (!response.ok) {
+      console.error(`❌ [BackendClient.getAllAdmin] Error:`, response.status);
+      throw new Error(`Error al obtener datos: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log(`✅ [BackendClient.getAllAdmin] Obtenidos: ${data.length} elementos`);
+    return data as ResponseType[];
+  }
+
+  /**
+   * Obtener elemento por ID (admin)
+   * GET /api/{resource}/admin/{id}?relations=true
+   */
+  async getByIdAdmin(id: number, relations = true): Promise<ResponseType | null> {
+    console.log(`🔵 [BackendClient.getByIdAdmin] GET ${this.baseUrl}/admin/${id}?relations=${relations}`);
+    const response = await fetch(`${this.baseUrl}/admin/${id}?relations=${relations}`, {
+      headers: this.getHeaders(),
+    });
+    
+    if (!response.ok) {
+      console.error(`❌ [BackendClient.getByIdAdmin] Error:`, response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    console.log(`✅ [BackendClient.getByIdAdmin] Elemento obtenido:`, data);
+    return data as ResponseType;
+  }
+
+  /**
+   * Crear elemento (admin)
+   * POST /api/{resource}/admin
+   */
+  async postAdmin(data: RequestType): Promise<ResponseType> {
+    console.log(`🔵 [BackendClient.postAdmin] POST ${this.baseUrl}/admin`, data);
+    const response = await fetch(`${this.baseUrl}/admin`, {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ [BackendClient.postAdmin] Error:`, errorText);
+      throw new Error(errorText);
+    }
+    
+    const newData = await response.json();
+    console.log(`✅ [BackendClient.postAdmin] Elemento creado:`, newData);
+    return newData as ResponseType;
+  }
+
+  /**
+   * Actualizar elemento (admin)
+   * PATCH /api/{resource}/admin/{id}
+   */
+  async patchAdmin(id: number | string, data: RequestType | Partial<RequestType>): Promise<ResponseType> {
+    console.log(`🔵 [BackendClient.patchAdmin] PATCH ${this.baseUrl}/admin/${id}`, data);
+    const response = await fetch(`${this.baseUrl}/admin/${id}`, {
+      method: "PATCH",
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ [BackendClient.patchAdmin] Error:`, errorText);
+      throw new Error(errorText);
+    }
+    
+    const newData = await response.json();
+    console.log(`✅ [BackendClient.patchAdmin] Elemento actualizado:`, newData);
+    return newData as ResponseType;
+  }
+
+  /**
+   * Toggle estado activo/inactivo (admin)
+   * PATCH /api/{resource}/admin/{id}/toggle-active
+   */
+  async toggleActiveAdmin(id: number): Promise<any> {
+    console.log(`🔵 [BackendClient.toggleActiveAdmin] PATCH ${this.baseUrl}/admin/${id}/toggle-active`);
+    const response = await fetch(`${this.baseUrl}/admin/${id}/toggle-active`, {
+      method: "PATCH",
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Error al cambiar estado' }));
+      console.error(`❌ [BackendClient.toggleActiveAdmin] Error:`, error);
+      throw new Error(error.message || 'Error al cambiar estado');
+    }
+
+    const result = await response.json();
+    console.log(`✅ [BackendClient.toggleActiveAdmin] Estado cambiado:`, result);
+    return result;
+  }
+
+  /**
+   * Desactivar elemento (soft delete) (admin)
+   * PATCH /api/{resource}/admin/{id}/deactivate
+   */
+  async deactivateAdmin(id: number): Promise<any> {
+    console.log(`🔵 [BackendClient.deactivateAdmin] PATCH ${this.baseUrl}/admin/${id}/deactivate`);
+    const response = await fetch(`${this.baseUrl}/admin/${id}/deactivate`, {
+      method: "PATCH",
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Error al desactivar' }));
+      console.error(`❌ [BackendClient.deactivateAdmin] Error:`, error);
+      throw new Error(error.message || 'Error al desactivar');
+    }
+
+    const result = await response.json();
+    console.log(`✅ [BackendClient.deactivateAdmin] Elemento desactivado:`, result);
+    return result;
+  }
+
+  /**
+   * Eliminar permanentemente (hard delete) (admin)
+   * DELETE /api/{resource}/admin/{id}
+   */
+  async hardDeleteAdmin(id: number): Promise<void> {
+    console.log(`🔵 [BackendClient.hardDeleteAdmin] DELETE ${this.baseUrl}/admin/${id}`);
+    const response = await fetch(`${this.baseUrl}/admin/${id}`, {
+      method: "DELETE",
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      console.error(`❌ [BackendClient.hardDeleteAdmin] Error:`, response.status);
+      throw new Error(`Error al eliminar: ${response.statusText}`);
+    }
+
+    console.log(`✅ [BackendClient.hardDeleteAdmin] Elemento eliminado permanentemente`);
+  }
+
 }

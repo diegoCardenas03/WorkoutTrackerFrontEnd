@@ -7,12 +7,14 @@ import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../../store"
 import { 
   fetchEquipments, 
-  createEquipment, 
+  createEquipment,
+  updateEquipment, 
   toggleEquipmentActive,
   hardDeleteEquipment 
 } from "../../store/slices/equipmentSlice"
 import type { EquipamientoRequestDTO } from "../../types/equipamiento/EquipamientoRequestDTO"
 import { Toast } from "../../components/Toast"
+import { Spinner } from "../../components/Spinner"
 import { useAuth0 } from "@auth0/auth0-react"
 
 interface Equipment {
@@ -24,7 +26,7 @@ interface Equipment {
 export const EquipmentAdminView = () => {
   const dispatch = useDispatch()
   const { getAccessTokenSilently } = useAuth0()
-  const { equipments } = useSelector((s: RootState) => s.equipments)
+  const { equipments, loading } = useSelector((s: RootState) => s.equipments)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -160,10 +162,21 @@ export const EquipmentAdminView = () => {
       console.log('🔑 [EquipmentAdminView] Token obtenido');
 
       if (editingEquipment) {
-        // TODO: Implementar update cuando esté disponible en el backend
-        setToast({ msg: 'La edición de equipamiento estará disponible próximamente', type: 'error' })
-        setTimeout(() => setToast(null), 4000)
-        return;
+        console.log('🔄 [EquipmentAdminView] Actualizando equipamiento...');
+        const result = await (dispatch as any)(updateEquipment({ 
+          token, 
+          id: Number(editingEquipment.id), 
+          data: payload 
+        }))
+        
+        if (result.type.endsWith('/rejected')) {
+          console.error('❌ [EquipmentAdminView] Acción rechazada:', result);
+          throw new Error(result.payload || 'Error al actualizar equipamiento');
+        }
+        
+        console.log('✅ [EquipmentAdminView] Equipamiento actualizado exitosamente');
+        setToast({ msg: 'Equipamiento actualizado exitosamente', type: 'success' })
+        setTimeout(() => setToast(null), 3000)
       } else {
         console.log('🚀 [EquipmentAdminView] Llamando a createEquipment...');
         const result = await (dispatch as any)(createEquipment({ token, data: payload }))
@@ -222,8 +235,13 @@ export const EquipmentAdminView = () => {
 
         {/* Content */}
         <div className="p-6">
-          {/* Search Bar */}
-          <div className="mb-6">
+          {/* Loading Spinner */}
+          {loading ? (
+            <Spinner size="lg" message="Cargando equipamiento..." />
+          ) : (
+            <>
+              {/* Search Bar */}
+              <div className="mb-6">
             <div className="relative max-w-md">
               <LuSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-quaternary" size={20} />
               <input
@@ -352,6 +370,8 @@ export const EquipmentAdminView = () => {
               <LuChevronRight size={16} />
             </button>
           </div>
+            </>
+          )}
         </div>
 
         {/* Modal */}
