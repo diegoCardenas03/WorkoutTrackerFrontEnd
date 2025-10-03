@@ -11,6 +11,7 @@ interface ExerciseCardProps {
   name: string
   description: string
   tags: Tag[]
+  targetMuscles?: string[]
   onClick?: () => void
   isSelectMode?: boolean
   isSelected?: boolean
@@ -21,6 +22,7 @@ export const ExerciseCard = ({
   name,
   description,
   tags,
+  targetMuscles = [],
   onClick,
   isSelectMode = false,
   isSelected = false,
@@ -64,7 +66,7 @@ export const ExerciseCard = ({
       </p>
 
       {/* Tags */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-3">
         {tags.map((tag, index) => (
           <span
             key={index}
@@ -74,6 +76,23 @@ export const ExerciseCard = ({
           </span>
         ))}
       </div>
+
+      {/* Target Muscles */}
+      {targetMuscles.length > 0 && (
+        <div className="mb-4">
+          <p className="text-quaternary text-xs mb-2">Músculos objetivo:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {targetMuscles.map((muscle, index) => (
+              <span
+                key={index}
+                className="px-3 py-1 bg-black text-quaternary border border-quaternary rounded-full text-xs font-medium"
+              >
+                {muscle}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Botón de configurar (solo en modo selección) */}
       {isSelectMode && (

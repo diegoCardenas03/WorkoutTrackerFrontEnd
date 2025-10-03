@@ -19,6 +19,7 @@ import { MembersAdminView } from './views/admin/MembersAdminView'
 import { ExercisesAdminView } from './views/admin/ExercisesAdminView'
 import { MusclesAdminView } from './views/admin/MusclesAdminView'
 import { MuscleZonesAdminView } from './views/admin/MuscleZonesAdminView'
+import { CategoriesAdminView } from './views/admin/CategoriesAdminView'
 import { EquipmentAdminView } from './views/admin/EquipmentAdminView'
 import { Provider } from 'react-redux'
 import { store } from './store'
@@ -83,6 +84,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/admin/exercises" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><ExercisesAdminView /></RoleProtectedRoute>} />
             <Route path="/admin/muscles" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><MusclesAdminView /></RoleProtectedRoute>} />
             <Route path="/admin/muscle-zones" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><MuscleZonesAdminView /></RoleProtectedRoute>} />
+            <Route path="/admin/categories" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><CategoriesAdminView /></RoleProtectedRoute>} />
             <Route path="/admin/equipment" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><EquipmentAdminView /></RoleProtectedRoute>} />
             
             {/* Ruta catch-all: redirige cualquier ruta inexistente al dashboard */}

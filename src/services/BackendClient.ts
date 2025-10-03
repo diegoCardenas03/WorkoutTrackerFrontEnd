@@ -144,7 +144,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
 
   // Método para eliminar un elemento por su ID
   async delete(id: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/delete/${id}`, {
+    const response = await fetch(`${this.baseUrl}/${id}`, {
       method: "DELETE",
       headers: this.getHeaders(),
     });

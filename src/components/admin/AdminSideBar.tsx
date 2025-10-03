@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { LuUsers, LuDumbbell, LuUserCog, LuLogOut, LuBicepsFlexed, LuBoxes, LuWrench } from "react-icons/lu"
+import { LuUsers, LuDumbbell, LuUserCog, LuLogOut, LuBicepsFlexed, LuBoxes, LuWrench, LuFolderTree } from "react-icons/lu"
 import logo from "../../assets/Logo.png"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "../../hooks/useUser"
@@ -41,6 +41,7 @@ export const AdminSideBar = () => {
     { id: "exercises", label: "Ejercicios", icon: LuDumbbell, path: "/admin/exercises" },
     { id: "muscles", label: "Músculos", icon: LuBicepsFlexed, path: "/admin/muscles" },
     { id: "muscle-zones", label: "Zonas Musculares", icon: LuBoxes, path: "/admin/muscle-zones" },
+    { id: "categories", label: "Categorías", icon: LuFolderTree, path: "/admin/categories" },
     { id: "equipment", label: "Equipamiento", icon: LuWrench, path: "/admin/equipment" },
     // { id: "statistics", label: "Estadísticas", icon: LuChartNoAxesCombined, path: "/admin/stats" }
   ]

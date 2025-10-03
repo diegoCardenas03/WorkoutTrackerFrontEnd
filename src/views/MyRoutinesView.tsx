@@ -6,6 +6,7 @@ import { PrivateLayout } from "../layouts/PrivateLayout"
 import { FeatureCard } from "../components/FeatureCard"
 import { SearchBar } from "../components/SearchBar"
 import { CustomSelect } from "../components/CustomSelect"
+import { Spinner } from "../components/Spinner"
 // import { handleCategoryChange } from "../utils/handleCategoryChange"
 import { RoutineCard } from "../components/myRoutines/cards/RoutineCard"
 import { RoutineModal } from "../components/myRoutines/modals/RoutineModal"
@@ -463,9 +464,7 @@ export const MyRoutinesView = () => {
 
                 {/* Mostrar rutinas filtradas */}
                 {routinesLoading ? (
-                    <div className="text-center py-12">
-                        <p className="text-quaternary text-lg">Cargando rutinas...</p>
-                    </div>
+                    <Spinner message="Cargando rutinas..." size="md" />
                 ) : filteredRoutines.length === 0 ? (
                     <div className="text-center py-12">
                         <p className="text-quaternary text-lg">

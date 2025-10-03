@@ -18,9 +18,10 @@ export const ConfigExerciseOnSelectMode = ({
   onAddExercise
 }: ConfigExerciseOnSelectModeProps) => {
   const [series, setSeries] = useState(3)
-  const [reps, setReps] = useState(12) // Cambiado a número
+  const [reps, setReps] = useState(12)
+  const [repsError, setRepsError] = useState("")
   const [restKg, setRestKg] = useState("")
-  const [restTime, setRestTime] = useState("60")
+  const [restTime, setRestTime] = useState("60") // 60 segundos = 1 minuto
   const [notes, setNotes] = useState("")
 
   const handleAddExercise = () => {
@@ -75,6 +76,23 @@ export const ConfigExerciseOnSelectMode = ({
               </span>
             ))}
           </div>
+
+          {/* Músculos objetivo */}
+          {exercise?.targetMuscles && exercise.targetMuscles.length > 0 && (
+            <div className="mt-3">
+              <p className="text-quaternary text-xs mb-2">Músculos objetivo:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {exercise.targetMuscles.map((muscle: string, index: number) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-linksNavbar text-quaternary rounded-full text-xs font-medium"
+                  >
+                    {muscle}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -102,34 +120,37 @@ export const ConfigExerciseOnSelectMode = ({
 
             <div>
               <label className="text-white text-sm font-medium block mb-2">Repeticiones</label>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setReps(Math.max(1, reps - 1))}
-                  className="w-8 h-8 bg-itemsCard border border-white/20 rounded-lg flex items-center justify-center text-white hover:bg-white/10 transition-colors flex-shrink-0"
-                >
-                  <LuMinus size={14} />
-                </button>
+              <div>
                 <input
-                  type="number"
+                  type="text"
                   value={reps}
                   onChange={(e) => {
-                    const value = parseInt(e.target.value)
-                    if (!isNaN(value) && value >= 1) {
-                      setReps(value)
-                    } else if (e.target.value === '') {
-                      setReps(1)
+                    const value = e.target.value
+                    // Validar que no contenga comas
+                    if (value.includes(',') || value.includes('.')) {
+                      setRepsError('No se permiten comas ni decimales')
+                      return
+                    }
+                    
+                    // Limpiar error si existe
+                    if (repsError) setRepsError('')
+                    
+                    // Validar que sea un número entero válido
+                    const numValue = parseInt(value)
+                    if (!isNaN(numValue) && numValue >= 1) {
+                      setReps(numValue)
+                    } else if (value === '') {
+                      setReps(0)
                     }
                   }}
-                  min="1"
                   placeholder="12"
-                  className="flex-1 min-w-0 p-2 bg-itemsCard border border-white/20 rounded-lg text-white text-center placeholder-quaternary focus:outline-none focus:border-white/40 text-sm"
+                  className={`w-full p-2 sm:p-3 bg-itemsCard border ${
+                    repsError ? 'border-red-500' : 'border-white/20'
+                  } rounded-lg text-white text-center placeholder-quaternary focus:outline-none focus:border-white/40 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                 />
-                <button
-                  onClick={() => setReps(reps + 1)}
-                  className="w-8 h-8 bg-itemsCard border border-white/20 rounded-lg flex items-center justify-center text-white hover:bg-white/10 transition-colors flex-shrink-0"
-                >
-                  <LuPlus size={14} />
-                </button>
+                {repsError && (
+                  <p className="text-red-400 text-xs mt-1">{repsError}</p>
+                )}
               </div>
             </div>
           </div>
@@ -201,7 +222,7 @@ export const ConfigExerciseOnSelectMode = ({
               isWidthFull={true}
               lgPaddingLine=""
               mdPaddingLine=""
-              isBlocked={!reps || reps < 1}
+              isBlocked={!reps || reps < 1 || !!repsError}
               onlyMobileText
             >
               Agregar ejercicio

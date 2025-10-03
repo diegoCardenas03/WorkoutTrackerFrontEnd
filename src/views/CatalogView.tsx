@@ -13,10 +13,12 @@ import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../store"
 import { fetchActiveExercises } from "../store/slices/exerciseSlice"
 import { fetchCategories } from "../store/slices/categorySlice"
+import { fetchActiveMuscleZones } from "../store/slices/muscleZoneSlice"
+import { fetchActiveEquipments } from "../store/slices/equipmentSlice"
 import { useRoutineSelection } from "../hooks/useRoutineSelection"
 import type { EjercicioResponseDTO } from "../types/ejercicio/EjercicioResponseDTO"
 
-import { createRoutine, fetchRoutines, updateRoutine } from "../store/slices/routineSlice"
+import { createRoutine, updateRoutine } from "../store/slices/routineSlice"
 import type { RutinaRequestDTO } from "../types/rutina/RutinaRequestDTO"
 import { buildRutinaRequest } from "../utils/buildRutinaRequest"
 import { useNavigate } from "react-router-dom"
@@ -28,6 +30,7 @@ export const CatalogView = () => {
     const [selectedExercise, setSelectedExercise] = useState<EjercicioResponseDTO | null>(null)
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedMuscle, setSelectedMuscle] = useState("")
+    const [selectedMuscleZone, setSelectedMuscleZone] = useState("")
     const [selectedEquipment, setSelectedEquipment] = useState("")
     const [showSuccessToast, setShowSuccessToast] = useState(false)
     const [showErrorToast, setShowErrorToast] = useState(false)
@@ -37,6 +40,8 @@ export const CatalogView = () => {
     const dispatch = useDispatch<AppDispatch>()
     const { exercises, error: exercisesError } = useSelector((state: RootState) => state.exercises)
     const categoriesFromStore = useSelector((state: RootState) => state.categories?.categories ?? []) as { id: number; name: string }[]
+    const muscleZonesFromStore = useSelector((state: RootState) => state.muscleZones?.muscleZones ?? [])
+    const equipmentsFromStore = useSelector((state: RootState) => state.equipments?.equipments ?? [])
     const navigate = useNavigate()
     const [editingRoutineId, setEditingRoutineId] = useState<number | null>(null)
     const { getAccessTokenSilently } = useAuth0()
@@ -78,6 +83,8 @@ export const CatalogView = () => {
                 
                 dispatch(fetchActiveExercises(token) as any)
                 dispatch(fetchCategories(token) as any)
+                dispatch(fetchActiveMuscleZones(token) as any)
+                dispatch(fetchActiveEquipments(token) as any)
             } catch (error) {
                 console.error("Error al obtener token:", error)
             }
@@ -210,18 +217,14 @@ export const CatalogView = () => {
             
             setShowSuccessToast(true)
             
-            // refrescar la lista para asegurar datos completos del backend
-            await dispatch(fetchRoutines(token))
             // limpiar estado de selección y storage
             exitSelectMode()
             localStorage.removeItem('pendingRoutineData')
             localStorage.removeItem('pendingExercisesByDay')
             setEditingRoutineId(null)
             
-            // Esperar un momento para que se vea el toast antes de navegar
-            setTimeout(() => {
-                navigate('/routines', { replace: true })
-            }, 1500)
+            // Navegar inmediatamente - las rutinas se cargarán en MyRoutinesView
+            navigate('/routines', { replace: true })
         } catch (e) {
             console.error('Error creando/actualizando rutina:', e)
             setToastMessage(editingRoutineId 
@@ -236,10 +239,17 @@ export const CatalogView = () => {
         const matchesMuscle = selectedMuscle
             ? exercise.targetMuscles?.some(m => m.name === selectedMuscle)
             : true
+        const matchesMuscleZone = selectedMuscleZone
+            ? exercise.targetMuscles?.some(m => {
+                // Type guard to check if muscle has muscleGroup property
+                const muscleWithGroup = m as any
+                return muscleWithGroup.muscleGroup?.name === selectedMuscleZone
+            })
+            : true
         const matchesEquipment = selectedEquipment
             ? exercise.equipment.some(eq => eq.name === selectedEquipment)
             : true
-        return matchesSearch && matchesMuscle && matchesEquipment
+        return matchesSearch && matchesMuscle && matchesMuscleZone && matchesEquipment
     })
 
     const totalPages = Math.ceil(filteredExercises.length / exercisesPerPage)
@@ -250,22 +260,36 @@ export const CatalogView = () => {
 
     useEffect(() => {
         setCurrentPage(1)
-    }, [searchTerm, selectedMuscle, selectedEquipment])
+    }, [searchTerm, selectedMuscle, selectedMuscleZone, selectedEquipment])
 
     const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
+    // Obtener músculos únicos de los ejercicios
+    const uniqueMuscles = Array.from(
+        new Set(
+            exercises.flatMap(ex => ex.targetMuscles?.map(m => m.name) ?? [])
+        )
+    ).sort()
+
     const muscleOptions = [
         { value: "", label: "Todos los músculos" },
-        { value: "pecho", label: "Pecho" },
-        { value: "espalda", label: "Espalda" },
-        { value: "tríceps", label: "Tríceps" },
+        ...uniqueMuscles.map(muscle => ({ value: muscle, label: muscle }))
     ]
 
-    const equipment = [
+    // Opciones de zonas musculares desde el store
+    const muscleZoneOptions = [
+        { value: "", label: "Todas las zonas" },
+        ...muscleZonesFromStore
+            .filter((zone: any) => zone.active !== false)
+            .map((zone: any) => ({ value: zone.name, label: zone.name }))
+    ]
+
+    // Opciones de equipamiento desde el store
+    const equipmentOptions = [
         { value: "", label: "Todo el equipo" },
-        { value: "barra", label: "Barra" },
-        { value: "mancuernas", label: "Mancuernas" },
-        { value: "peso corporal", label: "Peso corporal" }
+        ...equipmentsFromStore
+            .filter((eq: any) => eq.active !== false)
+            .map((eq: any) => ({ value: eq.name, label: eq.name }))
     ]
 
     if (isSelectMode) {
@@ -398,8 +422,14 @@ export const CatalogView = () => {
                                 onChange={handleMuscleSelect}
                             />
                             <CustomSelect
+                                name="Todas las zonas"
+                                options={muscleZoneOptions}
+                                defaultValue=""
+                                onChange={setSelectedMuscleZone}
+                            />
+                            <CustomSelect
                                 name="Todo el equipo"
-                                options={equipment}
+                                options={equipmentOptions}
                                 defaultValue=""
                                 onChange={handleEquipmentSelect}
                             />
@@ -414,6 +444,7 @@ export const CatalogView = () => {
                                     name={exercise.name}
                                     description={exercise.description}
                                     tags={getEquipmentTag(exercise.equipment)}
+                                    targetMuscles={exercise.targetMuscles?.map(m => m.name) || []}
                                     onClick={() => handleExerciseClick(exercise)}
                                     isSelectMode={true}
                                     isSelected={isExerciseSelected(exercise.id)}
@@ -422,7 +453,8 @@ export const CatalogView = () => {
                                         title: exercise.name,
                                         tags: Array.isArray(exercise.equipment) && exercise.equipment.length > 0
                                             ? [{ label: exercise.equipment[0].name, color: 'orange' as const }]
-                                            : []
+                                            : [],
+                                        targetMuscles: exercise.targetMuscles?.map(m => m.name) || []
                                     })}
                                 />
                             ))
@@ -466,8 +498,14 @@ export const CatalogView = () => {
                             onChange={handleMuscleSelect}
                         />
                         <CustomSelect
+                            name="Todas las zonas"
+                            options={muscleZoneOptions}
+                            defaultValue=""
+                            onChange={setSelectedMuscleZone}
+                        />
+                        <CustomSelect
                             name="Todo el equipo"
-                            options={equipment}
+                            options={equipmentOptions}
                             defaultValue=""
                             onChange={handleEquipmentSelect}
                         />
@@ -483,6 +521,7 @@ export const CatalogView = () => {
                             name={exercise.name}
                             description={exercise.description}
                             tags={getEquipmentTag(exercise.equipment)}
+                            targetMuscles={exercise.targetMuscles?.map(m => m.name) || []}
                             onClick={() => handleExerciseClick(exercise)}
                         />
                     ))}
