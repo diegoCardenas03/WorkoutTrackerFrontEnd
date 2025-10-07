@@ -17,6 +17,7 @@ import { AgendaDetailsModal } from "../components/calendar/modals/AgendaDetailsM
 import { EditSessionModal } from "../components/calendar/modals/EditSessionModal"
 import { Toast } from "../components/Toast"
 import { useAuth0 } from "@auth0/auth0-react"
+import { Spinner } from "../components/Spinner"
 
 
 export const CalendarView = () => {
@@ -34,6 +35,7 @@ export const CalendarView = () => {
     const [isUpdating, setIsUpdating] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
     const [isCompleting, setIsCompleting] = useState(false)
+    const [initialLoading, setInitialLoading] = useState(true)
     const workoutDates = useMemo(() => {
         return (agenda.items ?? []).map(i => new Date(i.startDate))
     }, [agenda.items])
@@ -109,15 +111,38 @@ export const CalendarView = () => {
                         audience: import.meta.env.VITE_AUTH0_AUDIENCE,
                     }
                 })
-                await (dispatch as any)(fetchAgenda(token))
-                await (dispatch as any)(fetchRoutines(token))
+                
+                const startTime = Date.now()
+                await Promise.all([
+                    (dispatch as any)(fetchAgenda(token)),
+                    (dispatch as any)(fetchRoutines(token))
+                ])
+                
+                // Delay mínimo de 500ms para UX profesional
+                const elapsed = Date.now() - startTime
+                if (elapsed < 500) {
+                    await new Promise(resolve => setTimeout(resolve, 500 - elapsed))
+                }
             } catch (e) {
                 console.error('Error al cargar datos:', e)
                 setToast({ open: true, type: 'error', message: '❌ Error al cargar agenda' })
+            } finally {
+                setInitialLoading(false)
             }
         }
         loadData()
     }, [dispatch, getAccessTokenSilently])
+    
+    if (initialLoading) {
+        return (
+            <PrivateLayout>
+                <div className="flex items-center justify-center h-[60vh]">
+                    <Spinner message="Cargando agenda..." size="md" />
+                </div>
+            </PrivateLayout>
+        )
+    }
+    
     return (
         <PrivateLayout>
             <SubHeader nameView="Agenda" description="Planifica y gestiona tus entrenamientos">

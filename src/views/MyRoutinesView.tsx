@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import { LuPlus, LuTarget, LuTrendingUp } from "react-icons/lu"
 import { Button } from "../components/Button"
 import { SubHeader } from "../components/SubHeader"
@@ -14,11 +14,14 @@ import { ConfigRoutineModal } from "../components/myRoutines/modals/ConfigRoutin
 import { useNavigate } from "react-router-dom"
 import type { RutinaResponseDTO } from "../types/rutina/RutinaResponseDTO"
 import { useDispatch, useSelector } from "react-redux"
-import { fetchRoutines, updateRoutine, deleteRoutine } from "../store/slices/routineSlice"
+import { fetchRoutines, updateRoutine, deleteRoutine, fetchSavedRoutines } from "../store/slices/routineSlice"
 import { fetchCategories } from "../store/slices/categorySlice"
 import { startRoutineFromDto } from "../store/slices/trainingSlice"
+import { savePublicRoutine } from "../store/slices/communitySlice"
+import { fetchAgenda } from "../store/slices/agendaSlice"
 import { useAuth0 } from "@auth0/auth0-react"
 import { Toast } from "../components/Toast"
+import type { RootState } from "../store"
 
 interface RoutineData {
     id: string
@@ -56,17 +59,22 @@ export const MyRoutinesView = () => {
     const [toastMessage, setToastMessage] = useState("")
     // const [routineFormData, setRoutineFormData] = useState(null)
     const dispatch = useDispatch()
-    const routinesFromStore: RutinaResponseDTO[] = useSelector((state: any) => state.routines?.routines ?? [])
-    const routinesLoading: boolean = useSelector((state: any) => state.routines?.loading ?? false)
-    const categoriesFromStore: { id: number; name: string; active?: boolean }[] = useSelector((state: any) => state.categories?.categories ?? [])
+    const routinesFromStore: RutinaResponseDTO[] = useSelector((state: RootState) => state.routines?.routines ?? [])
+    const savedRoutinesFromStore: RutinaResponseDTO[] = useSelector((state: RootState) => state.routines?.savedRoutines ?? [])
+    const routinesLoading: boolean = useSelector((state: RootState) => state.routines?.loading ?? false)
+    const categoriesFromStore: { id: number; name: string; active?: boolean }[] = useSelector((state: RootState) => state.categories?.categories ?? [])
+    const agendaItems = useSelector((state: RootState) => state.agenda?.items ?? [])
     const navigate = useNavigate()
     const { getAccessTokenSilently } = useAuth0()
+    const [initialLoading, setInitialLoading] = useState(true)
 
     useEffect(() => {
         const loadRoutines = async () => {
             // Siempre intentar cargar rutinas al montar el componente
             try {
                 console.log('🔵 [MyRoutinesView] Cargando rutinas...')
+                const startTime = Date.now()
+                
                 const token = await getAccessTokenSilently({
                     authorizationParams: {
                         audience: import.meta.env.VITE_AUTH0_AUDIENCE,
@@ -76,13 +84,57 @@ export const MyRoutinesView = () => {
                 console.log('🔑 [MyRoutinesView] Token obtenido')
                 await (dispatch as any)(fetchRoutines(token))
                 console.log('✅ [MyRoutinesView] Rutinas cargadas desde el store')
+                
+                // Delay mínimo de 500ms para UX profesional
+                const elapsed = Date.now() - startTime
+                if (elapsed < 500) {
+                    await new Promise(resolve => setTimeout(resolve, 500 - elapsed))
+                }
             } catch (error) {
                 console.error("❌ [MyRoutinesView] Error al obtener token:", error)
+            } finally {
+                setInitialLoading(false)
             }
         }
         loadRoutines()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dispatch])
+
+    useEffect(() => {
+        // Cargar rutinas guardadas del usuario
+        const loadSavedRoutines = async () => {
+            try {
+                const token = await getAccessTokenSilently({
+                    authorizationParams: {
+                        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                        scope: "openid profile email",
+                    },
+                })
+                await (dispatch as any)(fetchSavedRoutines(token))
+            } catch (error) {
+                console.error("Error al cargar rutinas guardadas:", error)
+            }
+        }
+        loadSavedRoutines()
+    }, [dispatch, getAccessTokenSilently])
+
+    useEffect(() => {
+        // Cargar agenda del usuario
+        const loadAgenda = async () => {
+            try {
+                const token = await getAccessTokenSilently({
+                    authorizationParams: {
+                        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                        scope: "openid profile email",
+                    },
+                })
+                await (dispatch as any)(fetchAgenda(token))
+            } catch (error) {
+                console.error("Error al cargar agenda:", error)
+            }
+        }
+        loadAgenda()
+    }, [dispatch, getAccessTokenSilently])
 
     useEffect(() => {
         // Fetch categories solo una vez al montar el componente
@@ -105,6 +157,38 @@ export const MyRoutinesView = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dispatch])
 
+    // Calcular estadísticas basadas en datos reales
+    const stats = useMemo(() => {
+        // Completadas este mes
+        const now = new Date()
+        const currentMonth = now.getMonth()
+        const currentYear = now.getFullYear()
+        
+        const completedThisMonth = agendaItems.filter(item => {
+            if (!item.completed || !item.completedAt) return false
+            const completedDate = new Date(item.completedAt)
+            return completedDate.getMonth() === currentMonth && 
+                   completedDate.getFullYear() === currentYear
+        }).length
+
+        // Rutina favorita (la más frecuente en la agenda)
+        const routineFrequency: Record<string, number> = {}
+        agendaItems.forEach(item => {
+            const routineName = item.routine?.name
+            if (routineName) {
+                routineFrequency[routineName] = (routineFrequency[routineName] || 0) + 1
+            }
+        })
+
+        const favoriteRoutine = Object.entries(routineFrequency)
+            .sort(([, a], [, b]) => b - a)[0]?.[0] || "—"
+
+        return {
+            completedThisMonth,
+            favoriteRoutine
+        }
+    }, [agendaItems])
+
     const handleOpenRoutineModal = (routine: RoutineData) => {
         setSelectedRoutine(routine)
         setIsRoutineModalOpen(true)
@@ -122,7 +206,10 @@ export const MyRoutinesView = () => {
             setIsRoutineModalOpen(true)
             return
         }
-        const dto = (routinesFromStore ?? []).find(r => String(r.id) === routine.id)
+        // Buscar el DTO según el tipo de rutina
+        const dto = selectedType === "community"
+            ? (savedRoutinesFromStore ?? []).find(r => String(r.id) === routine.id)
+            : (routinesFromStore ?? []).find(r => String(r.id) === routine.id)
         if (!dto) return
         ;(dispatch as any)(startRoutineFromDto({ routine: dto }))
         navigate('/training')
@@ -156,6 +243,40 @@ export const MyRoutinesView = () => {
         }
     }
 
+    const handleSaveCommunityRoutine = async (routine: RoutineData) => {
+        try {
+            const token = await getAccessTokenSilently({
+                authorizationParams: {
+                    audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                    scope: "openid profile email",
+                },
+            })
+
+            const routineId = Number(routine.id)
+            
+            // Verificar si la rutina ya está guardada
+            const isSaved = savedRoutinesFromStore.some(r => r.id === routineId)
+            
+            if (isSaved) {
+                // Si ya está guardada, quitarla de guardadas (unsave)
+                setToastMessage('Rutina quitada de guardadas')
+            } else {
+                // Si no está guardada, guardarla
+                await (dispatch as any)(savePublicRoutine({ token, routineId, isSaved: false })).unwrap()
+                setToastMessage('Rutina guardada exitosamente')
+            }
+            
+            setShowSuccessToast(true)
+            
+            // Recargar rutinas guardadas
+            await (dispatch as any)(fetchSavedRoutines(token))
+        } catch (error: any) {
+            console.error('Error al guardar/quitar rutina:', error)
+            setToastMessage(error.message || 'Error al procesar la rutina. Inténtalo de nuevo.')
+            setShowErrorToast(true)
+        }
+    }
+
     
 
     const categoriesFilterOptions = [
@@ -172,7 +293,8 @@ export const MyRoutinesView = () => {
 
     const typeOfRoutine = [
         { value: "simple", label: "Simple" },
-        { value: "weekly", label: "Semanal" }
+        { value: "weekly", label: "Semanal" },
+        { value: "community", label: "Comunidad" }
     ];
 
     // Helpers de mapeo desde RutinaResponseDTO
@@ -234,11 +356,16 @@ export const MyRoutinesView = () => {
     }
 
     // Datos de las rutinas mapeados desde el store
-    const allRoutines: RoutineData[] = (routinesFromStore ?? []).map(mapDtoToRoutine)
+    const allRoutines: RoutineData[] = selectedType === "community" 
+        ? (savedRoutinesFromStore ?? []).map(mapDtoToRoutine)
+        : (routinesFromStore ?? []).map(mapDtoToRoutine)
 
     // Construir datos completos para el modal desde el DTO original
     const buildRoutineModalData = (routine: RoutineData) => {
-        const dto = (routinesFromStore ?? []).find(r => String(r.id) === routine.id)
+        // Buscar el DTO en las rutinas del usuario o en las guardadas según el tipo seleccionado
+        const dto = selectedType === "community"
+            ? (savedRoutinesFromStore ?? []).find(r => String(r.id) === routine.id)
+            : (routinesFromStore ?? []).find(r => String(r.id) === routine.id)
         // target muscles agregados de todas las sesiones
         const targetMusclesSet = new Set<string>()
         const exercises: { id: string; name: string; sets: number; reps: string; rest: string; equipment?: string }[] = []
@@ -338,9 +465,12 @@ export const MyRoutinesView = () => {
     // Función para filtrar rutinas
     const getFilteredRoutines = () => {
         return allRoutines.filter(routine => {
-            // Filtro por tipo de rutina
-            if (selectedType === "simple" && routine.isWeekly) return false
-            if (selectedType === "weekly" && !routine.isWeekly) return false
+            // Si es comunidad, NO filtrar por tipo (simple/semanal)
+            if (selectedType !== "community") {
+                // Filtro por tipo de rutina (solo para mis rutinas)
+                if (selectedType === "simple" && routine.isWeekly) return false
+                if (selectedType === "weekly" && !routine.isWeekly) return false
+            }
 
             if (selectedCategory && routine.category !== selectedCategory) {
                 return false
@@ -426,12 +556,12 @@ export const MyRoutinesView = () => {
                     <FeatureCard
                         icon={<LuTrendingUp size={20} className="text-[#49D56E]" />}
                         title="Completadas este mes"
-                        value="28"
+                        value={stats.completedThisMonth.toString()}
                     />
                     <FeatureCard
                         icon={<LuTarget size={20} className="text-[#D089DB]" />}
                         title="Rutina favorita"
-                        value="Tren Superior"
+                        value={stats.favoriteRoutine}
                     />
                 </div>
 
@@ -463,13 +593,15 @@ export const MyRoutinesView = () => {
                 </div>
 
                 {/* Mostrar rutinas filtradas */}
-                {routinesLoading ? (
+                {(initialLoading || routinesLoading) ? (
                     <Spinner message="Cargando rutinas..." size="md" />
                 ) : filteredRoutines.length === 0 ? (
                     <div className="text-center py-12">
                         <p className="text-quaternary text-lg">
                             {allRoutines.length === 0 
-                                ? 'No tienes rutinas creadas. ¡Crea tu primera rutina!' 
+                                ? (selectedType === "community" 
+                                    ? 'No tienes rutinas guardadas. ¡Guarda rutinas desde la comunidad!' 
+                                    : 'No tienes rutinas creadas. ¡Crea tu primera rutina!') 
                                 : 'No se encontraron rutinas con los filtros seleccionados'}
                         </p>
                     </div>
@@ -486,10 +618,12 @@ export const MyRoutinesView = () => {
                                     isWeekly={routine.isWeekly}
                                     weeklyData={routine.weeklyData}
                                     simpleData={routine.simpleData}
+                                    isCommunityRoutine={selectedType === "community"}
                                     onStart={() => handleStartRoutine(routine)}
                                     onViewRoutine={() => handleOpenRoutineModal(routine)}
-                                    onEdit={() => prepareEditAndNavigate(routine)}
-                                    onDelete={() => handleDeleteRoutine(routine)}
+                                    onEdit={selectedType === "community" ? undefined : () => prepareEditAndNavigate(routine)}
+                                    onDelete={selectedType === "community" ? undefined : () => handleDeleteRoutine(routine)}
+                                    onSave={selectedType === "community" ? () => handleSaveCommunityRoutine(routine) : undefined}
                                 />
                             ))}
                         </div>
@@ -506,7 +640,10 @@ export const MyRoutinesView = () => {
                     exerciseDtos={built.exerciseDtos}
                     onStart={(opts) => {
                         if (selectedRoutine) {
-                            const dto = (routinesFromStore ?? []).find(r => String(r.id) === selectedRoutine.id)
+                            // Buscar el DTO según el tipo de rutina
+                            const dto = selectedType === "community"
+                                ? (savedRoutinesFromStore ?? []).find(r => String(r.id) === selectedRoutine.id)
+                                : (routinesFromStore ?? []).find(r => String(r.id) === selectedRoutine.id)
                             if (dto) {
                                 ;(dispatch as any)(startRoutineFromDto({ routine: dto, dayOfWeek: opts?.dayOfWeek }))
                                 navigate('/training')

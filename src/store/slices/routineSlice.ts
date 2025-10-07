@@ -8,6 +8,7 @@ const rutinaService = new RutinaService()
 
 interface RoutineState {
   routines: RutinaResponseDTO[]
+  savedRoutines: RutinaResponseDTO[]
   loading: boolean
   error: string | null
   selectedRoutine: RutinaResponseDTO | null
@@ -18,6 +19,7 @@ interface RoutineState {
 
 const initialState: RoutineState = {
   routines: [],
+  savedRoutines: [],
   loading: false,
   error: null,
   selectedRoutine: null,
@@ -95,6 +97,21 @@ export const deleteRoutine = createAsyncThunk(
   }
 )
 
+export const fetchSavedRoutines = createAsyncThunk(
+  'routines/fetchSavedRoutines',
+  async (token: string, { rejectWithValue }) => {
+    try {
+      console.log('🔵 [routineSlice] Obteniendo rutinas guardadas del usuario...')
+      const data = await rutinaService.getSavedRoutines(token)
+      console.log('✅ [routineSlice] Rutinas guardadas obtenidas:', data.length)
+      return data as RutinaResponseDTO[]
+    } catch (error) {
+      console.error('❌ [routineSlice] Error al cargar rutinas guardadas:', error)
+      return rejectWithValue(error instanceof Error ? error.message : 'Error al cargar rutinas guardadas')
+    }
+  }
+)
+
 const routineSlice = createSlice({
   name: 'routines',
   initialState,
@@ -107,6 +124,7 @@ const routineSlice = createSlice({
     },
     resetRoutines: (state) => {
       state.routines = []
+      state.savedRoutines = []
       state.selectedRoutine = null
       state.error = null
     },
@@ -196,6 +214,19 @@ const routineSlice = createSlice({
       })
       .addCase(deleteRoutine.rejected, (state, action) => {
         state.deleting = false
+        state.error = action.payload as string
+      })
+      // Fetch saved routines
+      .addCase(fetchSavedRoutines.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchSavedRoutines.fulfilled, (state, action) => {
+        state.loading = false
+        state.savedRoutines = action.payload
+      })
+      .addCase(fetchSavedRoutines.rejected, (state, action) => {
+        state.loading = false
         state.error = action.payload as string
       })
   },

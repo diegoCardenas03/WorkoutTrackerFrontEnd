@@ -1,4 +1,4 @@
-import { LuDumbbell, LuCalendarDays, LuPlay, LuEllipsisVertical, LuTrash2, LuPencil } from "react-icons/lu"
+import { LuDumbbell, LuCalendarDays, LuPlay, LuEllipsisVertical, LuTrash2, LuPencil, LuBookmark } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
 import { useState, useRef, useEffect } from "react"
@@ -20,10 +20,12 @@ interface RoutineCardProps {
   simpleData?: {
     lastCompleted?: string
   }
+  isCommunityRoutine?: boolean // Nueva prop para identificar rutinas de comunidad
   onStart?: () => void
   onViewRoutine?: () => void
   onEdit?: () => void
   onDelete?: () => void
+  onSave?: () => void // Nueva acción para guardar rutinas de comunidad
   className?: string
 }
 
@@ -35,10 +37,12 @@ export const RoutineCard = ({
   isWeekly = false,
   weeklyData,
   simpleData,
+  isCommunityRoutine = false,
   onStart,
   onViewRoutine,
   onEdit,
   onDelete,
+  onSave,
   className = ""
 }: RoutineCardProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -117,20 +121,37 @@ export const RoutineCard = ({
           {/* Dropdown Menu */}
           {isMenuOpen && (
             <div className="absolute right-0 top-8 bg-tertiary border border-white/20 rounded-lg shadow-lg z-10 min-w-[160px]">
-              <button
-                onClick={handleEditClick}
-                className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-itemsCard transition-colors border-b border-white/10 cursor-pointer text-blue-400 hover:text-blue-300"
-              >
-                <LuPencil size={16} />
-                <span className="text-sm font-medium">Editar rutina</span>
-              </button>
-              <button
-                onClick={handleDeleteClick}
-                className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-itemsCard transition-colors rounded-lg cursor-pointer text-red-400 hover:text-red-300"
-              >
-                <LuTrash2 size={16} />
-                <span className="text-sm font-medium">Eliminar rutina</span>
-              </button>
+              {isCommunityRoutine ? (
+                // Menú para rutinas de comunidad
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false)
+                    if (onSave) onSave()
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-itemsCard transition-colors rounded-lg cursor-pointer text-green-400 hover:text-green-300"
+                >
+                  <LuBookmark size={16} />
+                  <span className="text-sm font-medium">Guardar en Mis Rutinas</span>
+                </button>
+              ) : (
+                // Menú para rutinas propias
+                <>
+                  <button
+                    onClick={handleEditClick}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-itemsCard transition-colors border-b border-white/10 cursor-pointer text-blue-400 hover:text-blue-300"
+                  >
+                    <LuPencil size={16} />
+                    <span className="text-sm font-medium">Editar rutina</span>
+                  </button>
+                  <button
+                    onClick={handleDeleteClick}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-itemsCard transition-colors rounded-lg cursor-pointer text-red-400 hover:text-red-300"
+                  >
+                    <LuTrash2 size={16} />
+                    <span className="text-sm font-medium">Eliminar rutina</span>
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>

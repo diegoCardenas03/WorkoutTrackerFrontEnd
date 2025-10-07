@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { usuarioService } from '../services/UsuarioService'
 import { Toast } from '../components/Toast'
+import { Spinner } from '../components/Spinner'
 
 export const MyProfileView = () => {
   const { userData, isLoading, auth0User, refetch } = useUser();
@@ -22,6 +23,7 @@ export const MyProfileView = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [initialLoading, setInitialLoading] = useState(true)
 
   // Verificar si es usuario de Google
   const isGoogleUser = auth0User?.sub?.includes('google-oauth2');
@@ -34,7 +36,25 @@ export const MyProfileView = () => {
     }
   }, [userData]);
 
+  // Delay profesional para carga inicial
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
+
   const profilePicture = auth0User?.picture || fotoPerfil;
+
+  if (initialLoading || isLoading) {
+    return (
+      <PrivateLayout>
+        <div className="flex items-center justify-center h-[60vh]">
+          <Spinner message="Cargando perfil..." size="md" />
+        </div>
+      </PrivateLayout>
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

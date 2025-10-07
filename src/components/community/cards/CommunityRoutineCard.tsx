@@ -1,5 +1,4 @@
 import { LuHeart, LuBookmark, LuMessageCircle, LuTarget, LuBook } from "react-icons/lu"
-import { useState } from "react"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
 
@@ -25,6 +24,9 @@ interface CommunityExerciseCardProps {
   saves: number
   comments: number
   publishDate: string
+  isLiked?: boolean
+  isSaved?: boolean
+  isOwnRoutine?: boolean
   onLike?: () => void
   onSave?: () => void
   onComments?: () => void
@@ -44,28 +46,25 @@ export const CommunityExerciseCard = ({
   saves,
   comments,
   publishDate,
+  isLiked = false,
+  isSaved = false,
+  isOwnRoutine = false,
   onLike,
   onSave,
   onClick,
- onComments, 
+  onComments, 
   className = ""
 }: CommunityExerciseCardProps) => {
-  const [isLiked, setIsLiked] = useState(false)
-  const [isSaved, setIsSaved] = useState(false)
 
-  const handleLike = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setIsLiked(!isLiked)
+  const handleLike = () => {
     if (onLike) onLike()
   }
 
-  const handleSave = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setIsSaved(!isSaved)
+  const handleSave = () => {
     if (onSave) onSave()
   }
 
-    const handleComments = (e: React.MouseEvent) => {
+  const handleComments = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (onComments) onComments()
   }
@@ -81,7 +80,6 @@ export const CommunityExerciseCard = ({
         <div className="flex items-start justify-between mb-2">
           <h3 className="text-white text-lg 2xl:text-xl font-semibold flex items-center gap-2">
             {title}
-            <span className="text-lg">💃</span>
           </h3>
         </div>
         <p className="text-quaternary text-sm md:text-base leading-relaxed">
@@ -131,19 +129,7 @@ export const CommunityExerciseCard = ({
 
       {/* Stats */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-1">
-          <span className="text-yellow-400 text-sm 2xl:text-base">★</span>
-          <span className="text-white text-sm md:text-base font-medium">{rating}</span>
-        </div>
         <div className="flex items-center gap-4 text-quaternary text-sm 2xl:text-base">
-          <div className="flex items-center gap-1 cursor-pointer">
-            <LuHeart size={14} className="hover:text-quaternary/80 transition-colors" />
-            <span>{likes}</span>
-          </div>
-          <div className="flex items-center gap-1 cursor-pointer">
-            <LuBookmark size={14} className="hover:text-quaternary/80 transition-colors" />
-            <span>{saves}</span>
-          </div>
           <div className="flex items-center gap-1 cursor-pointer" onClick={handleComments}>
             <LuMessageCircle size={14} className="hover:text-quaternary/80 transition-colors" />
             <span>{comments}</span>
@@ -157,23 +143,36 @@ export const CommunityExerciseCard = ({
       </p>
 
       {/* Action buttons */}
-      <div className="flex gap-3">
-        <Button
-        iconPosition={false}
-        icon={<LuHeart className="text-[#7C0000]" />}
-        isALike= {true}
-        lgHeight="lg:h-40"
-        >
-            312
-        </Button>
-       <Button 
-       isWidthFull={true}
-       iconPosition={false}
-       icon={<LuBookmark/>}
-       lgHeight="lg:h-40"
-       >
-        Guardar
-       </Button>
+      <div className="flex gap-3" onClick={(e) => e.stopPropagation()}>
+        {isOwnRoutine ? (
+          /* Si es rutina propia, mostrar badge de creador */
+          <div className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg">
+            <LuBook size={16} />
+            <span className="text-sm font-medium">Tu rutina publicada</span>
+          </div>
+        ) : (
+          /* Si no es rutina propia, mostrar botones de like y guardar */
+          <>
+            <Button
+              iconPosition={false}
+              icon={<LuHeart className={isLiked ? "text-red-500 fill-current" : "text-[#7C0000]"} />}
+              isALike={true}
+              lgHeight="lg:h-10"
+              action={handleLike}
+            >
+              {likes}
+            </Button>
+            <Button 
+              isWidthFull={true}
+              iconPosition={false}
+              icon={isSaved ? <LuBookmark className="fill-current" /> : <LuBookmark />}
+              lgHeight="lg:h-10"
+              action={handleSave}
+            >
+              {isSaved ? "Guardada" : "Guardar"}
+            </Button>
+          </>
+        )}
       </div>
     </div>
   )

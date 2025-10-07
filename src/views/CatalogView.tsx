@@ -38,7 +38,7 @@ export const CatalogView = () => {
 
 
     const dispatch = useDispatch<AppDispatch>()
-    const { exercises, error: exercisesError } = useSelector((state: RootState) => state.exercises)
+    const { exercises, error: exercisesError, loading: exercisesLoading } = useSelector((state: RootState) => state.exercises)
     const categoriesFromStore = useSelector((state: RootState) => state.categories?.categories ?? []) as { id: number; name: string }[]
     const muscleZonesFromStore = useSelector((state: RootState) => state.muscleZones?.muscleZones ?? [])
     const equipmentsFromStore = useSelector((state: RootState) => state.equipments?.equipments ?? [])
@@ -296,7 +296,7 @@ export const CatalogView = () => {
         return (
             <PrivateLayout>
                 <div className="border-b border-white/10 pb-6">
-                    {exercisesError && (
+                    {exercisesError && !exercisesLoading && exercises.length === 0 && (
                         <div style={{ color: "white", background: "red", padding: 8, borderRadius: 4, marginBottom: 16 }}>
                             {exercisesError}
                         </div>
@@ -480,7 +480,7 @@ export const CatalogView = () => {
         <PrivateLayout>
             <SubHeader nameView="Catálogo de ejercicios" description="Explora todos los ejercicios disponibles" />
             <div className="flex flex-col gap-6">
-                {exercisesError && (
+                {exercisesError && !exercisesLoading && exercises.length === 0 && (
                     <div style={{ color: "white", background: "red", padding: 8, borderRadius: 4, marginBottom: 16 }}>
                         {exercisesError}
                     </div>

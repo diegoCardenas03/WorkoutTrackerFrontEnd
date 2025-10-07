@@ -8,6 +8,8 @@ import agendaReducer from './slices/agendaSlice'
 import muscleReducer from './slices/muscleSlice'
 import muscleZoneReducer from './slices/muscleZoneSlice'
 import pesoReducer from './slices/pesoSlice'
+import communityReducer from './slices/communitySlice'
+import comentarioReducer from './slices/comentarioSlice'
 
 
 
@@ -22,6 +24,8 @@ export const store = configureStore({
   muscles: muscleReducer,
   muscleZones: muscleZoneReducer,
   peso: pesoReducer,
+  community: communityReducer,
+  comentarios: comentarioReducer,
   }
 })
 
