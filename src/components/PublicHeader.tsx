@@ -34,7 +34,12 @@ export const Header = () => {
               Cerrar Sesión
             </Button>
           ) : (
-            <Button isWhite={false} action={() => loginWithRedirect()}>
+            <Button isWhite={false} action={() => loginWithRedirect({
+              authorizationParams: {
+                prompt: 'login', // Forzar a mostrar la pantalla de login
+                screen_hint: 'signup' // Sugerir la pantalla de registro
+              }
+            })}>
               Iniciar Sesión
             </Button>
           )}
@@ -65,7 +70,12 @@ export const Header = () => {
           ) : isAuthenticated ? (
             <Button isWhite={false} isWidthFull={true} action={() => logout({ logoutParams: { returnTo: window.location.origin } })}>Cerrar Sesión</Button>
           ) : (
-            <Button isWhite={false} isWidthFull={true} action={() => loginWithRedirect()}>Iniciar Sesión</Button>
+            <Button isWhite={false} isWidthFull={true} action={() => loginWithRedirect({
+              authorizationParams: {
+                prompt: 'login', // Forzar a mostrar la pantalla de login
+                screen_hint: 'signup' // Sugerir la pantalla de registro
+              }
+            })}>Iniciar Sesión</Button>
           )}
           {isAuthenticated ? (
             <Button isWidthFull={true} icon={<LuArrowRight />} action={() => navigate('/')}>Ir al Dashboard</Button>

@@ -21,11 +21,12 @@ interface RoutineCardProps {
     lastCompleted?: string
   }
   isCommunityRoutine?: boolean // Nueva prop para identificar rutinas de comunidad
+  isSavedCommunityRoutine?: boolean // Nueva prop para saber si ya está guardada
   onStart?: () => void
   onViewRoutine?: () => void
   onEdit?: () => void
   onDelete?: () => void
-  onSave?: () => void // Nueva acción para guardar rutinas de comunidad
+  onSave?: () => void // Nueva acción para guardar/quitar rutinas de comunidad
   className?: string
 }
 
@@ -38,6 +39,7 @@ export const RoutineCard = ({
   weeklyData,
   simpleData,
   isCommunityRoutine = false,
+  isSavedCommunityRoutine = false,
   onStart,
   onViewRoutine,
   onEdit,
@@ -128,10 +130,16 @@ export const RoutineCard = ({
                     setIsMenuOpen(false)
                     if (onSave) onSave()
                   }}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-itemsCard transition-colors rounded-lg cursor-pointer text-green-400 hover:text-green-300"
+                  className={`w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-itemsCard transition-colors rounded-lg cursor-pointer ${
+                    isSavedCommunityRoutine 
+                      ? 'text-red-400 hover:text-red-300' 
+                      : 'text-green-400 hover:text-green-300'
+                  }`}
                 >
                   <LuBookmark size={16} />
-                  <span className="text-sm font-medium">Guardar en Mis Rutinas</span>
+                  <span className="text-sm font-medium">
+                    {isSavedCommunityRoutine ? 'Quitar de Mis Rutinas' : 'Guardar en Mis Rutinas'}
+                  </span>
                 </button>
               ) : (
                 // Menú para rutinas propias

@@ -22,6 +22,7 @@ import { fetchAgenda } from "../store/slices/agendaSlice"
 import { useAuth0 } from "@auth0/auth0-react"
 import { Toast } from "../components/Toast"
 import type { RootState } from "../store"
+import { ConfirmModal } from "../components/ConfirmModal"
 
 interface RoutineData {
     id: string
@@ -57,6 +58,9 @@ export const MyRoutinesView = () => {
     const [showSuccessToast, setShowSuccessToast] = useState(false)
     const [showErrorToast, setShowErrorToast] = useState(false)
     const [toastMessage, setToastMessage] = useState("")
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [routineToDelete, setRoutineToDelete] = useState<RoutineData | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
     // const [routineFormData, setRoutineFormData] = useState(null)
     const dispatch = useDispatch()
     const routinesFromStore: RutinaResponseDTO[] = useSelector((state: RootState) => state.routines?.routines ?? [])
@@ -216,10 +220,14 @@ export const MyRoutinesView = () => {
     }
 
     const handleDeleteRoutine = async (routine: RoutineData) => {
-        if (!window.confirm(`¿Estás seguro de que deseas eliminar la rutina "${routine.title}"?`)) {
-            return
-        }
+        setRoutineToDelete(routine)
+        setShowDeleteConfirm(true)
+    }
 
+    const performDeleteRoutine = async () => {
+        if (!routineToDelete) return
+
+        setIsDeleting(true)
         try {
             const token = await getAccessTokenSilently({
                 authorizationParams: {
@@ -228,11 +236,13 @@ export const MyRoutinesView = () => {
                 },
             })
 
-            const routineId = Number(routine.id)
+            const routineId = Number(routineToDelete.id)
             await (dispatch as any)(deleteRoutine({ token, id: routineId })).unwrap()
             
             setToastMessage('Rutina eliminada exitosamente')
             setShowSuccessToast(true)
+            setShowDeleteConfirm(false)
+            setRoutineToDelete(null)
             
             // Recargar rutinas
             await (dispatch as any)(fetchRoutines(token))
@@ -240,6 +250,8 @@ export const MyRoutinesView = () => {
             console.error('Error al eliminar rutina:', error)
             setToastMessage(error.message || 'Error al eliminar la rutina. Inténtalo de nuevo.')
             setShowErrorToast(true)
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -257,15 +269,12 @@ export const MyRoutinesView = () => {
             // Verificar si la rutina ya está guardada
             const isSaved = savedRoutinesFromStore.some(r => r.id === routineId)
             
-            if (isSaved) {
-                // Si ya está guardada, quitarla de guardadas (unsave)
-                setToastMessage('Rutina quitada de guardadas')
-            } else {
-                // Si no está guardada, guardarla
-                await (dispatch as any)(savePublicRoutine({ token, routineId, isSaved: false })).unwrap()
-                setToastMessage('Rutina guardada exitosamente')
-            }
+            console.log('🔵 Toggle save en rutina:', routineId, 'actualmente guardada:', isSaved)
             
+            // El backend hace toggle automáticamente
+            await (dispatch as any)(savePublicRoutine({ token, routineId })).unwrap()
+            
+            setToastMessage(isSaved ? 'Rutina quitada de guardadas' : 'Rutina guardada exitosamente')
             setShowSuccessToast(true)
             
             // Recargar rutinas guardadas
@@ -558,11 +567,6 @@ export const MyRoutinesView = () => {
                         title="Completadas este mes"
                         value={stats.completedThisMonth.toString()}
                     />
-                    <FeatureCard
-                        icon={<LuTarget size={20} className="text-[#D089DB]" />}
-                        title="Rutina favorita"
-                        value={stats.favoriteRoutine}
-                    />
                 </div>
 
                 <div className="p-6 flex flex-col bg-tertiary rounded-lg gap-4 border border-white/20">
@@ -619,6 +623,7 @@ export const MyRoutinesView = () => {
                                     weeklyData={routine.weeklyData}
                                     simpleData={routine.simpleData}
                                     isCommunityRoutine={selectedType === "community"}
+                                    isSavedCommunityRoutine={selectedType === "community"}
                                     onStart={() => handleStartRoutine(routine)}
                                     onViewRoutine={() => handleOpenRoutineModal(routine)}
                                     onEdit={selectedType === "community" ? undefined : () => prepareEditAndNavigate(routine)}
@@ -769,6 +774,22 @@ export const MyRoutinesView = () => {
                     }
                     handleContinueToSelection(data)
                 }}
+            />
+
+            {/* Confirm Modal para eliminar rutina */}
+            <ConfirmModal
+                isOpen={showDeleteConfirm}
+                onClose={() => {
+                    setShowDeleteConfirm(false)
+                    setRoutineToDelete(null)
+                }}
+                onConfirm={performDeleteRoutine}
+                title="Eliminar rutina"
+                message={routineToDelete ? `¿Estás seguro de que deseas eliminar la rutina "${routineToDelete.title}"? Esta acción no se puede deshacer.` : ''}
+                confirmText="Eliminar"
+                cancelText="Cancelar"
+                variant="danger"
+                isLoading={isDeleting}
             />
 
             {/* Toasts de éxito y error */}

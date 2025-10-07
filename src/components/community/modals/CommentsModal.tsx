@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { LuMessageCircle, LuSend, LuX, LuCornerDownRight, LuHeart, LuTrash2, LuPencil } from "react-icons/lu"
 import { Button } from "../../Button"
+import { ConfirmModal } from "../../ConfirmModal"
 
 
 interface Comment {
@@ -47,6 +48,9 @@ export const CommentsModal = ({
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState("")
   const [showMenuForComment, setShowMenuForComment] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [commentToDelete, setCommentToDelete] = useState<{ id: string; content: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,11 +92,25 @@ export const CommentsModal = ({
     }
   }
 
-  const handleDelete = (commentId: string) => {
-    if (onDeleteComment && window.confirm("¿Estás seguro de eliminar este comentario?")) {
-      onDeleteComment(Number(commentId))
-    }
+  const handleDelete = (commentId: string, commentContent: string) => {
+    setCommentToDelete({ id: commentId, content: commentContent })
+    setShowDeleteConfirm(true)
     setShowMenuForComment(null)
+  }
+
+  const performDelete = async () => {
+    if (!commentToDelete || !onDeleteComment) return
+
+    setIsDeleting(true)
+    try {
+      await onDeleteComment(Number(commentToDelete.id))
+      setShowDeleteConfirm(false)
+      setCommentToDelete(null)
+    } catch (error) {
+      console.error("Error al eliminar comentario:", error)
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const handleLike = (commentId: string) => {
@@ -221,7 +239,7 @@ export const CommentsModal = ({
                                 Editar
                               </button>
                               <button
-                                onClick={() => handleDelete(comment.id)}
+                                onClick={() => handleDelete(comment.id, comment.content)}
                                 className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2"
                               >
                                 <LuTrash2 size={14} />
@@ -365,7 +383,7 @@ export const CommentsModal = ({
                                           Editar
                                         </button>
                                         <button
-                                          onClick={() => handleDelete(reply.id)}
+                                          onClick={() => handleDelete(reply.id, reply.content)}
                                           className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2"
                                         >
                                           <LuTrash2 size={14} />
@@ -455,6 +473,26 @@ export const CommentsModal = ({
           </form>
         </div>
       </div>
+
+      {/* Confirm Modal para eliminar comentario */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false)
+          setCommentToDelete(null)
+        }}
+        onConfirm={performDelete}
+        title="Eliminar comentario"
+        message={
+          commentToDelete 
+            ? `¿Estás seguro de que deseas eliminar este comentario? Esta acción no se puede deshacer.\n\n"${commentToDelete.content.substring(0, 100)}${commentToDelete.content.length > 100 ? '...' : ''}"`
+            : ''
+        }
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </div>
   )
 }

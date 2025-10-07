@@ -52,22 +52,17 @@ export const fetchPublicRoutines = createAsyncThunk(
 );
 
 /**
- * Dar like a una rutina (toggle)
- * POST /api/routines/{id}/like o /api/routines/{id}/unlike
+ * Dar/quitar like a una rutina (toggle)
+ * POST /api/routines/{id}/like
  */
 export const likeRoutine = createAsyncThunk(
   "community/likeRoutine",
-  async ({ token, routineId, isLiked }: { token: string; routineId: number; isLiked: boolean }, { rejectWithValue }) => {
+  async ({ token, routineId, wasLiked }: { token: string; routineId: number; wasLiked: boolean }, { rejectWithValue }) => {
     try {
-      if (isLiked) {
-        // Si ya tiene like, quitar like
-        await rutinaService.unlikeRoutine(token, routineId);
-      } else {
-        // Si no tiene like, dar like
-        await rutinaService.likeRoutine(token, routineId);
-      }
+      // El backend ahora maneja el toggle automáticamente
+      await rutinaService.toggleLikeRoutine(token, routineId);
       
-      return { routineId, isLiked: !isLiked };
+      return { routineId, wasLiked };
     } catch (error: any) {
       return rejectWithValue(error.message || "Error al dar like");
     }
@@ -75,22 +70,17 @@ export const likeRoutine = createAsyncThunk(
 );
 
 /**
- * Marcar/desmarcar rutina como guardada (toggle)
- * POST /api/routines/{id}/save o /api/routines/{id}/unsave
+ * Guardar/quitar rutina de guardadas (toggle)
+ * POST /api/routines/{id}/save
  */
 export const savePublicRoutine = createAsyncThunk(
   "community/saveRoutine",
-  async ({ token, routineId, isSaved }: { token: string; routineId: number; isSaved: boolean }, { rejectWithValue }) => {
+  async ({ token, routineId }: { token: string; routineId: number }, { rejectWithValue }) => {
     try {
-      if (isSaved) {
-        // Si ya está guardada, quitarla de guardadas
-        await rutinaService.unsaveRoutine(token, routineId);
-      } else {
-        // Si no está guardada, guardarla
-        await rutinaService.saveRoutine(token, routineId);
-      }
+      // El backend ahora maneja el toggle automáticamente
+      await rutinaService.toggleSaveRoutine(token, routineId);
       
-      return { routineId, isSaved: !isSaved };
+      return { routineId };
     } catch (error: any) {
       return rejectWithValue(error.message || "Error al guardar rutina");
     }
@@ -138,13 +128,31 @@ const communitySlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Like rutina
+    // Like rutina - Actualizar contador optimistamente
     builder
-      .addCase(likeRoutine.fulfilled, (state, action) => {
-        const routine = state.routines.find((r) => r.id === action.payload.routineId);
+      .addCase(likeRoutine.pending, (state, action) => {
+        // Actualización optimista del contador
+        const routine = state.routines.find((r) => r.id === action.meta.arg.routineId);
         if (routine) {
-          // Toggle: incrementar o decrementar
-          if (action.payload.isLiked) {
+          const wasLiked = action.meta.arg.wasLiked;
+          // Si ya tenía like, decrementar. Si no tenía like, incrementar
+          if (wasLiked) {
+            routine.likesCount = Math.max(0, (routine.likesCount || 0) - 1);
+          } else {
+            routine.likesCount = (routine.likesCount || 0) + 1;
+          }
+        }
+      })
+      .addCase(likeRoutine.fulfilled, () => {
+        // El contador ya está actualizado optimistamente en pending
+      })
+      .addCase(likeRoutine.rejected, (state, action) => {
+        // Revertir el cambio optimista si falla
+        const routine = state.routines.find((r) => r.id === action.meta.arg.routineId);
+        if (routine) {
+          const wasLiked = action.meta.arg.wasLiked;
+          // Revertir: si tenía like, volver a incrementar. Si no tenía, volver a decrementar
+          if (wasLiked) {
             routine.likesCount = (routine.likesCount || 0) + 1;
           } else {
             routine.likesCount = Math.max(0, (routine.likesCount || 0) - 1);
@@ -154,17 +162,8 @@ const communitySlice = createSlice({
 
     // Save rutina
     builder
-      .addCase(savePublicRoutine.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(savePublicRoutine.fulfilled, (state) => {
-        state.loading = false;
-        // No necesitamos actualizar nada aquí, el estado local en CommunityView lo maneja
-      })
-      .addCase(savePublicRoutine.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
+      .addCase(savePublicRoutine.fulfilled, () => {
+        // Actualización optimista manejada en el componente
       });
   },
 });

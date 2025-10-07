@@ -62,7 +62,7 @@ export const CustomSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`${ignoreWidth ? '' : 'xl:w-[15em]' } pl-4 pr-4 h-10 2xl:h-12 w-full   py-2 flex items-center justify-between
+        className={`${ignoreWidth ? '' : 'lg:w-[13em] xl:w-[15em]' } pl-4 pr-4 h-10 2xl:h-12 w-full   py-2 flex items-center justify-between
           bg-itemsCard rounded-lg text-sm md:text-base
           focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent
           transition-all duration-200 cursor-pointer ${isOpen ? "ring-2 ring-white/20 border-white/20" : ""}`}

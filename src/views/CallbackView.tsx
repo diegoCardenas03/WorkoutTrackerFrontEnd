@@ -1,20 +1,65 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { usuarioService } from "../services/UsuarioService";
 import { UsernameModal } from "../components/modals/UsernameModal";
 
 export const CallbackView = () => {
-  const { isAuthenticated, isLoading, getAccessTokenSilently, user } = useAuth0();
+  const { isAuthenticated, isLoading, getAccessTokenSilently, user, error: auth0Error } = useAuth0();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [registering, setRegistering] = useState(false);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isSavingUsername, setIsSavingUsername] = useState(false);
 
+  // Verificar errores de Auth0 en la URL primero
+  useEffect(() => {
+    const urlError = searchParams.get('error');
+    const urlErrorDescription = searchParams.get('error_description');
+
+    if (urlError) {
+      console.error('🚨 [CallbackView] Error de Auth0 en URL:', urlError, urlErrorDescription);
+      
+      let message = '';
+      if (urlError === 'access_denied') {
+        message = 'Cancelaste el proceso de autorización. Para usar la aplicación, necesitas aceptar los permisos solicitados.';
+      } else {
+        message = urlErrorDescription || 'Ocurrió un error durante la autenticación.';
+      }
+      
+      setError(message);
+      
+      // Limpiar el estado de autenticación de Auth0 en localStorage
+      // para evitar loops infinitos
+      try {
+        const auth0Keys = Object.keys(localStorage).filter(key => 
+          key.startsWith('@@auth0spajs@@') || key.startsWith('a0.spajs')
+        );
+        auth0Keys.forEach(key => {
+          console.log('🗑️ Limpiando clave de Auth0:', key);
+          localStorage.removeItem(key);
+        });
+      } catch (e) {
+        console.error('Error al limpiar localStorage:', e);
+      }
+    }
+
+    if (auth0Error) {
+      console.error('🚨 [CallbackView] Error de Auth0 hook:', auth0Error);
+      setError(auth0Error.message || 'Error de autenticación.');
+    }
+  }, [searchParams, auth0Error]);
+
   useEffect(() => {
     const handleAuthCallback = async () => {
+      // Si hay error, no proceder
+      if (error) {
+        console.log('⚠️ [CallbackView] Callback detenido por error:', error);
+        return;
+      }
+
       if (isAuthenticated && user && !registering) {
         setRegistering(true);
         try {
@@ -90,7 +135,7 @@ export const CallbackView = () => {
     if (!isLoading) {
       handleAuthCallback();
     }
-  }, [isAuthenticated, isLoading, user, getAccessTokenSilently, navigate, registering]);
+  }, [isAuthenticated, isLoading, user, getAccessTokenSilently, navigate, registering, error]);
 
   const handleUsernameSubmit = async (username: string) => {
     if (!accessToken) return;
@@ -122,15 +167,26 @@ export const CallbackView = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-primary">
         <div className="text-center max-w-md p-8 bg-itemsCard rounded-lg border border-white/10">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h2 className="text-white text-2xl font-bold mb-4">Error al iniciar sesión</h2>
+          <div className="text-yellow-500 text-5xl mb-4">⚠️</div>
+          <h2 className="text-white text-2xl font-bold mb-4">
+            Autorización cancelada
+          </h2>
           <p className="text-quaternary mb-6">{error}</p>
-          <button
-            onClick={() => navigate("/landing")}
-            className="px-6 py-3 bg-white text-primary rounded-lg font-semibold hover:bg-white/90 transition-colors"
-          >
-            Volver al inicio
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => {
+                // Limpiar completamente la URL y el estado antes de volver
+                window.history.replaceState({}, document.title, "/landing");
+                navigate("/landing", { replace: true });
+              }}
+              className="px-6 py-3 bg-white text-primary rounded-lg font-semibold hover:bg-white/90 transition-colors"
+            >
+              Volver al inicio
+            </button>
+            <p className="text-quaternary text-sm">
+              Si cambias de opinión, puedes intentar registrarte nuevamente desde la página de inicio.
+            </p>
+          </div>
         </div>
       </div>
     );

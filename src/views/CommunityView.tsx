@@ -17,7 +17,9 @@ import type { RootState } from "../store"
 import type { RutinaResponseDTO } from "../types/rutina/RutinaResponseDTO"
 import { Spinner } from "../components/Spinner"
 import { Toast } from "../components/Toast"
+import { RutinaService } from "../services/RutinaService"
 
+const rutinaService = new RutinaService()
 
 export const CommunityView = () => {
     const dispatch = useDispatch()
@@ -63,6 +65,31 @@ export const CommunityView = () => {
                 } catch (error) {
                     console.error("Error al cargar categorías:", error)
                 }
+            }
+            
+            // Cargar rutinas con like y guardadas del usuario
+            try {
+                const token = await getAccessTokenSilently({
+                    authorizationParams: {
+                        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                    },
+                })
+                
+                const [likedRoutines, savedRoutines] = await Promise.all([
+                    rutinaService.getLikedRoutines(token),
+                    rutinaService.getSavedRoutines(token)
+                ])
+                
+                // Extraer solo los IDs
+                const likedIds = likedRoutines.map(r => r.id)
+                const savedIds = savedRoutines.map(r => r.id)
+                
+                setLikedRoutines(new Set(likedIds))
+                setSavedRoutines(new Set(savedIds))
+                
+                console.log('✅ Estado inicial cargado - Likes:', likedIds.length, 'Guardadas:', savedIds.length)
+            } catch (error) {
+                console.error("Error al cargar estado de likes/guardadas:", error)
             }
             
             // Delay mínimo de 500ms para UX profesional
@@ -224,18 +251,19 @@ export const CommunityView = () => {
                 },
             })
             
-            const isLiked = likedRoutines.has(routine.id)
+            const wasLiked = likedRoutines.has(routine.id)
             
-            console.log('🔵 Dando like a rutina:', routine.id, 'isLiked:', isLiked)
+            console.log('🔵 Toggle like en rutina:', routine.id, 'wasLiked:', wasLiked)
             
-            const result = await (dispatch as any)(likeRoutine({ token, routineId: routine.id, isLiked })).unwrap()
+            // El backend hace toggle automáticamente, enviamos wasLiked para actualizar contador
+            const result = await (dispatch as any)(likeRoutine({ token, routineId: routine.id, wasLiked })).unwrap()
             
-            console.log('🟢 Resultado de like:', result)
+            console.log('🟢 Resultado de toggle like:', result)
             
             // Actualizar estado local inmediatamente (optimistic update)
             setLikedRoutines(prev => {
                 const newSet = new Set(prev)
-                if (isLiked) {
+                if (wasLiked) {
                     newSet.delete(routine.id)
                 } else {
                     newSet.add(routine.id)
@@ -243,10 +271,7 @@ export const CommunityView = () => {
                 return newSet
             })
             
-            // NO recargar rutinas para evitar el spinner
-            // El contador se actualiza optimistamente en el estado local
-            
-            setToastMessage(isLiked ? "Like eliminado" : "¡Like agregado!")
+            setToastMessage(wasLiked ? "Like eliminado" : "¡Like agregado!")
             setShowSuccessToast(true)
         } catch (error: any) {
             console.error("🔴 Error completo al dar like:", error)
@@ -256,8 +281,8 @@ export const CommunityView = () => {
             // Revertir cambio optimista si hay error
             setLikedRoutines(prev => {
                 const newSet = new Set(prev)
-                const isLiked = likedRoutines.has(routine.id)
-                if (isLiked) {
+                const wasLiked = likedRoutines.has(routine.id)
+                if (wasLiked) {
                     newSet.add(routine.id)
                 } else {
                     newSet.delete(routine.id)
@@ -277,11 +302,12 @@ export const CommunityView = () => {
             
             const isSaved = savedRoutines.has(routine.id)
             
-            console.log('🔵 Guardando rutina:', routine.id, 'isSaved:', isSaved)
+            console.log('🔵 Toggle save en rutina:', routine.id, 'actualmente guardada:', isSaved)
             
-            const result = await (dispatch as any)(savePublicRoutine({ token, routineId: routine.id, isSaved })).unwrap()
+            // El backend hace toggle automáticamente
+            const result = await (dispatch as any)(savePublicRoutine({ token, routineId: routine.id })).unwrap()
             
-            console.log('🟢 Resultado de save:', result)
+            console.log('🟢 Resultado de toggle save:', result)
             
             // Actualizar estado local inmediatamente (optimistic update)
             setSavedRoutines(prev => {
@@ -558,11 +584,6 @@ export const CommunityView = () => {
                         icon={<LuHeart size={20} className="text-[#FF0000]" />}
                         title="Total likes"
                         value={stats?.totalLikes.toString() || "0"}
-                    />
-                    <FeatureCard
-                        icon={<LuBookmark size={20} className="text-[#04D932]" />}
-                        title="Total guardados"
-                        value={stats?.totalSaves.toString() || "0"}
                     />
                     <FeatureCard
                         icon={<LuTrendingUp size={20} className="text-[#FF8800]" />}
