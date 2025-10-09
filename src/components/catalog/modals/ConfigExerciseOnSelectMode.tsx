@@ -21,7 +21,7 @@ export const ConfigExerciseOnSelectMode = ({
   const [reps, setReps] = useState(12)
   const [repsError, setRepsError] = useState("")
   const [restKg, setRestKg] = useState("")
-  const [restTime, setRestTime] = useState("60") // 60 segundos = 1 minuto
+  const [restTime, setRestTime] = useState("2") 
   const [notes, setNotes] = useState("")
 
   const handleAddExercise = () => {
