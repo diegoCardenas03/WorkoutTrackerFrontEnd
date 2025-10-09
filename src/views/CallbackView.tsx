@@ -118,11 +118,16 @@ export const CallbackView = () => {
           console.log('📊 [CallbackView] userWasCreated:', userWasCreated);
           console.log('📊 [CallbackView] userData.createdAt:', userData?.createdAt);
           console.log('📊 [CallbackView] userData.lastAccess:', userData?.lastAccess);
+          console.log('📊 [CallbackView] userData.name:', userData?.name);
+          console.log('📊 [CallbackView] userData.pictureUrl:', userData?.pictureUrl);
           
-          // Calcular si es primera vez:
+          // Calcular si debe mostrar el modal:
           // 1. Si userWasCreated = true (usuario acabó de crearse en este login)
           // 2. Si lastAccess es null (nunca ha accedido antes)
-          // 3. Si createdAt y lastAccess son muy cercanos (menos de 5 minutos de diferencia)
+          // 3. Si createdAt y lastAccess son muy cercanos (menos de 10 segundos)
+          // 4. PERO NO mostrar si ya tiene nombre con espacios (indica configuración manual previa)
+          // 5. PERO NO mostrar si ya tiene imagen de Cloudinary (no de Auth0)
+          
           let isFirstLogin = userWasCreated;
           
           if (!isFirstLogin && userData) {
@@ -134,21 +139,32 @@ export const CallbackView = () => {
               // Comparar createdAt con lastAccess (si son muy cercanos, es primera vez)
               const createdAt = new Date(userData.createdAt);
               const lastAccess = new Date(userData.lastAccess);
-              const diffInMinutes = (lastAccess.getTime() - createdAt.getTime()) / (1000 * 60);
+              const diffInSeconds = (lastAccess.getTime() - createdAt.getTime()) / 1000;
               
-              if (diffInMinutes < 5) {
+              if (diffInSeconds < 10) {
                 isFirstLogin = true;
-                console.log(`🆕 [CallbackView] Primera vez: createdAt y lastAccess muy cercanos (${diffInMinutes.toFixed(2)} min)`);
+                console.log(`🆕 [CallbackView] Primera vez: createdAt y lastAccess muy cercanos (${diffInSeconds.toFixed(2)} seg)`);
               }
             }
           }
           
-          if (isFirstLogin) {
-            console.log('📝 [CallbackView] Primera vez - Mostrando modal de username');
+          // Verificar si el usuario ya configuró su perfil (tiene nombre con espacios o imagen de Cloudinary)
+          const hasCustomName = userData?.name && userData.name.includes(' ');
+          const hasCloudinaryImage = userData?.pictureUrl && userData.pictureUrl.includes('cloudinary');
+          const alreadyConfigured = hasCustomName || hasCloudinaryImage;
+          
+          if (alreadyConfigured) {
+            console.log('✅ [CallbackView] Usuario ya configuró su perfil previamente');
+            console.log('📊 [CallbackView] hasCustomName:', hasCustomName, '| hasCloudinaryImage:', hasCloudinaryImage);
+            isFirstLogin = false;
+          }
+          
+          if (isFirstLogin && !alreadyConfigured) {
+            console.log('📝 [CallbackView] Primera vez Y sin configurar - Mostrando modal de username');
             setShowUsernameModal(true);
           } else {
-            // Si no es primera vez, ir directo al dashboard
-            console.log("✅ [CallbackView] Usuario existente con accesos previos - Navegando a /");
+            // Si no es primera vez o ya está configurado, ir directo al dashboard
+            console.log("✅ [CallbackView] Usuario existente o ya configurado - Navegando a /");
             console.log("📊 [CallbackView] Usuario final:", userData);
             navigate("/", { replace: true });
           }

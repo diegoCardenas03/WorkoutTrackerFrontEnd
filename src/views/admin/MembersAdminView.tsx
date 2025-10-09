@@ -173,7 +173,7 @@ export const MembersAdminView = () => {
                   {/* Image */}
                   <div>
                     <img
-                      src={member.picture || 'https://cdn.auth0.com/avatars/default.png'}
+                      src={member.pictureUrl || 'https://cdn.auth0.com/avatars/default.png'}
                       alt={member.name}
                       className="w-10 h-10 rounded-full object-cover"
                     />

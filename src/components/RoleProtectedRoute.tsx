@@ -8,15 +8,21 @@ interface RoleProtectedRouteProps {
   children: ReactNode;
   allowedRoles: UserRole[];
   redirectTo?: string;
+  /**
+   * Si true, permite acceso a roles superiores en la jerarquía
+   * Ejemplo: allowedRoles=['ADMIN'] + requireExact=false → ADMIN y PROPIETARIO pueden acceder
+   */
+  requireExact?: boolean;
 }
 
 export const RoleProtectedRoute = ({ 
   children, 
   allowedRoles,
-  redirectTo = "/" 
+  redirectTo = "/",
+  requireExact = false
 }: RoleProtectedRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth0();
-  const { hasAnyRole, roles, isAdmin } = useUserRole();
+  const { hasAnyRole, hasRoleOrHigher, isAdmin, isOwner, primaryRole } = useUserRole();
 
   if (isLoading) {
     return (
@@ -33,13 +39,23 @@ export const RoleProtectedRoute = ({
     return <Navigate to="/landing" replace />;
   }
   
-  // Verificar si el usuario tiene alguno de los roles permitidos
-  if (!hasAnyRole(allowedRoles)) {
+  // Verificar permisos según el modo (exacto o jerárquico)
+  const hasPermission = requireExact 
+    ? hasAnyRole(allowedRoles) 
+    : hasRoleOrHigher(allowedRoles);
+  
+  if (!hasPermission) {
     console.warn(`❌ Usuario sin permisos para acceder a esta ruta`);
-    console.warn(`📋 Roles del usuario: [${roles.join(', ') || 'NINGUNO'}]`);
+    console.warn(`📋 Rol del usuario: ${primaryRole || 'NINGUNO'}`);
     console.warn(`✅ Roles permitidos: [${allowedRoles.join(', ')}]`);
+    console.warn(`🔒 Modo: ${requireExact ? 'Exacto' : 'Jerárquico'}`);
     
-    // Si es ADMIN intentando acceder a rutas de usuario, redirigir a /admin/profile
+    // Redirigir según el rol del usuario
+    if (isOwner) {
+      console.log('🔄 Propietario redirigido a /admin/profile');
+      return <Navigate to="/admin/profile" replace />;
+    }
+    
     if (isAdmin) {
       console.log('🔄 Admin redirigido a /admin/profile');
       return <Navigate to="/admin/profile" replace />;
@@ -48,17 +64,21 @@ export const RoleProtectedRoute = ({
     // En desarrollo, mostrar mensaje de ayuda
     if (import.meta.env.DEV) {
       console.error(`
-🔧 SOLUCIÓN: El usuario no tiene roles asignados en Auth0.
+🔧 SOLUCIÓN: El usuario no tiene los permisos necesarios.
+   
+   Rol actual: ${primaryRole || 'Sin rol'}
+   Roles requeridos: ${allowedRoles.join(', ')}
+   
+   Jerarquía de roles:
+   USUARIO (nivel 1) < ADMIN (nivel 2) < PROPIETARIO (nivel 3)
    
    Pasos para solucionar:
    1. Ve a tu dashboard de Auth0: https://manage.auth0.com/
    2. Navega a User Management → Users
    3. Selecciona tu usuario
    4. Ve a la pestaña "Roles"
-   5. Asigna el rol "USUARIO" o "ADMIN"
+   5. Asigna el rol apropiado
    6. Cierra sesión y vuelve a iniciar sesión
-   
-   Ver más detalles en: AUTH0_ROLES_SETUP.md
       `);
     }
     

@@ -1,4 +1,4 @@
-import { LuSave, LuCamera } from 'react-icons/lu'
+import { LuSave, LuCamera, LuEye, LuEyeOff } from 'react-icons/lu'
 import { Button } from '../components/Button'
 import { PrivateLayout } from '../layouts/PrivateLayout'
 import fotoPerfil from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\FotoPerfil.png"
@@ -27,6 +27,8 @@ export const MyProfileView = () => {
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Verificar si es usuario de Google
   const isGoogleUser = auth0User?.sub?.includes('google-oauth2');
@@ -277,14 +279,25 @@ export const MyProfileView = () => {
               <>
                 <div className='flex flex-col gap-2'>
                   <p className='font-light text-base'>Contraseña Nueva (opcional)</p>
-                  <input
-                    type='password'
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Ingresa tu nueva contraseña"
-                    disabled={isSaving}
-                    className="w-full h-11 md:h-11 lg:h-11 2xl:h-12 px-4 text-[15px] md:text-[0.95em] lg:text-[1em] rounded-[5px] 2xl:text-[1.1em] text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Ingresa tu nueva contraseña"
+                      disabled={isSaving}
+                      className="w-full h-11 md:h-11 lg:h-11 2xl:h-12 px-4 pr-12 text-[15px] md:text-[0.95em] lg:text-[1em] rounded-[5px] 2xl:text-[1.1em] text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isSaving}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-quaternary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? <LuEyeOff size={20} /> : <LuEye size={20} />}
+                    </button>
+                  </div>
                   <p className='font-light text-[11px] text-quaternary'>
                     Mínimo 8 caracteres. Debe contener mayúsculas, minúsculas y símbolos.
                   </p>
@@ -292,14 +305,25 @@ export const MyProfileView = () => {
 
                 <div className='flex flex-col gap-2'>
                   <p className='font-light text-base'>Confirmar Contraseña</p>
-                  <input
-                    type='password'
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirma tu nueva contraseña"
-                    disabled={isSaving}
-                    className="w-full h-11 md:h-11 lg:h-11 2xl:h-12 px-4 text-[15px] md:text-[0.95em] lg:text-[1em] rounded-[5px] 2xl:text-[1.1em] text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirma tu nueva contraseña"
+                      disabled={isSaving}
+                      className="w-full h-11 md:h-11 lg:h-11 2xl:h-12 px-4 pr-12 text-[15px] md:text-[0.95em] lg:text-[1em] rounded-[5px] 2xl:text-[1.1em] text-white placeholder-gray-400 border border-white focus:border-quaternary focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      disabled={isSaving}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-quaternary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showConfirmPassword ? <LuEyeOff size={20} /> : <LuEye size={20} />}
+                    </button>
+                  </div>
                   <p className='font-light text-[11px] text-quaternary'>
                     Las contraseñas deben coincidir
                   </p>

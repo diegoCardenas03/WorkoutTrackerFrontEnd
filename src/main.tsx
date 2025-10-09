@@ -77,15 +77,17 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/myProfile" element={<RoleProtectedRoute allowedRoles={['USUARIO']}><MyProfileView /></RoleProtectedRoute>} />
             <Route path="/training" element={<RoleProtectedRoute allowedRoles={['USUARIO']}><TrainingView /></RoleProtectedRoute>} />
             
-            {/* Rutas de administración - solo para rol ADMIN */}
+            {/* Rutas de administración - para ADMIN y PROPIETARIO */}
             <Route path="/admin/profile" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><MyProfileAdminView /></RoleProtectedRoute>} />
-            <Route path="/admin/employees" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><EmployeesAdminView /></RoleProtectedRoute>} />
             <Route path="/admin/members" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><MembersAdminView /></RoleProtectedRoute>} />
             <Route path="/admin/exercises" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><ExercisesAdminView /></RoleProtectedRoute>} />
             <Route path="/admin/muscles" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><MusclesAdminView /></RoleProtectedRoute>} />
             <Route path="/admin/muscle-zones" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><MuscleZonesAdminView /></RoleProtectedRoute>} />
             <Route path="/admin/categories" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><CategoriesAdminView /></RoleProtectedRoute>} />
             <Route path="/admin/equipment" element={<RoleProtectedRoute allowedRoles={['ADMIN']}><EquipmentAdminView /></RoleProtectedRoute>} />
+            
+            {/* Rutas exclusivas de PROPIETARIO - solo para gestión de administradores */}
+            <Route path="/admin/employees" element={<RoleProtectedRoute allowedRoles={['PROPIETARIO']} requireExact={true}><EmployeesAdminView /></RoleProtectedRoute>} />
             
             {/* Ruta catch-all: redirige cualquier ruta inexistente al dashboard */}
             <Route path="*" element={<Navigate to="/" replace />} />

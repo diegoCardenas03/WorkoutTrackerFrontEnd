@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { IoClose } from "react-icons/io5"
+import { LuEye, LuEyeOff } from "react-icons/lu"
 import { Button } from "../../Button"
 import type { SignupRequestDTO } from "../../../types/usuario/auth0/SignupRequestDTO"
 import type { UsuarioResponseDTO } from "../../../types/usuario/UsuarioResponseDTO"
@@ -30,6 +31,8 @@ export const EmployeeModal = ({
     email: "",
     password: ""
   })
+
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     if (isOpen && employee) {
@@ -190,16 +193,27 @@ export const EmployeeModal = ({
             <label className="text-white text-sm font-medium block mb-2">
               Contraseña {employee && '(Opcional)'}
             </label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => handleInputChange("password", e.target.value)}
-              placeholder={employee ? "Dejar vacío para no cambiar" : "Ingresa la contraseña (mínimo 8 caracteres)"}
-              disabled={isSaving}
-              className={`w-full p-3 bg-tertiary border rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed ${
-                errors.password ? 'border-red-500' : 'border-white/20'
-              }`}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                placeholder={employee ? "Dejar vacío para no cambiar" : "Ingresa la contraseña (mínimo 8 caracteres)"}
+                disabled={isSaving}
+                className={`w-full p-3 pr-12 bg-tertiary border rounded-lg text-white placeholder-quaternary focus:outline-none focus:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  errors.password ? 'border-red-500' : 'border-white/20'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isSaving}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-quaternary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {showPassword ? <LuEyeOff size={20} /> : <LuEye size={20} />}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-red-500 text-xs mt-1">{errors.password}</p>
             )}

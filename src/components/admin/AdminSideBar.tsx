@@ -4,6 +4,7 @@ import { LuUsers, LuDumbbell, LuUserCog, LuLogOut, LuBicepsFlexed, LuBoxes, LuWr
 import logo from "../../assets/Logo.png"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "../../hooks/useUser"
+import { useUserRole } from "../../hooks/useUserRole"
 
 export const AdminSideBar = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -11,6 +12,7 @@ export const AdminSideBar = () => {
   const location = useLocation()
   const { logout } = useAuth0()
   const { userData, auth0User, refetch } = useUser()
+  const { isOwner } = useUserRole() // ← Nuevo: detectar si es propietario
 
   // Escuchar evento de actualización de perfil
   useEffect(() => {
@@ -36,8 +38,9 @@ export const AdminSideBar = () => {
 
   const menuItems = [
     { id: "profile", label: "Mi perfil", icon: LuUserCog, path: "/admin/profile" },
-    { id: "employees", label: "Administradores", icon: LuUsers, path: "/admin/employees" },
-    { id: "members", label: "Usuarios", icon: LuUsers, path: "/admin/members" },
+    // Solo mostrar "Administradores" si es PROPIETARIO
+    ...(isOwner ? [{ id: "employees", label: "Administradores", icon: LuUsers, path: "/admin/employees" }] : []),
+    ...(isOwner ? [{ id: "members", label: "Usuarios", icon: LuUsers, path: "/admin/members" }] : []),
     { id: "exercises", label: "Ejercicios", icon: LuDumbbell, path: "/admin/exercises" },
     { id: "muscles", label: "Músculos", icon: LuBicepsFlexed, path: "/admin/muscles" },
     { id: "muscle-zones", label: "Zonas Musculares", icon: LuBoxes, path: "/admin/muscle-zones" },

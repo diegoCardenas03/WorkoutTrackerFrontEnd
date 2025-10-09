@@ -6,13 +6,14 @@ import { useEffect, useState } from "react";
 
 /**
  * Componente que redirige al dashboard apropiado según el rol del usuario
+ * - PROPIETARIO → /admin/profile
  * - ADMIN → /admin/profile
  * - USUARIO → Dashboard normal
  * - Sin autenticar → /landing
  */
 export const RootRedirect = () => {
   const { isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
-  const { isAdmin, isUser, roles } = useUserRole();
+  const { isAdmin, isUser, isOwner, roles } = useUserRole();
   const [retryCount, setRetryCount] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -67,9 +68,10 @@ export const RootRedirect = () => {
     return <Navigate to="/landing" replace />;
   }
 
-  // Si es ADMIN, redirigir a su perfil de admin
-  if (isAdmin) {
-    console.log('🔄 Admin detectado, redirigiendo a /admin/profile');
+  // Si es PROPIETARIO o ADMIN, redirigir a perfil de admin
+  if (isOwner || isAdmin) {
+    const roleLabel = isOwner ? 'Propietario' : 'Admin';
+    console.log(`🔄 ${roleLabel} detectado, redirigiendo a /admin/profile`);
     return <Navigate to="/admin/profile" replace />;
   }
 

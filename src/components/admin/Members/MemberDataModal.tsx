@@ -57,7 +57,7 @@ export const MemberDataModal = ({
           {/* User Image */}
           <div className="flex justify-center">
             <img
-              src={member.picture || 'https://cdn.auth0.com/avatars/default.png'}
+              src={member.pictureUrl || 'https://cdn.auth0.com/avatars/default.png'}
               alt={member.name}
               className="w-20 h-20 rounded-full object-cover border-2 border-white/20"
             />

@@ -232,7 +232,7 @@ export const EmployeesAdminView = () => {
                   {/* Image */}
                   <div>
                     <img
-                      src={employee.picture || 'https://cdn.auth0.com/avatars/default.png'}
+                      src={employee.pictureUrl || 'https://cdn.auth0.com/avatars/default.png'}
                       alt={employee.name}
                       className="w-10 h-10 rounded-full object-cover"
                     />
