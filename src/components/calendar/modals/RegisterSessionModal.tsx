@@ -132,13 +132,14 @@ export const RegisterSessionModal = ({
             <label className="text-white text-sm font-medium block mb-2">
               Seleccionar rutina
             </label>
-            <CustomSelect
+            {routinesOptions.length > 0 ? <CustomSelect
               name="Elige una rutina"
               options={routinesOptions}
               defaultValue={routineId}
               onChange={setRoutineId}
               className="w-full"
-            />
+            /> : 
+            <h2 className="text-quaternary">No hay rutinas</h2>}
           </div>
 
           {/* Programación */}

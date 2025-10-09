@@ -1,13 +1,18 @@
 import { LuTrendingUp } from "react-icons/lu"
 import { useSelector } from "react-redux"
 import type { RootState } from "../../../store"
-import { useMemo } from "react"
+import { useMemo, useEffect, useState } from "react"
+import { useAuth0 } from "@auth0/auth0-react"
+import { progresoService } from "../../../services/ProgresoService"
 
 export const ProgressCard = () => {
   const agendaItems = useSelector((state: RootState) => state.agenda?.items ?? [])
+  const { getAccessTokenSilently } = useAuth0()
+  const [completedRoutinesCount, setCompletedRoutinesCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Calcular progreso mensual
-  const monthlyProgress = useMemo(() => {
+  // Calcular entrenamientos completados del mes (de la agenda)
+  const monthlyScheduledProgress = useMemo(() => {
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
@@ -19,11 +24,44 @@ export const ProgressCard = () => {
     })
 
     const completedCount = monthSessions.filter(s => s.completed).length
-    const totalCount = monthSessions.length
-    const percentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
-
-    return { completedCount, totalCount, percentage }
+    return completedCount
   }, [agendaItems])
+
+  // Cargar rutinas completadas del mes desde el backend
+  useEffect(() => {
+    const loadCompletedRoutines = async () => {
+      try {
+        const token = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+          },
+        })
+
+        // Obtener primer y último día del mes actual
+        const now = new Date()
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
+        const completedRoutines = await progresoService.getCompletedRoutines(
+          token,
+          startOfMonth.toISOString(),
+          endOfMonth.toISOString()
+        )
+
+        setCompletedRoutinesCount(completedRoutines.length)
+      } catch (error) {
+        console.error('Error al cargar rutinas completadas:', error)
+        setCompletedRoutinesCount(0)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadCompletedRoutines()
+  }, [getAccessTokenSilently])
+
+  // Total de entrenamientos = sesiones agendadas completadas + rutinas completadas extra
+  const totalCompletedTrainings = monthlyScheduledProgress + completedRoutinesCount
 
   // Obtener nombre del mes actual
   const currentMonthName = useMemo(() => {
@@ -34,6 +72,18 @@ export const ProgressCard = () => {
     return monthNames[new Date().getMonth()]
   }, [])
 
+  if (isLoading) {
+    return (
+      <div className="bg-tertiary rounded-lg p-6 text-white border border-white/20 h-[17em] md:h-[19em] flex flex-col">
+        <div className="flex items-center gap-3 mb-6">
+          <LuTrendingUp className="md:text-[1.1em] mlg:text-[1.2em]"/>
+          <h3 className="text-[15px] lg:text-[18px]">Progreso</h3>
+        </div>
+        <div className="text-quaternary text-sm text-center">Cargando...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-tertiary rounded-lg p-6 text-white border border-white/20 h-[17em] md:h-[19em] flex flex-col">
       {/* Header con icono y título */}
@@ -42,35 +92,39 @@ export const ProgressCard = () => {
         <h3 className="text-[15px] lg:text-[18px]">Progreso</h3>
       </div>
 
-      {/* Objetivo mensual */}
+      {/* Rutinas completadas del mes */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-gray-300">Entrenamientos de {currentMonthName}</span>
-          <span className="text-sm text-gray-300">
-            {monthlyProgress.completedCount}/{monthlyProgress.totalCount}
+          <span className="text-sm text-gray-300">Rutinas de {currentMonthName}</span>
+          <span className="text-2xl font-bold text-white">
+            {totalCompletedTrainings}
           </span>
         </div>
         
-        {/* Barra de progreso */}
-        <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-          <div 
-            className="bg-white h-2 rounded-full transition-all duration-300" 
-            style={{ width: `${monthlyProgress.percentage}%` }}
-          />
-        </div>
+        {/* Información detallada (solo si hay datos) */}
+        {(monthlyScheduledProgress > 0 || completedRoutinesCount > 0) && (
+          <div className="space-y-1 text-quaternary text-xs mt-2">
+            {monthlyScheduledProgress > 0 && (
+              <p>• {monthlyScheduledProgress} desde agenda</p>
+            )}
+            {completedRoutinesCount > 0 && (
+              <p>• {completedRoutinesCount} adicionales</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Mensaje motivacional */}
       <p className="text-sm text-quaternary text-center pt-6 pb-15">
-        {monthlyProgress.totalCount === 0 
-          ? "¡Agenda tus entrenamientos del mes!" 
-          : monthlyProgress.completedCount === 0 
-            ? "¡Comienza tus entrenamientos de este mes!" 
-            : monthlyProgress.percentage >= 80 
-              ? "¡Excelente trabajo este mes!" 
-              : monthlyProgress.percentage >= 50
-                ? "¡Vas por buen camino!"
-                : "¡Sigue adelante, tú puedes!"}
+        {totalCompletedTrainings === 0
+          ? "¡Empieza hoy tu primer entrenamiento!"
+          : totalCompletedTrainings >= 12
+            ? "¡Increíble dedicación! 💪🔥"
+            : totalCompletedTrainings >= 8
+              ? "¡Excelente trabajo este mes! 💪"
+              : totalCompletedTrainings >= 4
+                ? "¡Sigue así, vas muy bien! 🔥"
+                : "¡Buen comienzo, continúa! 💪"}
       </p>
     </div>
   )

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { LuArrowLeft, LuSkipForward, LuX } from "react-icons/lu"
 import { PrivateLayout } from "../layouts/PrivateLayout"
 import { Button } from "../components/Button"
@@ -9,13 +9,22 @@ import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../store"
 import { addRestSeconds, nextExercise, pauseRest, previousExercise, resumeRest, toggleSetCompleted, tickSecond, startRest, stopRest, resetTraining } from "../store/slices/trainingSlice"
 import { Navigate, useNavigate } from "react-router-dom"
+import { useAuth0 } from "@auth0/auth0-react"
+import { progresoService } from "../services/ProgresoService"
+import { markAgendaCompleted } from "../store/slices/agendaSlice"
+import { Toast } from "../components/Toast"
 
 // using training slice state, no local Exercise type needed
 
 export const TrainingView = () => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
+    const { getAccessTokenSilently } = useAuth0()
     const training = useSelector((state: RootState) => state.training)
+    const [isFinishing, setIsFinishing] = useState(false)
+    const [showSuccessToast, setShowSuccessToast] = useState(false)
+    const [showErrorToast, setShowErrorToast] = useState(false)
+    const [toastMessage, setToastMessage] = useState("")
 
     // Guard render: if no active routine, redirect immediately (avoids visual flash)
     if (!training.activeRoutineId || training.exercises.length === 0) {
@@ -48,11 +57,58 @@ export const TrainingView = () => {
     // rest starts automatically when completing a set
     const handlePreviousExercise = () => dispatch(previousExercise())
     const handleNextExercise = () => dispatch(nextExercise())
-    const handleFinishWorkout = () => {
-        // limpiar estado y volver a Mis rutinas
-        dispatch(resetTraining())
-        navigate('/routines')
+    
+    const handleFinishWorkout = async () => {
+        setIsFinishing(true)
+        
+        try {
+            const token = await getAccessTokenSilently({
+                authorizationParams: {
+                    audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+                },
+            })
+
+            // 1. Registrar rutina completada
+            console.log('🏋️ [TrainingView] Registrando rutina completada:', training.activeRoutineId)
+            await progresoService.completeRoutine(token, {
+                routineId: training.activeRoutineId!,
+                scheduleId: training.agendaId, // Si viene de agenda, se vincula
+                completedAt: new Date().toISOString(),
+            })
+
+            // 2. Si viene de agenda, marcar sesión como completada
+            if (training.agendaId) {
+                console.log('📅 [TrainingView] Marcando sesión de agenda como completada:', training.agendaId)
+                await (dispatch as any)(markAgendaCompleted({ 
+                    id: training.agendaId, 
+                    token 
+                })).unwrap()
+            }
+
+            setToastMessage('¡Entrenamiento completado exitosamente!')
+            setShowSuccessToast(true)
+
+            // Esperar un momento para que el usuario vea el toast
+            setTimeout(() => {
+                dispatch(resetTraining())
+                navigate('/routines')
+            }, 1500)
+
+        } catch (error) {
+            console.error('❌ [TrainingView] Error al finalizar entrenamiento:', error)
+            setToastMessage('Error al guardar el progreso. Volviendo a rutinas...')
+            setShowErrorToast(true)
+            
+            // Aún así volver a rutinas después de un momento
+            setTimeout(() => {
+                dispatch(resetTraining())
+                navigate('/routines')
+            }, 2000)
+        } finally {
+            setIsFinishing(false)
+        }
     }
+    
     const isResting = training.isResting
     const restTimeRemaining = training.restTimeRemaining
 
@@ -175,12 +231,29 @@ export const TrainingView = () => {
                             isWhite={true}
                             isWidthFull={true}
                             action={handleFinishWorkout}
+                            isBlocked={isFinishing}
                         >
-                            Finalizar entrenamiento
+                            {isFinishing ? 'Guardando progreso...' : 'Finalizar entrenamiento'}
                         </Button>
                     )
                 })()}
             </div>
+
+            {/* Toasts */}
+            <Toast
+                open={showSuccessToast}
+                type="success"
+                message={toastMessage}
+                onClose={() => setShowSuccessToast(false)}
+                durationMs={2000}
+            />
+            <Toast
+                open={showErrorToast}
+                type="error"
+                message={toastMessage}
+                onClose={() => setShowErrorToast(false)}
+                durationMs={3000}
+            />
         </PrivateLayout>
     )
 }

@@ -169,7 +169,7 @@ export const CallbackView = () => {
         <div className="text-center max-w-md p-8 bg-itemsCard rounded-lg border border-white/10">
           <div className="text-yellow-500 text-5xl mb-4">⚠️</div>
           <h2 className="text-white text-2xl font-bold mb-4">
-            Autorización cancelada
+            Cuenta creada pero permisos rechazados.
           </h2>
           <p className="text-quaternary mb-6">{error}</p>
           <div className="flex flex-col gap-3">

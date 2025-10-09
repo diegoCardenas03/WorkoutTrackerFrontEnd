@@ -17,6 +17,7 @@ interface Comment {
   timeAgo: string
   likes: number
   replies?: Comment[]
+  isLiked?: boolean  // Nuevo campo para indicar si el usuario dio like
 }
 
 interface CommentsModalProps {
@@ -25,6 +26,7 @@ interface CommentsModalProps {
   exerciseTitle: string
   comments: Comment[]
   currentUserAuth0Id?: string
+  likedCommentIds?: Set<number>  // Nuevo prop: IDs de comentarios con like del usuario
   onAddComment?: (content: string, replyToId?: number) => void
   onLikeComment?: (commentId: number) => void
   onEditComment?: (commentId: number, content: string) => void
@@ -37,6 +39,7 @@ export const CommentsModal = ({
   exerciseTitle,
   comments = [],
   currentUserAuth0Id,
+  likedCommentIds = new Set(),
   onAddComment,
   onLikeComment,
   onEditComment,
@@ -289,9 +292,16 @@ export const CommentsModal = ({
                       {/* Botón de Like */}
                       <button 
                         onClick={() => handleLike(comment.id)}
-                        className="flex items-center gap-1 text-quaternary hover:text-red-400 transition-colors cursor-pointer group"
+                        className={`flex items-center gap-1 transition-colors cursor-pointer group ${
+                          likedCommentIds.has(Number(comment.id))
+                            ? 'text-red-400'
+                            : 'text-quaternary hover:text-red-400'
+                        }`}
                       >
-                        <LuHeart size={14} className="group-hover:fill-current" />
+                        <LuHeart 
+                          size={14} 
+                          className={likedCommentIds.has(Number(comment.id)) ? 'fill-current' : 'group-hover:fill-current'} 
+                        />
                         {comment.likes > 0 && <span>{comment.likes}</span>}
                       </button>
                       
@@ -433,9 +443,16 @@ export const CommentsModal = ({
                                 {/* Botón de Like en respuesta */}
                                 <button 
                                   onClick={() => handleLike(reply.id)}
-                                  className="flex items-center gap-1 text-quaternary hover:text-red-400 transition-colors cursor-pointer group"
+                                  className={`flex items-center gap-1 transition-colors cursor-pointer group ${
+                                    likedCommentIds.has(Number(reply.id))
+                                      ? 'text-red-400'
+                                      : 'text-quaternary hover:text-red-400'
+                                  }`}
                                 >
-                                  <LuHeart size={12} className="group-hover:fill-current" />
+                                  <LuHeart 
+                                    size={12} 
+                                    className={likedCommentIds.has(Number(reply.id)) ? 'fill-current' : 'group-hover:fill-current'} 
+                                  />
                                   {reply.likes > 0 && <span>{reply.likes}</span>}
                                 </button>
                               </div>

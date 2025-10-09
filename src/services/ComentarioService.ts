@@ -122,6 +122,28 @@ export class ComentarioService {
   }
 
   /**
+   * Obtener comentarios que el usuario ha dado like
+   * GET /api/comments/liked
+   */
+  async getLikedComentarios(token: string): Promise<any[]> {
+    console.log('🔵 [ComentarioService.getLikedComentarios] Obteniendo comentarios con like del usuario');
+    const response = await fetch(`${this.baseUrl}/liked`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('❌ [ComentarioService.getLikedComentarios] Error:', response.status);
+      throw new Error('Error al obtener comentarios con like');
+    }
+
+    const data = await response.json();
+    console.log('✅ [ComentarioService.getLikedComentarios] Comentarios obtenidos:', data.length);
+    return data;
+  }
+
+  /**
    * Eliminar propio comentario (usuario)
    * DELETE /api/comments/{id}
    */

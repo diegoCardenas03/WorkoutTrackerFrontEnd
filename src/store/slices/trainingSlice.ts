@@ -28,6 +28,7 @@ export interface TrainingState {
   activeRoutineId: number | null
   routineName?: string
   dayOfWeek?: DayOfWeek
+  agendaId?: number  // ID de la sesión de agenda si viene de ahí
   exercises: TrainingExercise[]
   currentExerciseIndex: number
   isResting: boolean
@@ -40,6 +41,7 @@ const initialState: TrainingState = {
   activeRoutineId: null,
   routineName: undefined,
   dayOfWeek: undefined,
+  agendaId: undefined,
   exercises: [],
   currentExerciseIndex: 0,
   isResting: false,
@@ -80,11 +82,12 @@ const trainingSlice = createSlice({
   name: 'training',
   initialState,
   reducers: {
-    startRoutineFromDto: (state, action: PayloadAction<{ routine: RutinaResponseDTO; dayOfWeek?: DayOfWeek }>) => {
-      const { routine, dayOfWeek } = action.payload
+    startRoutineFromDto: (state, action: PayloadAction<{ routine: RutinaResponseDTO; dayOfWeek?: DayOfWeek; agendaId?: number }>) => {
+      const { routine, dayOfWeek, agendaId } = action.payload
       state.activeRoutineId = routine.id
       state.routineName = routine.name
       state.dayOfWeek = dayOfWeek
+      state.agendaId = agendaId
       state.exercises = buildExercisesFromSessions(routine.sessions ?? [], dayOfWeek)
       state.currentExerciseIndex = 0
       state.isResting = false

@@ -18,10 +18,13 @@ import { EditSessionModal } from "../components/calendar/modals/EditSessionModal
 import { Toast } from "../components/Toast"
 import { useAuth0 } from "@auth0/auth0-react"
 import { Spinner } from "../components/Spinner"
+import { startRoutineFromDto } from "../store/slices/trainingSlice"
+import { useNavigate } from "react-router-dom"
 
 
 export const CalendarView = () => {
     const dispatch = useDispatch()
+    const navigate = useNavigate()
     const { getAccessTokenSilently } = useAuth0()
     const agenda = useSelector((state: RootState) => state.agenda)
     const routines = useSelector((state: RootState) => state.routines?.routines ?? [])
@@ -303,6 +306,20 @@ export const CalendarView = () => {
                         setSelectedItem(found)
                         setIsDetailsOpen(false) // Cerrar modal de detalles
                         setIsEditOpen(true)
+                    }
+                }}
+                onStartTraining={(agendaItem) => {
+                    if (agendaItem.routine) {
+                        const routine = routines.find(r => r.id === agendaItem.routine.id)
+                        if (routine) {
+                            (dispatch as any)(startRoutineFromDto({ 
+                                routine, 
+                                agendaId: agendaItem.id 
+                            }))
+                            navigate('/training')
+                        } else {
+                            setToast({ open: true, type: 'error', message: '❌ No se encontró la rutina' })
+                        }
                     }
                 }}
             />

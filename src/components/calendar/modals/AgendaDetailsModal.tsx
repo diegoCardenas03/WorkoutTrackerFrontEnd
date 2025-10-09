@@ -9,6 +9,7 @@ interface AgendaDetailsModalProps {
   onDelete?: (id: number) => void
   onMarkCompleted?: (id: number) => void
   onEdit?: (id: number) => void
+  onStartTraining?: (agendaItem: AgendaResponseDTO) => void
 }
 
 export const AgendaDetailsModal = ({
@@ -18,6 +19,7 @@ export const AgendaDetailsModal = ({
   onDelete,
   onMarkCompleted,
   onEdit,
+  onStartTraining,
 }: AgendaDetailsModalProps) => {
   if (!isOpen || !item) return null
 
@@ -109,19 +111,26 @@ export const AgendaDetailsModal = ({
             </div>
           ) : (
             <div className="flex flex-col gap-3">
+              {/* Botón Comenzar entrenamiento - disponible solo si es hoy o pasado y no completada */}
+              {canMarkComplete && onStartTraining && (
+                <Button isWhite={true} isWidthFull={true} action={() => onStartTraining(item)}>
+                  Comenzar entrenamiento
+                </Button>
+              )}
+              
               <div className="flex flex-col md:flex-row gap-3">
                 {canMarkComplete && onMarkCompleted && (
-                  <Button isWhite={true} isWidthFull={true} action={() => onMarkCompleted(item.id)}>
+                  <Button isWhite={false} isWidthFull={true} action={() => onMarkCompleted(item.id)}>
                     Marcar completada
                   </Button>
                 )}
                 {canEdit && onEdit && (
-                  <Button isWhite={true} isWidthFull={true} action={() => onEdit(item.id)}>Editar</Button>
+                  <Button isWhite={false} isWidthFull={true} action={() => onEdit(item.id)}>Editar</Button>
                 )}
               </div>
               {!canMarkComplete && (
                 <div className="text-center text-quaternary text-xs bg-quaternary/5 py-2 rounded border border-quaternary/10">
-                  ℹ️ Solo se puede marcar como completada el día de la sesión
+                  ℹ️ Solo se puede comenzar el día de la sesión
                 </div>
               )}
               {onDelete && (

@@ -37,7 +37,7 @@ export const Header = () => {
             <Button isWhite={false} action={() => loginWithRedirect({
               authorizationParams: {
                 prompt: 'login', // Forzar a mostrar la pantalla de login
-                screen_hint: 'signup' // Sugerir la pantalla de registro
+                screen_hint: 'login' // Sugerir la pantalla de registro
               }
             })}>
               Iniciar Sesión

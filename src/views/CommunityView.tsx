@@ -1,4 +1,4 @@
-import { LuBookmark, LuHeart, LuTrendingUp, LuUsers } from "react-icons/lu"
+import { LuHeart, LuTrendingUp, LuUsers } from "react-icons/lu"
 import { FeatureCard } from "../components/FeatureCard"
 import { SubHeader } from "../components/SubHeader"
 import { PrivateLayout } from "../layouts/PrivateLayout"
@@ -18,6 +18,7 @@ import type { RutinaResponseDTO } from "../types/rutina/RutinaResponseDTO"
 import { Spinner } from "../components/Spinner"
 import { Toast } from "../components/Toast"
 import { RutinaService } from "../services/RutinaService"
+import { comentarioService } from "../services/ComentarioService"
 
 const rutinaService = new RutinaService()
 
@@ -46,6 +47,7 @@ export const CommunityView = () => {
     const [initialLoading, setInitialLoading] = useState(true)
     const [likedRoutines, setLikedRoutines] = useState<Set<number>>(new Set())
     const [savedRoutines, setSavedRoutines] = useState<Set<number>>(new Set())
+    const [likedComments, setLikedComments] = useState<Set<number>>(new Set())
 
     useEffect(() => {
         // Cargar rutinas públicas y categorías
@@ -75,19 +77,22 @@ export const CommunityView = () => {
                     },
                 })
                 
-                const [likedRoutines, savedRoutines] = await Promise.all([
+                const [likedRoutines, savedRoutines, likedComments] = await Promise.all([
                     rutinaService.getLikedRoutines(token),
-                    rutinaService.getSavedRoutines(token)
+                    rutinaService.getSavedRoutines(token),
+                    comentarioService.getLikedComentarios(token)
                 ])
                 
                 // Extraer solo los IDs
-                const likedIds = likedRoutines.map(r => r.id)
-                const savedIds = savedRoutines.map(r => r.id)
+                const likedRoutineIds = likedRoutines.map(r => r.id)
+                const savedRoutineIds = savedRoutines.map(r => r.id)
+                const likedCommentIds = likedComments.map((c: any) => c.id)
                 
-                setLikedRoutines(new Set(likedIds))
-                setSavedRoutines(new Set(savedIds))
+                setLikedRoutines(new Set(likedRoutineIds))
+                setSavedRoutines(new Set(savedRoutineIds))
+                setLikedComments(new Set(likedCommentIds))
                 
-                console.log('✅ Estado inicial cargado - Likes:', likedIds.length, 'Guardadas:', savedIds.length)
+                console.log('✅ Estado inicial cargado - Likes rutinas:', likedRoutineIds.length, 'Guardadas:', savedRoutineIds.length, 'Likes comentarios:', likedCommentIds.length)
             } catch (error) {
                 console.error("Error al cargar estado de likes/guardadas:", error)
             }
@@ -190,12 +195,35 @@ export const CommunityView = () => {
                 },
             })
             
+            // Actualizar estado local optimistamente
+            const wasLiked = likedComments.has(commentId)
+            setLikedComments(prev => {
+                const newSet = new Set(prev)
+                if (wasLiked) {
+                    newSet.delete(commentId)
+                } else {
+                    newSet.add(commentId)
+                }
+                return newSet
+            })
+            
             await (dispatch as any)(toggleLikeComentario({ token, id: commentId })).unwrap()
             
             // Recargar comentarios para actualizar el contador de likes
             await (dispatch as any)(fetchComentariosByRoutine({ token, routineId: selectedRoutineForComments.id }))
         } catch (error: any) {
             console.error("Error al dar like al comentario:", error)
+            // Revertir el cambio optimista en caso de error
+            setLikedComments(prev => {
+                const newSet = new Set(prev)
+                const wasLiked = likedComments.has(commentId)
+                if (wasLiked) {
+                    newSet.add(commentId)
+                } else {
+                    newSet.delete(commentId)
+                }
+                return newSet
+            })
             setToastMessage(error || "Error al dar like al comentario")
             setShowErrorToast(true)
         }
@@ -682,6 +710,7 @@ export const CommunityView = () => {
                 exerciseTitle={selectedRoutineForComments?.name || ""}
                 comments={mappedComments}
                 currentUserAuth0Id={user?.email}
+                likedCommentIds={likedComments}
                 onAddComment={handleAddComment}
                 onLikeComment={handleLikeComment}
                 onEditComment={handleEditComment}

@@ -40,7 +40,10 @@ export const NextSessionCard = () => {
         if (nextSession?.routine) {
             const routine = routines.find(r => r.id === nextSession.routine.id)
             if (routine) {
-                (dispatch as any)(startRoutineFromDto({ routine }))
+                (dispatch as any)(startRoutineFromDto({ 
+                    routine, 
+                    agendaId: nextSession.id  // Pasar el ID de la sesión de agenda
+                }))
                 navigate('/training')
             }
         } else {
