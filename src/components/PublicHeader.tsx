@@ -1,6 +1,5 @@
 import { LuArrowRight, LuMenu, LuX } from "react-icons/lu"
 import { Button } from "./Button"
-import logo from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\Logo.png"
 import { useState } from "react"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useNavigate } from "react-router-dom"
@@ -20,7 +19,7 @@ export const Header = () => {
       {/* Header Principal */}
       <div className="flex justify-between items-center h-20 px-6">
         <div>
-          <img className="w-25 cursor-pointer" src={logo} alt="logo" onClick={() => navigate('/landing')} />
+          <img className="w-25 cursor-pointer" src="https://res.cloudinary.com/dno9aqup3/image/upload/v1758733666/Logo_o8y7iv.png" alt="logo" onClick={() => navigate('/landing')} />
         </div>
 
         {/* Desktop Menu */}

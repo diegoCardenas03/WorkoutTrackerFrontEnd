@@ -1,5 +1,4 @@
 import { LuBell, LuPanelLeft } from "react-icons/lu"
-import fotoPerfil from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\FotoPerfil.png"
 import { IoCaretDownSharp } from "react-icons/io5"
 import { useState, useEffect } from "react"
 import { MenuProfile } from "./MenuProfile"
@@ -36,7 +35,7 @@ export const PrivateHeader = ({ onToggleSidebar, isSidebarOpen, isMessage }: Pri
         };
     }, [refetch]);
     
-    const profilePicture = userData?.pictureUrl || auth0User?.picture || fotoPerfil;
+    const profilePicture = userData?.pictureUrl || auth0User?.picture;
     const userName = userData?.name || auth0User?.name || "Usuario";
     const displayName = truncateName(userName, 12);
 

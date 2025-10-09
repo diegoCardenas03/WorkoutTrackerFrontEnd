@@ -1,4 +1,3 @@
-import logo from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\Logo.png"
 import { IoCalendarClearOutline, IoGridOutline, IoHomeOutline, IoListCircleOutline, IoStatsChartOutline } from "react-icons/io5"
 import { LuUsers } from "react-icons/lu"
 import { useNavigate, useLocation } from "react-router-dom"
@@ -18,7 +17,7 @@ export const Navbar = () => {
     return (
         <div className="bg-navbar flex flex-col h-full w-full align-center text-white font-bold md:border-r md:border-white/20 lg:border-r lg:border-white/20 ">
             <div className="flex align-center justify-center h-0 md:h-auto py-0 md:py-[2em] overflow-hidden">
-                <img className="hidden md:block lg:block w-28" src={logo} alt="logo" />
+                <img className="hidden md:block lg:block w-28" src="https://res.cloudinary.com/dno9aqup3/image/upload/v1758733666/Logo_o8y7iv.png" alt="logo" />
             </div>
             <div className="flex flex-col px-2 gap-2 py-5">
                 <div

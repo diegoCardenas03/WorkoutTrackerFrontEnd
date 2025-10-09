@@ -1,5 +1,4 @@
 import { LuLogOut, LuUser } from "react-icons/lu"
-import fotoPerfil from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\FotoPerfil.png"
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../hooks/useUser";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -28,7 +27,7 @@ export const MenuProfile = ({ isVisible }: MenuProfileProps) => {
     };
 
     // Usar la foto de Auth0 si existe, sino la por defecto
-    const profilePicture = userData?.pictureUrl || auth0User?.picture || fotoPerfil;
+    const profilePicture = userData?.pictureUrl || auth0User?.picture 
     // Usar el nombre del backend, sino el de Auth0, sino "Usuario"
     const userName = truncateName(userData?.name || auth0User?.name || "Usuario", 20);
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { LuUsers, LuDumbbell, LuUserCog, LuLogOut, LuBicepsFlexed, LuBoxes, LuWrench, LuFolderTree } from "react-icons/lu"
-import logo from "../../assets/Logo.png"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "../../hooks/useUser"
 import { useUserRole } from "../../hooks/useUserRole"
@@ -65,7 +64,7 @@ export const AdminSideBar = () => {
     <div className="bg-navbar flex flex-col h-screen w-64 text-white border-r border-white/20">
       {/* Logo */}
       <div className="flex items-center justify-center py-8 border-b border-white/20">
-        <img className="w-32" src={logo} alt="Workout Tracker" />
+        <img className="w-32" src="https://res.cloudinary.com/dno9aqup3/image/upload/v1758733666/Logo_o8y7iv.png" alt="Workout Tracker" />
       </div>
 
       {/* Navigation Menu */}
