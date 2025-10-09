@@ -153,13 +153,22 @@ export const CallbackView = () => {
           const hasCloudinaryImage = userData?.pictureUrl && userData.pictureUrl.includes('cloudinary');
           const alreadyConfigured = hasCustomName || hasCloudinaryImage;
           
+          // Verificar si el usuario es admin o propietario
+          const isAdminOrOwner = userData?.role && 
+            (userData.role.name === 'ADMIN' || userData.role.name === 'PROPIETARIO');
+          
           if (alreadyConfigured) {
             console.log('✅ [CallbackView] Usuario ya configuró su perfil previamente');
             console.log('📊 [CallbackView] hasCustomName:', hasCustomName, '| hasCloudinaryImage:', hasCloudinaryImage);
             isFirstLogin = false;
           }
           
-          if (isFirstLogin && !alreadyConfigured) {
+          if (isAdminOrOwner) {
+            console.log('👔 [CallbackView] Usuario es ADMIN o PROPIETARIO - No mostrar modal de configuración');
+            isFirstLogin = false;
+          }
+          
+          if (isFirstLogin && !alreadyConfigured && !isAdminOrOwner) {
             console.log('📝 [CallbackView] Primera vez Y sin configurar - Mostrando modal de username');
             setShowUsernameModal(true);
           } else {
