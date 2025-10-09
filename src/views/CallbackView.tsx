@@ -137,13 +137,13 @@ export const CallbackView = () => {
     }
   }, [isAuthenticated, isLoading, user, getAccessTokenSilently, navigate, registering, error]);
 
-  const handleUsernameSubmit = async (username: string) => {
+  const handleUsernameSubmit = async (username: string, profileImage?: File) => {
     if (!accessToken) return;
     
     setIsSavingUsername(true);
     try {
-      await usuarioService.setUsername(accessToken, username);
-      console.log("✅ Username establecido correctamente:", username);
+      await usuarioService.setUsername(accessToken, username, profileImage);
+      console.log("✅ Username y foto de perfil establecidos correctamente:", username);
       
       // Cerrar modal y redirigir
       setShowUsernameModal(false);

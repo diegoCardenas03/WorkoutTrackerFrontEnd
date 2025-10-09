@@ -56,11 +56,10 @@ export const fetchActiveEquipments = createAsyncThunk(
 // Crear equipamiento
 export const createEquipment = createAsyncThunk(
   'equipments/create',
-  async ({ token, data }: { token: string; data: EquipamientoRequestDTO }, { rejectWithValue }) => {
+  async ({ token, data, image }: { token: string; data: EquipamientoRequestDTO; image?: File }, { rejectWithValue }) => {
     try {
       console.log('🚀 [equipmentSlice] Creando equipamiento...')
-      equipamientoService.setToken(token)
-      const result = await equipamientoService.postAdmin(data)
+      const result = await equipamientoService.createEquipment(token, data, image)
       return result
     } catch (error) {
       console.error("❌ [equipmentSlice] Error al crear equipamiento:", error)
@@ -72,11 +71,10 @@ export const createEquipment = createAsyncThunk(
 // Actualizar equipamiento
 export const updateEquipment = createAsyncThunk(
   'equipments/update',
-  async ({ token, id, data }: { token: string; id: number; data: Partial<EquipamientoRequestDTO> }, { rejectWithValue }) => {
+  async ({ token, id, data, image }: { token: string; id: number; data: Partial<EquipamientoRequestDTO>; image?: File }, { rejectWithValue }) => {
     try {
       console.log('🔄 [equipmentSlice] Actualizando equipamiento:', id)
-      equipamientoService.setToken(token)
-      const result = await equipamientoService.patchAdmin(id, data)
+      const result = await equipamientoService.updateEquipment(token, id, data as EquipamientoRequestDTO, image)
       return result
     } catch (error) {
       console.error("❌ [equipmentSlice] Error al actualizar equipamiento:", error)

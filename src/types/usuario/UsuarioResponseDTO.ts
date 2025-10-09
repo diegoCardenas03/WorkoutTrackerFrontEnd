@@ -6,7 +6,7 @@ export interface UsuarioResponseDTO {
   email: string;
   bodyWeight?: number;
   active: boolean;
-  picture?: string;
+  pictureUrl?: string;
   createdAt: string;
   updatedAt: string;
   lastAccess?: string;

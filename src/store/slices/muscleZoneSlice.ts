@@ -52,10 +52,9 @@ export const fetchActiveMuscleZones = createAsyncThunk(
 // Crear zona muscular
 export const createMuscleZone = createAsyncThunk(
   'muscleZones/create',
-  async ({ token, data }: { token: string; data: ZonaMuscularRequestDTO }, { rejectWithValue }) => {
+  async ({ token, data, image }: { token: string; data: ZonaMuscularRequestDTO; image?: File }, { rejectWithValue }) => {
     try {
-      service.setToken(token)
-      const response = await service.postAdmin(data)
+      const response = await service.createMuscleZone(token, data, image)
       return response
     } catch (e: any) {
       return rejectWithValue(e?.message ?? 'Error al crear zona muscular')
@@ -66,10 +65,9 @@ export const createMuscleZone = createAsyncThunk(
 // Actualizar zona muscular
 export const updateMuscleZone = createAsyncThunk(
   'muscleZones/update',
-  async ({ token, id, data }: { token: string; id: number; data: Partial<ZonaMuscularRequestDTO> }, { rejectWithValue }) => {
+  async ({ token, id, data, image }: { token: string; id: number; data: Partial<ZonaMuscularRequestDTO>; image?: File }, { rejectWithValue }) => {
     try {
-      service.setToken(token)
-      const response = await service.patchAdmin(id, data)
+      const response = await service.updateMuscleZone(token, id, data as ZonaMuscularRequestDTO, image)
       return response
     } catch (e: any) {
       return rejectWithValue(e?.message ?? 'Error al actualizar zona muscular')

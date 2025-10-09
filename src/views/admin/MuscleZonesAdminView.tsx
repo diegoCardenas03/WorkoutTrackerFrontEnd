@@ -15,6 +15,7 @@ interface MuscleZone {
   id: string
   name: string
   active: boolean
+  imageUrl?: string
 }
 
 export const MuscleZonesAdminView = () => {
@@ -93,7 +94,7 @@ export const MuscleZonesAdminView = () => {
     }
   }
 
-  const handleSaveMuscleZone = async (muscleZoneData: { name: string; active: boolean }) => {
+  const handleSaveMuscleZone = async (muscleZoneData: { name: string; active: boolean }, image?: File) => {
     const payload: ZonaMuscularRequestDTO = {
       name: muscleZoneData.name,
       active: muscleZoneData.active,
@@ -125,7 +126,8 @@ export const MuscleZonesAdminView = () => {
         const result = await (dispatch as any)(updateMuscleZone({ 
           token, 
           id: Number(editingMuscleZone.id), 
-          data: payload 
+          data: payload,
+          image 
         }))
         
         if (result.type.endsWith('/rejected')) {
@@ -138,7 +140,7 @@ export const MuscleZonesAdminView = () => {
         setTimeout(() => setToast(null), 3000)
       } else {
         console.log('🚀 [MuscleZonesAdminView] Llamando a createMuscleZone...');
-        const result = await (dispatch as any)(createMuscleZone({ token, data: payload }))
+        const result = await (dispatch as any)(createMuscleZone({ token, data: payload, image }))
         
         // Verificar si la acción fue rechazada
         if (result.type.endsWith('/rejected')) {
@@ -257,6 +259,7 @@ export const MuscleZonesAdminView = () => {
                         id: String(zone.id),
                         name: zone.name,
                         active: zone.active,
+                        imageUrl: zone.imageUrl,
                       })}
                       className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
                     >

@@ -1,10 +1,10 @@
-import { LuSave } from 'react-icons/lu'
+import { LuSave, LuCamera } from 'react-icons/lu'
 import { Button } from '../components/Button'
 import { PrivateLayout } from '../layouts/PrivateLayout'
 import fotoPerfil from "D:\\Proyectos\\WorkoutTracker\\WKFrontEnd\\src\\assets\\FotoPerfil.png"
 import { SubHeader } from '../components/SubHeader'
 import { useUser } from '../hooks/useUser'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { usuarioService } from '../services/UsuarioService'
 import { Toast } from '../components/Toast'
@@ -24,6 +24,9 @@ export const MyProfileView = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [initialLoading, setInitialLoading] = useState(true)
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Verificar si es usuario de Google
   const isGoogleUser = auth0User?.sub?.includes('google-oauth2');
@@ -44,7 +47,38 @@ export const MyProfileView = () => {
     return () => clearTimeout(timer)
   }, [])
 
-  const profilePicture = auth0User?.picture || fotoPerfil;
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tipo
+      if (!file.type.startsWith('image/')) {
+        setToastMessage('Por favor selecciona un archivo de imagen válido');
+        setToastType('error');
+        setShowToast(true);
+        return;
+      }
+
+      // Validar tamaño (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setToastMessage('La imagen no puede superar los 5MB');
+        setToastType('error');
+        setShowToast(true);
+        return;
+      }
+
+      setProfileImage(file);
+
+      // Crear preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Prioridad: preview temporal > imagen de Cloudinary > Auth0 > placeholder
+  const profilePicture = imagePreview || userData?.pictureUrl || auth0User?.picture || fotoPerfil;
 
   if (initialLoading || isLoading) {
     return (
@@ -138,7 +172,7 @@ export const MyProfileView = () => {
 
       // Actualizar perfil
       console.log('📤 Enviando actualización de perfil:', updateData);
-      await usuarioService.updateProfile(token, updateData);
+      await usuarioService.updateProfile(token, updateData, profileImage || undefined);
       
       // Recargar datos del usuario
       await refetch();
@@ -146,9 +180,11 @@ export const MyProfileView = () => {
       // Emitir evento personalizado para notificar a otros componentes
       window.dispatchEvent(new CustomEvent('userProfileUpdated'));
 
-      // Limpiar campos de contraseña
+      // Limpiar campos de contraseña y foto
       setPassword("");
       setConfirmPassword("");
+      setProfileImage(null);
+      setImagePreview(null);
 
       // Mostrar mensaje de éxito
       setToastMessage("Perfil actualizado correctamente");
@@ -181,12 +217,33 @@ export const MyProfileView = () => {
 
       <div className='flex flex-col items-center justify-start text-white h-full w-full'>
         <div className='flex flex-col md:flex-row items-center justify-center gap-3 md:gap-[5em] lg:gap-[5em] mt-[3em]'>
-          <div className='flex flex-col h-full'>
-            <img 
-              className="w-[6em] h-[6em] md:w-[10em] md:h-[10em] lg:w-[10em] lg:h-[10em] 2xl:w-[10em] 2xl:h-[10em] rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity" 
-              src={profilePicture} 
-              alt="fotoPerfil" 
+          <div className='flex flex-col h-full items-center'>
+            <div className="relative">
+              <img 
+                className="w-[6em] h-[6em] md:w-[10em] md:h-[10em] lg:w-[10em] lg:h-[10em] 2xl:w-[10em] 2xl:h-[10em] rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity" 
+                src={profilePicture} 
+                alt="fotoPerfil" 
+                onClick={() => !isSaving && fileInputRef.current?.click()}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSaving}
+                className="absolute bottom-0 right-0 p-2 bg-white text-primary rounded-full hover:bg-white/90 transition-colors disabled:opacity-50 border-2 border-primary"
+              >
+                <LuCamera size={16} />
+              </button>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
             />
+            {profileImage && (
+              <p className="text-quaternary text-xs mt-2">{profileImage.name}</p>
+            )}
           </div>
 
           <form className='flex flex-col gap-4 w-[20em] md:w-[25em] lg:w-[28em]' onSubmit={handleSubmit}>

@@ -36,7 +36,7 @@ export const PrivateHeader = ({ onToggleSidebar, isSidebarOpen, isMessage }: Pri
         };
     }, [refetch]);
     
-    const profilePicture = auth0User?.picture || fotoPerfil;
+    const profilePicture = userData?.pictureUrl || auth0User?.picture || fotoPerfil;
     const userName = userData?.name || auth0User?.name || "Usuario";
     const displayName = truncateName(userName, 12);
 

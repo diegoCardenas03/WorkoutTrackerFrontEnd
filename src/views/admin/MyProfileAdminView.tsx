@@ -1,6 +1,6 @@
-import { LuSave } from 'react-icons/lu'
+import { LuSave, LuCamera } from 'react-icons/lu'
 import { Button } from '../../components/Button'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { usuarioService } from '../../services/UsuarioService'
 import type { UsuarioUpdateRequestDTO } from '../../types/usuario/UsuarioUpdateRequestDTO'
@@ -22,6 +22,9 @@ export const MyProfileAdminView = () => {
     const [showSuccessToast, setShowSuccessToast] = useState(false)
     const [showErrorToast, setShowErrorToast] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
+    const [profileImage, setProfileImage] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Cargar datos del usuario cuando estén disponibles
     useEffect(() => {
@@ -30,6 +33,34 @@ export const MyProfileAdminView = () => {
             setEmail(userData.email || "")
         }
     }, [userData])
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            // Validar tipo
+            if (!file.type.startsWith('image/')) {
+                setErrorMessage('Por favor selecciona un archivo de imagen válido')
+                setShowErrorToast(true)
+                return
+            }
+
+            // Validar tamaño (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setErrorMessage('La imagen no puede superar los 5MB')
+                setShowErrorToast(true)
+                return
+            }
+
+            setProfileImage(file)
+
+            // Crear preview
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
 
     const handleSaveChanges = async () => {
         // Validaciones
@@ -98,9 +129,9 @@ export const MyProfileAdminView = () => {
             }
 
             // Solo hacer la petición si hay cambios
-            if (Object.keys(updateData).length > 0) {
+            if (Object.keys(updateData).length > 0 || profileImage) {
                 console.log('💾 [MyProfileAdminView] Actualizando perfil con:', updateData);
-                await usuarioService.updateProfile(token, updateData)
+                await usuarioService.updateProfile(token, updateData, profileImage || undefined)
                 await refetch() // Recargar datos del usuario
                 
                 // Emitir evento personalizado para notificar a otros componentes
@@ -108,6 +139,8 @@ export const MyProfileAdminView = () => {
                 
                 setPassword("")
                 setConfirmPassword("")
+                setProfileImage(null)
+                setImagePreview(null)
                 setShowSuccessToast(true)
             } else {
                 setErrorMessage("No hay cambios para guardar")
@@ -153,8 +186,33 @@ export const MyProfileAdminView = () => {
 
             <div className='flex flex-col items-center justify-start text-white h-full w-full'>
                 <div className='flex flex-col md:flex-row items-center justify-center gap-3 md:gap-[5em] lg:gap-[5em] mt-[3em]'>
-                    <div className='flex flex-col h-full'>
-                        <img className="w-[6em] h-[6em] md:w-[10em] md:h-[10em] lg:w-[10em] lg:h-[10em] 2xl:w-[10em] 2xl:h-[10em] cursor-pointer hover:opacity-80 transition-opacity rounded-full object-cover border-4 border-quaternary" src={auth0User?.picture} alt="fotoPerfil" />
+                    <div className='flex flex-col h-full items-center'>
+                        <div className="relative">
+                            <img 
+                                className="w-[6em] h-[6em] md:w-[10em] md:h-[10em] lg:w-[10em] lg:h-[10em] 2xl:w-[10em] 2xl:h-[10em] cursor-pointer hover:opacity-80 transition-opacity rounded-full object-cover border-4 border-quaternary" 
+                                src={imagePreview || userData?.pictureUrl || auth0User?.picture} 
+                                alt="fotoPerfil"
+                                onClick={() => !isSaving && fileInputRef.current?.click()}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isSaving}
+                                className="absolute bottom-0 right-0 p-2 bg-white text-primary rounded-full hover:bg-white/90 transition-colors disabled:opacity-50 border-2 border-primary"
+                            >
+                                <LuCamera size={16} />
+                            </button>
+                        </div>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="hidden"
+                        />
+                        {profileImage && (
+                            <p className="text-quaternary text-xs mt-2">{profileImage.name}</p>
+                        )}
                     </div>
 
                     <div className='flex flex-col gap-4 w-[20em] md:w-fit'>

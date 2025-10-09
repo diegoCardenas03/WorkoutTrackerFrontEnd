@@ -129,20 +129,33 @@ class UsuarioService {
    * Actualiza el perfil del usuario autenticado usando PATCH
    * @param token - Token de acceso de Auth0
    * @param data - Datos a actualizar (nombre y/o contraseña)
+   * @param image - Imagen de perfil opcional (File)
    * @returns Usuario actualizado
    */
-  async updateProfile(token: string, data: UsuarioUpdateRequestDTO): Promise<UsuarioResponseDTO> {
+  async updateProfile(token: string, data: UsuarioUpdateRequestDTO, image?: File): Promise<UsuarioResponseDTO> {
     console.log('🔄 [UsuarioService.updateProfile] Actualizando perfil...');
     console.log('🔄 [UsuarioService.updateProfile] URL:', `${this.BASE_URL}${this.BASE_PATH}`);
     console.log('🔄 [UsuarioService.updateProfile] Data:', data);
+    console.log('🔄 [UsuarioService.updateProfile] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
+    
+    // El backend siempre espera multipart/form-data, así que siempre usamos FormData
+    const formData = new FormData();
+    
+    // Agregar los datos como JSON en un blob
+    formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+    
+    // Agregar imagen solo si existe
+    if (image) {
+      formData.append('image', image);
+    }
     
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}`, {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        // NO establecer Content-Type - el navegador lo hace automáticamente con el boundary correcto
       },
-      body: JSON.stringify(data),
+      body: formData,
     });
 
     if (!response.ok) {
@@ -152,7 +165,7 @@ class UsuarioService {
     }
 
     const result = await response.json();
-    console.log('✅ [UsuarioService.updateProfile] Perfil actualizado:', result);
+    console.log(`✅ [UsuarioService.updateProfile] Perfil actualizado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
     return result;
   }
 
@@ -160,10 +173,11 @@ class UsuarioService {
    * Establece el nombre de usuario para el usuario autenticado
    * @param token - Token de acceso de Auth0
    * @param name - Nombre de usuario a establecer
+   * @param image - Imagen de perfil opcional (File)
    * @returns Usuario actualizado
    */
-  async setUsername(token: string, name: string): Promise<UsuarioResponseDTO> {
-    return this.updateProfile(token, { name });
+  async setUsername(token: string, name: string, image?: File): Promise<UsuarioResponseDTO> {
+    return this.updateProfile(token, { name }, image);
   }
 
   /**

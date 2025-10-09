@@ -21,6 +21,7 @@ interface Equipment {
   id: string
   name: string
   active: boolean
+  imageUrl?: string
 }
 
 export const EquipmentAdminView = () => {
@@ -125,7 +126,7 @@ export const EquipmentAdminView = () => {
     }
   }
 
-  const handleSaveEquipment = async (equipmentData: { name: string; active: boolean }) => {
+  const handleSaveEquipment = async (equipmentData: { name: string; active: boolean }, image?: File) => {
     const payload: EquipamientoRequestDTO = {
       name: equipmentData.name,
       active: equipmentData.active,
@@ -146,7 +147,8 @@ export const EquipmentAdminView = () => {
         const result = await (dispatch as any)(updateEquipment({ 
           token, 
           id: Number(editingEquipment.id), 
-          data: payload 
+          data: payload,
+          image 
         }))
         
         if (result.type.endsWith('/rejected')) {
@@ -159,7 +161,7 @@ export const EquipmentAdminView = () => {
         setTimeout(() => setToast(null), 3000)
       } else {
         console.log('🚀 [EquipmentAdminView] Llamando a createEquipment...');
-        const result = await (dispatch as any)(createEquipment({ token, data: payload }))
+        const result = await (dispatch as any)(createEquipment({ token, data: payload, image }))
         
         if (result.type.endsWith('/rejected')) {
           console.error('❌ [EquipmentAdminView] Acción rechazada:', result);
@@ -276,6 +278,7 @@ export const EquipmentAdminView = () => {
                         id: String(equipment.id),
                         name: equipment.name,
                         active: equipment.active,
+                        imageUrl: equipment.imageUrl,
                       })}
                       className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
                     >

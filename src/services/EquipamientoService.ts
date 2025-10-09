@@ -23,16 +23,26 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
     /**
      * Crea un nuevo equipamiento (solo ADMIN)
      */
-    async createEquipment(token: string, data: EquipamientoRequestDTO): Promise<EquipamientoResponseDTO> {
+    async createEquipment(token: string, data: EquipamientoRequestDTO, image?: File): Promise<EquipamientoResponseDTO> {
         console.log('🔵 [EquipamientoService.createEquipment] Creando equipamiento...', { data });
+        console.log('🔵 [EquipamientoService.createEquipment] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
+        
         try {
+            // El backend siempre espera multipart/form-data
+            const formData = new FormData();
+            formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+            
+            // Agregar imagen solo si existe
+            if (image) {
+                formData.append('image', image);
+            }
+            
             const response = await fetch(`${this.baseUrl}/admin`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify(data),
+                body: formData,
             });
 
             console.log('🟡 [EquipamientoService.createEquipment] Response status:', response.status);
@@ -44,7 +54,7 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
             }
 
             const result = await response.json();
-            console.log('✅ [EquipamientoService.createEquipment] Equipamiento creado:', result);
+            console.log(`✅ [EquipamientoService.createEquipment] Equipamiento creado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
             return result;
         } catch (error) {
             console.error('❌ [EquipamientoService.createEquipment] Error:', error);
@@ -76,6 +86,49 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
             return result;
         } catch (error) {
             console.error('❌ [EquipamientoService.getAllEquipments] Error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualiza un equipamiento existente (solo ADMIN)
+     */
+    async updateEquipment(token: string, id: number, data: EquipamientoRequestDTO, image?: File): Promise<EquipamientoResponseDTO> {
+        console.log('🔄 [EquipamientoService.updateEquipment] Actualizando equipamiento:', id);
+        console.log('🔄 [EquipamientoService.updateEquipment] Data:', data);
+        console.log('🔄 [EquipamientoService.updateEquipment] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
+        
+        try {
+            // El backend siempre espera multipart/form-data
+            const formData = new FormData();
+            formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+            
+            // Agregar imagen solo si existe
+            if (image) {
+                formData.append('image', image);
+            }
+            
+            const response = await fetch(`${this.baseUrl}/admin/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            console.log('🟡 [EquipamientoService.updateEquipment] Response status:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ [EquipamientoService.updateEquipment] Error:', errorText);
+                throw new Error(`Error al actualizar equipamiento: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log(`✅ [EquipamientoService.updateEquipment] Equipamiento actualizado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
+            return result;
+        } catch (error) {
+            console.error('❌ [EquipamientoService.updateEquipment] Error:', error);
             throw error;
         }
     }
