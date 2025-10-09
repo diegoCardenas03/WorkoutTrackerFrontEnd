@@ -63,10 +63,10 @@ export const UsernameModal = ({ isOpen, onSubmit, onSkip, isLoading = false }: U
       return;
     }
 
-    // Solo letras, espacios, acentos y apóstrofes
-    const nameRegex = /^[a-zA-ZÀ-ÿ\s'.-]+$/;
+    // Solo letras, números, espacios, acentos y apóstrofes
+    const nameRegex = /^[a-zA-ZÀ-ÿ0-9\s'.-]+$/;
     if (!nameRegex.test(username)) {
-      setError('El nombre solo puede contener letras, espacios y caracteres válidos');
+      setError('El nombre solo puede contener letras, números, espacios y caracteres válidos');
       return;
     }
 
@@ -89,9 +89,6 @@ export const UsernameModal = ({ isOpen, onSubmit, onSkip, isLoading = false }: U
 
         {/* Ícono y título */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-quaternary/10 border border-quaternary/30 mb-4">
-            <LuUser className="text-quaternary" size={32} />
-          </div>
           <h2 className="text-2xl font-bold text-white mb-2">
             Bienvenido a WorkoutTracker
           </h2>

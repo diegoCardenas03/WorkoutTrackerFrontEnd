@@ -82,10 +82,10 @@ export const MyProfileAdminView = () => {
             return
         }
 
-        // Solo letras, espacios, acentos y apóstrofes
-        const nameRegex = /^[a-zA-Z\u00c0-\u00ff\s'.-]+$/
+        // Solo letras, números, espacios, acentos y apóstrofes
+        const nameRegex = /^[a-zA-Z\u00c0-\u00ff0-9\s'.-]+$/
         if (!nameRegex.test(name)) {
-            setErrorMessage("El nombre solo puede contener letras, espacios y caracteres válidos")
+            setErrorMessage("El nombre solo puede contener letras, números, espacios y caracteres válidos")
             setShowErrorToast(true)
             return
         }

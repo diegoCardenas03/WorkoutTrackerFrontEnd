@@ -174,10 +174,18 @@ class UsuarioService {
    * @param token - Token de acceso de Auth0
    * @param name - Nombre de usuario a establecer
    * @param image - Imagen de perfil opcional (File)
+   * @param pictureUrl - URL de imagen de Auth0 (alternativa al File)
    * @returns Usuario actualizado
    */
-  async setUsername(token: string, name: string, image?: File): Promise<UsuarioResponseDTO> {
-    return this.updateProfile(token, { name }, image);
+  async setUsername(token: string, name: string, image?: File, pictureUrl?: string): Promise<UsuarioResponseDTO> {
+    const updateData: UsuarioUpdateRequestDTO = { name };
+    
+    // Si se proporciona una URL de imagen (de Auth0), agregarla al DTO
+    if (pictureUrl) {
+      updateData.picture = pictureUrl;
+    }
+    
+    return this.updateProfile(token, updateData, image);
   }
 
   /**

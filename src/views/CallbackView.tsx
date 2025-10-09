@@ -113,15 +113,42 @@ export const CallbackView = () => {
             console.log('🔍 [CallbackView] Nuevo token obtenido (primeros 50 chars):', refreshedToken.substring(0, 50) + '...');
           }
 
-          // Si es un usuario nuevo, mostrar modal para establecer username
+          // Verificar si es primera vez que inicia sesión
           console.log('🔍 [CallbackView] Verificando si mostrar modal de username...');
           console.log('📊 [CallbackView] userWasCreated:', userWasCreated);
-          if (userWasCreated) {
-            console.log('📝 [CallbackView] Mostrando modal de username para usuario nuevo');
+          console.log('📊 [CallbackView] userData.createdAt:', userData?.createdAt);
+          console.log('📊 [CallbackView] userData.lastAccess:', userData?.lastAccess);
+          
+          // Calcular si es primera vez:
+          // 1. Si userWasCreated = true (usuario acabó de crearse en este login)
+          // 2. Si lastAccess es null (nunca ha accedido antes)
+          // 3. Si createdAt y lastAccess son muy cercanos (menos de 5 minutos de diferencia)
+          let isFirstLogin = userWasCreated;
+          
+          if (!isFirstLogin && userData) {
+            if (!userData.lastAccess) {
+              // Si no tiene lastAccess, es primera vez
+              isFirstLogin = true;
+              console.log('🆕 [CallbackView] Primera vez: lastAccess es null');
+            } else {
+              // Comparar createdAt con lastAccess (si son muy cercanos, es primera vez)
+              const createdAt = new Date(userData.createdAt);
+              const lastAccess = new Date(userData.lastAccess);
+              const diffInMinutes = (lastAccess.getTime() - createdAt.getTime()) / (1000 * 60);
+              
+              if (diffInMinutes < 5) {
+                isFirstLogin = true;
+                console.log(`🆕 [CallbackView] Primera vez: createdAt y lastAccess muy cercanos (${diffInMinutes.toFixed(2)} min)`);
+              }
+            }
+          }
+          
+          if (isFirstLogin) {
+            console.log('📝 [CallbackView] Primera vez - Mostrando modal de username');
             setShowUsernameModal(true);
           } else {
-            // Si no es nuevo, ir directo al dashboard
-            console.log("✅ [CallbackView] Usuario existente - Navegando a /");
+            // Si no es primera vez, ir directo al dashboard
+            console.log("✅ [CallbackView] Usuario existente con accesos previos - Navegando a /");
             console.log("📊 [CallbackView] Usuario final:", userData);
             navigate("/", { replace: true });
           }
@@ -157,10 +184,49 @@ export const CallbackView = () => {
     }
   };
 
-  const handleSkipUsername = () => {
-    console.log("Usuario saltó la configuración de username");
-    setShowUsernameModal(false);
-    navigate("/", { replace: true });
+  const handleSkipUsername = async () => {
+    if (!accessToken || !user?.email) {
+      console.log("⚠️ Usuario saltó la configuración sin token o email");
+      setShowUsernameModal(false);
+      navigate("/", { replace: true });
+      return;
+    }
+
+    setIsSavingUsername(true);
+    try {
+      // Extraer nombre del email (antes del @)
+      const emailUsername = user.email.split('@')[0];
+      
+      // Capitalizar primera letra de cada palabra
+      const formattedName = emailUsername
+        .split(/[._-]/) // Separar por puntos, guiones bajos o guiones
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+      
+      console.log(`📧 [CallbackView] Usuario saltó configuración - usando nombre del email: "${formattedName}"`);
+      
+      // Obtener imagen de Auth0 si existe
+      const auth0Picture = user.picture;
+      if (auth0Picture) {
+        console.log(`🖼️ [CallbackView] Asignando imagen de Auth0: ${auth0Picture}`);
+        await usuarioService.setUsername(accessToken, formattedName, undefined, auth0Picture);
+      } else {
+        console.log(`📷 [CallbackView] Sin imagen de Auth0 - usando imagen por defecto`);
+        await usuarioService.setUsername(accessToken, formattedName);
+      }
+      
+      console.log("✅ Nombre e imagen por defecto establecidos correctamente:", formattedName);
+      
+      setShowUsernameModal(false);
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      console.error("Error al establecer nombre por defecto:", err);
+      // Aunque falle, dejamos que el usuario entre
+      setShowUsernameModal(false);
+      navigate("/", { replace: true });
+    } finally {
+      setIsSavingUsername(false);
+    }
   };
 
   if (error) {
