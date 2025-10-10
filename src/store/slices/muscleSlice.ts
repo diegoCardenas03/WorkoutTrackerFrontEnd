@@ -53,10 +53,9 @@ export const fetchActiveMuscles = createAsyncThunk(
 // Crear músculo
 export const createMuscle = createAsyncThunk(
   'muscles/create',
-  async ({ token, data }: { token: string; data: MusculoRequestDTO }, { rejectWithValue }) => {
+  async ({ token, data, image }: { token: string; data: MusculoRequestDTO; image?: File }, { rejectWithValue }) => {
     try {
-      service.setToken(token)
-      const response = await service.postAdmin(data)
+      const response = await service.createMuscle(token, data, image)
       return response
     } catch (e: any) {
       return rejectWithValue(e?.message ?? 'Error al crear músculo')
@@ -67,10 +66,9 @@ export const createMuscle = createAsyncThunk(
 // Actualizar músculo
 export const updateMuscle = createAsyncThunk(
   'muscles/update',
-  async ({ token, id, data }: { token: string; id: number; data: Partial<MusculoRequestDTO> }, { rejectWithValue }) => {
+  async ({ token, id, data, image }: { token: string; id: number; data: Partial<MusculoRequestDTO>; image?: File }, { rejectWithValue }) => {
     try {
-      service.setToken(token)
-      const response = await service.patchAdmin(id, data)
+      const response = await service.updateMuscle(token, id, data as MusculoRequestDTO, image)
       return response
     } catch (e: any) {
       return rejectWithValue(e?.message ?? 'Error al actualizar músculo')

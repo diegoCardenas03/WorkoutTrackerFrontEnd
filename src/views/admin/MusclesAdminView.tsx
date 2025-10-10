@@ -18,6 +18,7 @@ interface Muscle {
   muscleGroupId: number
   muscleGroupName: string
   active: boolean
+  imageUrl?: string
 }
 
 export const MusclesAdminView = () => {
@@ -100,7 +101,7 @@ export const MusclesAdminView = () => {
     }
   }
 
-  const handleSaveMuscle = async (muscleData: { name: string; muscleGroupId: number; active: boolean }) => {
+  const handleSaveMuscle = async (muscleData: { name: string; muscleGroupId: number; active: boolean }, image?: File) => {
     const payload: MusculoRequestDTO = {
       name: muscleData.name,
       muscleGroupId: muscleData.muscleGroupId,
@@ -122,7 +123,8 @@ export const MusclesAdminView = () => {
         const result = await (dispatch as any)(updateMuscle({ 
           token, 
           id: Number(editingMuscle.id), 
-          data: payload 
+          data: payload,
+          image
         }))
         
         if (result.type.endsWith('/rejected')) {
@@ -135,7 +137,7 @@ export const MusclesAdminView = () => {
         setTimeout(() => setToast(null), 3000)
       } else {
         console.log('🚀 [MusclesAdminView] Llamando a createMuscle...');
-        const result = await (dispatch as any)(createMuscle({ token, data: payload }))
+        const result = await (dispatch as any)(createMuscle({ token, data: payload, image }))
         
         // Verificar si la acción fue rechazada
         if (result.type.endsWith('/rejected')) {
@@ -262,6 +264,7 @@ export const MusclesAdminView = () => {
                         muscleGroupId: muscle.muscleGroup?.id || 0,
                         muscleGroupName: muscle.muscleGroup?.name || '',
                         active: muscle.active,
+                        imageUrl: muscle.imageUrl,
                       })}
                       className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
                     >

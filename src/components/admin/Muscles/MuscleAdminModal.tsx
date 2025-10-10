@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from "react"
-import { LuX, LuSave } from "react-icons/lu"
+import { useEffect, useState, useMemo, useRef } from "react"
+import { LuX, LuSave, LuImage } from "react-icons/lu"
 import { Button } from "../../Button"
 import { useSelector } from "react-redux"
 import type { RootState } from "../../../store"
@@ -7,8 +7,8 @@ import type { RootState } from "../../../store"
 interface MuscleAdminModalProps {
   isOpen: boolean
   onClose: () => void
-  muscle: { id: string; name: string; muscleGroupId: number; active: boolean } | null
-  onSave: (data: { name: string; muscleGroupId: number; active: boolean }) => Promise<void>
+  muscle: { id: string; name: string; muscleGroupId: number; active: boolean; imageUrl?: string } | null
+  onSave: (data: { name: string; muscleGroupId: number; active: boolean }, image?: File) => Promise<void>
 }
 
 export const MuscleAdminModal = ({ isOpen, onClose, muscle, onSave }: MuscleAdminModalProps) => {
@@ -17,7 +17,10 @@ export const MuscleAdminModal = ({ isOpen, onClose, muscle, onSave }: MuscleAdmi
   const [muscleGroupId, setMuscleGroupId] = useState<number | "">("")
   const [active, setActive] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [errors, setErrors] = useState<{ name?: string; muscleGroupId?: string }>({})
+  const [errors, setErrors] = useState<{ name?: string; muscleGroupId?: string; image?: string }>({})
+  const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Incluir zonas activas + la zona seleccionada (aunque esté inactiva)
   const availableMuscleZones = useMemo(() => {
@@ -38,14 +41,49 @@ export const MuscleAdminModal = ({ isOpen, onClose, muscle, onSave }: MuscleAdmi
         setName(muscle.name)
         setMuscleGroupId(muscle.muscleGroupId)
         setActive(muscle.active)
+        // Cargar imagen existente si hay
+        if (muscle.imageUrl) {
+          setImagePreview(muscle.imageUrl)
+        } else {
+          setImagePreview(null)
+        }
       } else {
         setName("")
         setMuscleGroupId("")
         setActive(true)
+        setImagePreview(null)
       }
       setErrors({})
+      setImage(null)
     }
   }, [isOpen, muscle])
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validar tipo
+      if (!file.type.startsWith('image/')) {
+        setErrors({ ...errors, image: 'Por favor selecciona un archivo de imagen válido' })
+        return
+      }
+
+      // Validar tamaño (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({ ...errors, image: 'La imagen no puede superar los 5MB' })
+        return
+      }
+
+      setImage(file)
+      setErrors({ ...errors, image: undefined })
+
+      // Crear preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const validate = () => {
     const newErrors: { name?: string; muscleGroupId?: string } = {}
@@ -71,7 +109,7 @@ export const MuscleAdminModal = ({ isOpen, onClose, muscle, onSave }: MuscleAdmi
         name: name.trim(),
         muscleGroupId: muscleGroupId as number,
         active,
-      })
+      }, image || undefined)
       onClose()
     } catch (error) {
       console.error('Error al guardar músculo:', error)
@@ -101,6 +139,47 @@ export const MuscleAdminModal = ({ isOpen, onClose, muscle, onSave }: MuscleAdmi
 
         {/* Content */}
         <div className="p-6 space-y-6">
+          {/* Imagen */}
+          <div>
+            <label className="block text-white text-sm font-medium mb-2">
+              Imagen del Músculo
+            </label>
+            <div className="flex items-center gap-4">
+              {imagePreview ? (
+                <div className="w-24 h-24 rounded-lg overflow-hidden bg-primary border border-white/20">
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-lg bg-primary border border-white/20 flex items-center justify-center">
+                  <LuImage className="text-quaternary" size={32} />
+                </div>
+              )}
+              <div className="flex-1">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  {image ? 'Cambiar imagen' : 'Seleccionar imagen'}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <p className="text-quaternary text-xs mt-2">
+                  {image ? image.name : 'Formato: JPG, PNG (máx. 5MB)'}
+                </p>
+                {errors.image && (
+                  <p className="text-red-400 text-xs mt-1">{errors.image}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Nombre */}
           <div>
             <label className="block text-white text-sm font-medium mb-2">

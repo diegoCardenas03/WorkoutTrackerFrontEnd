@@ -3,6 +3,7 @@ import type { ZonaMuscularSimpleDTO } from "../zonaMuscular/ZonaMuscularSimpleDT
 export interface MusculoResponseDTO {
   id: number;
   name: string;
+  imageUrl?: string;
   active: boolean;
   createdAt: string;
   updatedAt: string;
