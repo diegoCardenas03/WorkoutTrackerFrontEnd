@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { ExerciseCard } from "../components/catalog/cards/ExerciseCard"
 import { CustomSelect } from "../components/CustomSelect"
 import { SearchBar } from "../components/SearchBar"
@@ -15,6 +15,7 @@ import { fetchActiveExercises } from "../store/slices/exerciseSlice"
 import { fetchCategories } from "../store/slices/categorySlice"
 import { fetchActiveMuscleZones } from "../store/slices/muscleZoneSlice"
 import { fetchActiveEquipments } from "../store/slices/equipmentSlice"
+import { fetchActiveMuscles } from "../store/slices/muscleSlice"
 import { useRoutineSelection } from "../hooks/useRoutineSelection"
 import type { EjercicioResponseDTO } from "../types/ejercicio/EjercicioResponseDTO"
 
@@ -42,6 +43,7 @@ export const CatalogView = () => {
     const categoriesFromStore = useSelector((state: RootState) => state.categories?.categories ?? []) as { id: number; name: string }[]
     const muscleZonesFromStore = useSelector((state: RootState) => state.muscleZones?.muscleZones ?? [])
     const equipmentsFromStore = useSelector((state: RootState) => state.equipments?.equipments ?? [])
+    const musclesFromStore = useSelector((state: RootState) => state.muscles?.muscles ?? [])
     const navigate = useNavigate()
     const [editingRoutineId, setEditingRoutineId] = useState<number | null>(null)
     const { getAccessTokenSilently } = useAuth0()
@@ -85,6 +87,7 @@ export const CatalogView = () => {
                 dispatch(fetchCategories(token) as any)
                 dispatch(fetchActiveMuscleZones(token) as any)
                 dispatch(fetchActiveEquipments(token) as any)
+                dispatch(fetchActiveMuscles(token) as any)
             } catch (error) {
                 console.error("Error al obtener token:", error)
             }
@@ -137,6 +140,17 @@ export const CatalogView = () => {
     const handleSearch = (value: string) => setSearchTerm(value)
     const handleMuscleSelect = (value: string) => setSelectedMuscle(value)
     const handleEquipmentSelect = (value: string) => setSelectedEquipment(value)
+
+    // Crear mapeo de nombre de músculo -> nombre de zona muscular
+    const muscleToZoneMap = useMemo(() => {
+        const map = new Map<string, string>()
+        musclesFromStore.forEach(muscle => {
+            if (muscle.muscleGroup?.name) {
+                map.set(muscle.name, muscle.muscleGroup.name)
+            }
+        })
+        return map
+    }, [musclesFromStore])
 
     const getEquipmentTag = (equipment: { id: number; name: string }[] = []) => {
         if (!Array.isArray(equipment) || equipment.length === 0) return []
@@ -241,9 +255,9 @@ export const CatalogView = () => {
             : true
         const matchesMuscleZone = selectedMuscleZone
             ? exercise.targetMuscles?.some(m => {
-                // Type guard to check if muscle has muscleGroup property
-                const muscleWithGroup = m as any
-                return muscleWithGroup.muscleGroup?.name === selectedMuscleZone
+                // Usar el mapeo de músculo a zona muscular
+                const zoneName = muscleToZoneMap.get(m.name)
+                return zoneName === selectedMuscleZone
             })
             : true
         const matchesEquipment = selectedEquipment
