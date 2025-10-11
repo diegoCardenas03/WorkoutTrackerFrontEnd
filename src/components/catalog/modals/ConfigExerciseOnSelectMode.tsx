@@ -172,7 +172,7 @@ export const ConfigExerciseOnSelectMode = ({
               <label className="text-white text-sm font-medium block mb-2">Descanso (min)</label>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setRestTime(Math.max(0, parseInt(restTime) - 15).toString())}
+                  onClick={() => setRestTime(Math.max(0, parseInt(restTime) - 1).toString())}
                   className="w-8 h-8 bg-itemsCard border border-white/20 rounded-lg flex items-center justify-center text-white hover:bg-white/10 transition-colors flex-shrink-0"
                 >
                   <LuMinus size={14} />
@@ -184,7 +184,7 @@ export const ConfigExerciseOnSelectMode = ({
                   className="flex-1 min-w-0 p-2 bg-itemsCard border border-white/20 rounded-lg text-white text-center focus:outline-none focus:border-white/40 text-sm"
                 />
                 <button
-                  onClick={() => setRestTime((parseInt(restTime) + 15).toString())}
+                  onClick={() => setRestTime((parseInt(restTime) + 1).toString())}
                   className="w-8 h-8 bg-itemsCard border border-white/20 rounded-lg flex items-center justify-center text-white hover:bg-white/10 transition-colors flex-shrink-0"
                 >
                   <LuPlus size={14} />
