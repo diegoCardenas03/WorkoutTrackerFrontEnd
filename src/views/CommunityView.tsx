@@ -92,7 +92,7 @@ export const CommunityView = () => {
                 setSavedRoutines(new Set(savedRoutineIds))
                 setLikedComments(new Set(likedCommentIds))
                 
-                console.log('✅ Estado inicial cargado - Likes rutinas:', likedRoutineIds.length, 'Guardadas:', savedRoutineIds.length, 'Likes comentarios:', likedCommentIds.length)
+                // console.log('✅ Estado inicial cargado - Likes rutinas:', likedRoutineIds.length, 'Guardadas:', savedRoutineIds.length, 'Likes comentarios:', likedCommentIds.length)
             } catch (error) {
                 console.error("Error al cargar estado de likes/guardadas:", error)
             }
@@ -281,12 +281,12 @@ export const CommunityView = () => {
             
             const wasLiked = likedRoutines.has(routine.id)
             
-            console.log('🔵 Toggle like en rutina:', routine.id, 'wasLiked:', wasLiked)
+            // console.log('🔵 Toggle like en rutina:', routine.id, 'wasLiked:', wasLiked)
             
             // El backend hace toggle automáticamente, enviamos wasLiked para actualizar contador
             const result = await (dispatch as any)(likeRoutine({ token, routineId: routine.id, wasLiked })).unwrap()
             
-            console.log('🟢 Resultado de toggle like:', result)
+            // console.log('🟢 Resultado de toggle like:', result)
             
             // Actualizar estado local inmediatamente (optimistic update)
             setLikedRoutines(prev => {
@@ -330,12 +330,12 @@ export const CommunityView = () => {
             
             const isSaved = savedRoutines.has(routine.id)
             
-            console.log('🔵 Toggle save en rutina:', routine.id, 'actualmente guardada:', isSaved)
+            // console.log('🔵 Toggle save en rutina:', routine.id, 'actualmente guardada:', isSaved)
             
             // El backend hace toggle automáticamente
             const result = await (dispatch as any)(savePublicRoutine({ token, routineId: routine.id })).unwrap()
             
-            console.log('🟢 Resultado de toggle save:', result)
+            // console.log('🟢 Resultado de toggle save:', result)
             
             // Actualizar estado local inmediatamente (optimistic update)
             setSavedRoutines(prev => {

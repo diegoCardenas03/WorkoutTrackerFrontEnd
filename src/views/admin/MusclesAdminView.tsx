@@ -204,10 +204,10 @@ export const MusclesAdminView = () => {
         },
       })
 
-      console.log('🔑 [MusclesAdminView] Token obtenido, procediendo a guardar...');
+      // console.log('🔑 [MusclesAdminView] Token obtenido, procediendo a guardar...');
 
       if (editingMuscle) {
-        console.log('🔄 [MusclesAdminView] Actualizando músculo...');
+        // console.log('🔄 [MusclesAdminView] Actualizando músculo...');
         const result = await (dispatch as any)(updateMuscle({ 
           token, 
           id: Number(editingMuscle.id), 
@@ -220,11 +220,11 @@ export const MusclesAdminView = () => {
           throw new Error(result.payload || 'Error al actualizar músculo');
         }
         
-        console.log('✅ [MusclesAdminView] Músculo actualizado exitosamente');
+        // console.log('✅ [MusclesAdminView] Músculo actualizado exitosamente');
         setToast({ msg: 'Músculo actualizado exitosamente', type: 'success' })
         setTimeout(() => setToast(null), 3000)
       } else {
-        console.log('🚀 [MusclesAdminView] Llamando a createMuscle...');
+        // console.log('🚀 [MusclesAdminView] Llamando a createMuscle...');
         const result = await (dispatch as any)(createMuscle({ token, data: payload, image }))
         
         // Verificar si la acción fue rechazada
@@ -233,7 +233,7 @@ export const MusclesAdminView = () => {
           throw new Error(result.payload || 'Error al crear músculo');
         }
         
-        console.log('✅ [MusclesAdminView] Músculo creado exitosamente');
+        // console.log('✅ [MusclesAdminView] Músculo creado exitosamente');
         setToast({ msg: 'Músculo creado exitosamente', type: 'success' })
         setTimeout(() => setToast(null), 3000)
       }

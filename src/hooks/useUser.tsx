@@ -31,14 +31,14 @@ export const useUser = () => {
       });
 
       // 🔍 DEBUG: Decodificar el token para ver los roles
-      console.log('🔑 [useUser] Token obtenido');
+      // console.log('🔑 [useUser] Token obtenido');
       try {
         const tokenParts = token.split('.');
         const payload = JSON.parse(atob(tokenParts[1]));
-        console.log('🔍 [DEBUG useUser] Token payload completo:', payload);
-        console.log('🔍 [DEBUG useUser] Roles en el token:', payload[`${import.meta.env.VITE_AUTH0_AUDIENCE}/roles`]);
-        console.log('🔍 [DEBUG useUser] ¿Tiene rol ADMIN?', payload[`${import.meta.env.VITE_AUTH0_AUDIENCE}/roles`]?.includes('ADMIN'));
-        console.log('🔍 [DEBUG useUser] ¿Tiene rol USUARIO?', payload[`${import.meta.env.VITE_AUTH0_AUDIENCE}/roles`]?.includes('USUARIO'));
+        // console.log('🔍 [DEBUG useUser] Token payload completo:', payload);
+        // console.log('🔍 [DEBUG useUser] Roles en el token:', payload[`${import.meta.env.VITE_AUTH0_AUDIENCE}/roles`]);
+        // console.log('🔍 [DEBUG useUser] ¿Tiene rol ADMIN?', payload[`${import.meta.env.VITE_AUTH0_AUDIENCE}/roles`]?.includes('ADMIN'));
+        // console.log('🔍 [DEBUG useUser] ¿Tiene rol USUARIO?', payload[`${import.meta.env.VITE_AUTH0_AUDIENCE}/roles`]?.includes('USUARIO'));
       } catch (e) {
         console.error('❌ Error al decodificar token:', e);
       }

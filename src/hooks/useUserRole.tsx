@@ -27,11 +27,11 @@ export const useUserRole = () => {
   // Debug: exponer usuario para debugging (solo en desarrollo)
   if (import.meta.env.DEV && user) {
     (window as any).__auth0User = user;
-    console.log('🔐 Auth0 User Debug:', {
-      email: user.email,
-      roles: roles,
-      fullUser: user
-    });
+    // console.log('🔐 Auth0 User Debug:', {
+    //   email: user.email,
+    //   roles: roles,
+    //   fullUser: user
+    // });
   }
 
   const hasRole = (role: UserRole): boolean => {

@@ -122,15 +122,15 @@ export const CalendarView = () => {
             const sortedRoutineDays = [...routineDays].sort((a, b) => a - b)
             const firstDayOfRoutine = sortedRoutineDays[0]
             
-            console.log('🔍 Debug agendamiento:')
-            console.log('- Fecha seleccionada (string):', baseDate)
-            console.log('- Fecha como objeto:', selectedDateObj)
-            console.log('- Día de la semana (número):', selectedDayOfWeek)
-            console.log('- Día de la semana (nombre):', ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][selectedDayOfWeek])
-            console.log('- Días de la rutina:', routine.sessions.map(s => s.dayOfWeek))
-            console.log('- Días de la rutina (números):', routineDays)
-            console.log('- Es rutina semanal:', isWeeklyRoutine)
-            console.log('- Primer día de la rutina:', firstDayOfRoutine)
+            // console.log('🔍 Debug agendamiento:')
+            // console.log('- Fecha seleccionada (string):', baseDate)
+            // console.log('- Fecha como objeto:', selectedDateObj)
+            // console.log('- Día de la semana (número):', selectedDayOfWeek)
+            // console.log('- Día de la semana (nombre):', ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][selectedDayOfWeek])
+            // console.log('- Días de la rutina:', routine.sessions.map(s => s.dayOfWeek))
+            // console.log('- Días de la rutina (números):', routineDays)
+            // console.log('- Es rutina semanal:', isWeeklyRoutine)
+            // console.log('- Primer día de la rutina:', firstDayOfRoutine)
             
             // VALIDACIÓN 2: Para rutinas semanales, solo el primer día
             if (isWeeklyRoutine) {
@@ -181,9 +181,9 @@ export const CalendarView = () => {
                 const currentWeekStart = new Date(year, month - 1, day)
                 currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay()) // Domingo de esa semana
                 
-                console.log('📅 Calculando fechas para rutina semanal:')
-                console.log('- Fecha seleccionada:', baseDate)
-                console.log('- Domingo de esa semana:', currentWeekStart.toISOString().split('T')[0])
+                // console.log('📅 Calculando fechas para rutina semanal:')
+                // console.log('- Fecha seleccionada:', baseDate)
+                // console.log('- Domingo de esa semana:', currentWeekStart.toISOString().split('T')[0])
                 
                 const agendaPromises = routine.sessions.map(session => {
                     const dayIndex = dayOfWeekMap[session.dayOfWeek]
@@ -196,7 +196,7 @@ export const CalendarView = () => {
                     const sessionDateISO = sessionDate.toISOString().split('T')[0]
                     const startDateISO = `${sessionDateISO}T${baseTime}:00`
                     
-                    console.log(`  - Sesión ${session.dayOfWeek} (${dayIndex}): ${sessionDateISO}`)
+                    // console.log(`  - Sesión ${session.dayOfWeek} (${dayIndex}): ${sessionDateISO}`)
                     
                     const payload: AgendaRequestDTO = {
                         startDate: startDateISO,

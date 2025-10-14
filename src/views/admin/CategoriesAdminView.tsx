@@ -155,10 +155,10 @@ export const CategoriesAdminView = () => {
         },
       })
 
-      console.log('🔑 [CategoriesAdminView] Token obtenido');
+      // console.log('🔑 [CategoriesAdminView] Token obtenido');
 
       if (editingCategory) {
-        console.log('🔄 [CategoriesAdminView] Actualizando categoría...');
+        // console.log('🔄 [CategoriesAdminView] Actualizando categoría...');
         const result = await (dispatch as any)(updateCategory({ 
           token, 
           id: Number(editingCategory.id), 
@@ -170,11 +170,11 @@ export const CategoriesAdminView = () => {
           throw new Error(result.payload || 'Error al actualizar categoría');
         }
         
-        console.log('✅ [CategoriesAdminView] Categoría actualizada exitosamente');
+        // console.log('✅ [CategoriesAdminView] Categoría actualizada exitosamente');
         setToast({ msg: 'Categoría actualizada exitosamente', type: 'success' })
         setTimeout(() => setToast(null), 3000)
       } else {
-        console.log('🚀 [CategoriesAdminView] Llamando a createCategory...');
+        // console.log('🚀 [CategoriesAdminView] Llamando a createCategory...');
         const result = await (dispatch as any)(createCategory({ token, data: payload }))
         
         if (result.type.endsWith('/rejected')) {
@@ -182,7 +182,7 @@ export const CategoriesAdminView = () => {
           throw new Error(result.payload || 'Error al crear categoría');
         }
         
-        console.log('✅ [CategoriesAdminView] Categoría creada exitosamente');
+        // console.log('✅ [CategoriesAdminView] Categoría creada exitosamente');
         setToast({ msg: 'Categoría creada exitosamente', type: 'success' })
         setTimeout(() => setToast(null), 3000)
       }

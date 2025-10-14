@@ -124,21 +124,21 @@ export const MuscleZonesAdminView = () => {
         },
       })
 
-      console.log('🔑 [MuscleZonesAdminView] Token obtenido');
+      // console.log('🔑 [MuscleZonesAdminView] Token obtenido');
       
       // 🔍 DEBUG: Decodificar el token para ver los roles
       try {
         const tokenParts = token.split('.');
         const payload = JSON.parse(atob(tokenParts[1]));
-        console.log('🔍 [DEBUG] Token payload completo:', payload);
-        console.log('🔍 [DEBUG] Roles en el token:', payload[`${import.meta.env.VITE_AUTH0_AUDIENCE}/roles`]);
-        console.log('🔍 [DEBUG] ¿Tiene rol ADMIN?', payload[`${import.meta.env.VITE_AUTH0_AUDIENCE}/roles`]?.includes('ADMIN'));
+        // console.log('🔍 [DEBUG] Token payload completo:', payload);
+        // console.log('🔍 [DEBUG] Roles en el token:', payload[`${import.meta.env.VITE_AUTH0_AUDIENCE}/roles`]);
+        // console.log('🔍 [DEBUG] ¿Tiene rol ADMIN?', payload[`${import.meta.env.VITE_AUTH0_AUDIENCE}/roles`]?.includes('ADMIN'));
       } catch (e) {
         console.error('❌ Error al decodificar token:', e);
       }
 
       if (editingMuscleZone) {
-        console.log('🔄 [MuscleZonesAdminView] Actualizando zona muscular...');
+        // console.log('🔄 [MuscleZonesAdminView] Actualizando zona muscular...');
         const result = await (dispatch as any)(updateMuscleZone({ 
           token, 
           id: Number(editingMuscleZone.id), 
@@ -151,11 +151,11 @@ export const MuscleZonesAdminView = () => {
           throw new Error(result.payload || 'Error al actualizar zona muscular');
         }
         
-        console.log('✅ [MuscleZonesAdminView] Zona muscular actualizada exitosamente');
+        // console.log('✅ [MuscleZonesAdminView] Zona muscular actualizada exitosamente');
         setToast({ msg: 'Zona muscular actualizada exitosamente', type: 'success' })
         setTimeout(() => setToast(null), 3000)
       } else {
-        console.log('🚀 [MuscleZonesAdminView] Llamando a createMuscleZone...');
+        // console.log('🚀 [MuscleZonesAdminView] Llamando a createMuscleZone...');
         const result = await (dispatch as any)(createMuscleZone({ token, data: payload, image }))
         
         // Verificar si la acción fue rechazada
@@ -164,7 +164,7 @@ export const MuscleZonesAdminView = () => {
           throw new Error(result.payload || 'Error al crear zona muscular');
         }
         
-        console.log('✅ [MuscleZonesAdminView] Zona muscular creada exitosamente');
+        // console.log('✅ [MuscleZonesAdminView] Zona muscular creada exitosamente');
         setToast({ msg: 'Zona muscular creada exitosamente', type: 'success' })
         setTimeout(() => setToast(null), 3000)
       }

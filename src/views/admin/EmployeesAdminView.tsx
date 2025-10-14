@@ -125,7 +125,7 @@ export const EmployeesAdminView = () => {
         // Editar empleado existente
         // TODO: Implementar cuando el backend tenga el endpoint
         // await usuarioService.updateAdmin(token, editingEmployee.id, employeeData)
-        console.log('Editar empleado:', editingEmployee.id, employeeData)
+        // console.log('Editar empleado:', editingEmployee.id, employeeData)
         setToastMessage("Funcionalidad de edición pendiente en el backend")
         setShowErrorToast(true)
       } else {

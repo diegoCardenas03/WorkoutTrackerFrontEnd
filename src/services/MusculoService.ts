@@ -24,10 +24,10 @@ export class MusculoService extends BackendClient<MusculoRequestDTO, MusculoResp
      * Crear un músculo (requiere token de admin)
      */
     async createMuscle(token: string, data: MusculoRequestDTO, image?: File): Promise<MusculoResponseDTO> {
-        console.log('🔵 [MusculoService.createMuscle] Creando músculo...');
-        console.log('🔵 [MusculoService.createMuscle] URL:', `${this.baseUrl}/admin`);
-        console.log('🔵 [MusculoService.createMuscle] Data:', data);
-        console.log('🔵 [MusculoService.createMuscle] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
+        // console.log('🔵 [MusculoService.createMuscle] Creando músculo...');
+        // console.log('🔵 [MusculoService.createMuscle] URL:', `${this.baseUrl}/admin`);
+        // console.log('🔵 [MusculoService.createMuscle] Data:', data);
+        // console.log('🔵 [MusculoService.createMuscle] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
         
         // El backend siempre espera multipart/form-data
         const formData = new FormData();
@@ -46,7 +46,7 @@ export class MusculoService extends BackendClient<MusculoRequestDTO, MusculoResp
             body: formData,
         });
 
-        console.log('🔵 [MusculoService.createMuscle] Response status:', response.status);
+        // console.log('🔵 [MusculoService.createMuscle] Response status:', response.status);
         
         if (!response.ok) {
             const error = await response.json().catch(() => ({ message: 'Error al crear músculo' }))
@@ -56,7 +56,7 @@ export class MusculoService extends BackendClient<MusculoRequestDTO, MusculoResp
         }
 
         const result = await response.json();
-        console.log(`✅ [MusculoService.createMuscle] Músculo creado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
+        // console.log(`✅ [MusculoService.createMuscle] Músculo creado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
         return result;
     }
 
@@ -64,10 +64,10 @@ export class MusculoService extends BackendClient<MusculoRequestDTO, MusculoResp
      * Actualizar un músculo (requiere token de admin)
      */
     async updateMuscle(token: string, id: number, data: MusculoRequestDTO, image?: File): Promise<MusculoResponseDTO> {
-        console.log('🔄 [MusculoService.updateMuscle] Actualizando músculo...');
-        console.log('🔄 [MusculoService.updateMuscle] URL:', `${this.baseUrl}/admin/${id}`);
-        console.log('🔄 [MusculoService.updateMuscle] Data:', data);
-        console.log('🔄 [MusculoService.updateMuscle] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
+        // console.log('🔄 [MusculoService.updateMuscle] Actualizando músculo...');
+        // console.log('🔄 [MusculoService.updateMuscle] URL:', `${this.baseUrl}/admin/${id}`);
+        // console.log('🔄 [MusculoService.updateMuscle] Data:', data);
+        // console.log('🔄 [MusculoService.updateMuscle] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
         
         // El backend siempre espera multipart/form-data
         const formData = new FormData();
@@ -86,7 +86,7 @@ export class MusculoService extends BackendClient<MusculoRequestDTO, MusculoResp
             body: formData,
         });
 
-        console.log('🔄 [MusculoService.updateMuscle] Response status:', response.status);
+        // console.log('🔄 [MusculoService.updateMuscle] Response status:', response.status);
         
         if (!response.ok) {
             const error = await response.json().catch(() => ({ message: 'Error al actualizar músculo' }))
@@ -95,7 +95,7 @@ export class MusculoService extends BackendClient<MusculoRequestDTO, MusculoResp
         }
 
         const result = await response.json();
-        console.log(`✅ [MusculoService.updateMuscle] Músculo actualizado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
+        // console.log(`✅ [MusculoService.updateMuscle] Músculo actualizado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
         return result;
     }
 }
