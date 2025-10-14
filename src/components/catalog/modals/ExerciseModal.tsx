@@ -1,14 +1,14 @@
 import { IoClose } from "react-icons/io5"
-import { LuDumbbell } from "react-icons/lu"
+import { LuDumbbell, LuChevronLeft, LuChevronRight, LuPlay } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
 import type { EjercicioResponseDTO } from "../../../types/ejercicio/EjercicioResponseDTO"
+import { useState } from "react"
 
 interface ExerciseModalProps {
   isOpen: boolean
   onClose: () => void
   exercise: EjercicioResponseDTO | null
-  onWatchVideo?: () => void
   showBackButton?: boolean
   onBack?: () => void
 }
@@ -17,20 +17,35 @@ export const ExerciseModal = ({
   isOpen,
   onClose,
   exercise,
-  onWatchVideo,
   showBackButton,
   onBack
 }: ExerciseModalProps) => {
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
   
   if (!isOpen || !exercise) return null
 
   // Adaptar datos del ejercicio para el modal
-  const equipmentLabel = exercise.equipment?.[0]?.name || "Sin equipo"
-  const equipmentColor = "orange" as const
+  const equipmentList = exercise.equipment || []
   const targetMuscles = exercise.targetMuscles?.map(m => m.name) || []
   const instructions = exercise.instructions ? Object.values(exercise.instructions) : []
   const tips = exercise.tips || ""
   const description = exercise.description
+  const sampleVideos = exercise.sampleVideos || []
+  const hasMultipleVideos = sampleVideos.length > 1
+
+  const handlePreviousVideo = () => {
+    setCurrentVideoIndex((prev) => (prev > 0 ? prev - 1 : sampleVideos.length - 1))
+  }
+
+  const handleNextVideo = () => {
+    setCurrentVideoIndex((prev) => (prev < sampleVideos.length - 1 ? prev + 1 : 0))
+  }
+
+  const handleWatchCurrentVideo = () => {
+    if (sampleVideos.length > 0) {
+      window.open(sampleVideos[currentVideoIndex], "_blank")
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -57,13 +72,26 @@ export const ExerciseModal = ({
             </button>
           </div>
 
-          {/* Tags de dificultad y equipo */}
+          {/* Tags de equipo necesario */}
           <div className="flex items-center justify-between">
-            <div>
-              <span className="text-quaternary text-[12px] md:text-sm block mb-1">Equipo necesario</span>
-              <span className={`px-3 py-1 rounded-full text-[10px] md:text-xs font-medium border ${getTagStyles(equipmentColor)}`}>
-                {equipmentLabel}
-              </span>
+            <div className="flex-1">
+              <span className="text-quaternary text-[12px] md:text-sm block mb-2">Equipo necesario</span>
+              <div className="flex flex-wrap gap-1.5">
+                {equipmentList.length > 0 ? (
+                  equipmentList.map((equipment, index) => (
+                    <span
+                      key={index}
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-medium border ${getTagStyles('orange')}`}
+                    >
+                      {equipment.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-medium border border-quaternary text-quaternary">
+                    Sin equipo
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -81,11 +109,11 @@ export const ExerciseModal = ({
           {/* Músculos objetivo */}
           <div>
             <h3 className="text-white text-[14px] md:text-base font-medium mb-3">Músculos objetivo</h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {targetMuscles.map((muscle, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1 bg-linksNavbar text-quaternary rounded-full text-xs "
+                  className="px-2.5 py-0.5 bg-linksNavbar text-quaternary rounded-full text-[10px] md:text-xs"
                 >
                   {muscle}
                 </span>
@@ -118,12 +146,61 @@ export const ExerciseModal = ({
         {/* Footer con botones */}
         <div className="sticky bottom-0 rounded-b-lg p-6 pt-4 border-t border-white/10 bg-primary">
           <div className="flex flex-col gap-3">
+            {/* Video selector si hay múltiples videos */}
+            {hasMultipleVideos && (
+              <div className="bg-itemsCard rounded-lg p-4 border border-white/10">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-quaternary text-sm">
+                    Video {currentVideoIndex + 1} de {sampleVideos.length}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handlePreviousVideo}
+                      className="p-2 bg-tertiary hover:bg-white/10 text-white rounded transition-colors"
+                      aria-label="Video anterior"
+                    >
+                      <LuChevronLeft size={16} />
+                    </button>
+                    <button
+                      onClick={handleNextVideo}
+                      className="p-2 bg-tertiary hover:bg-white/10 text-white rounded transition-colors"
+                      aria-label="Video siguiente"
+                    >
+                      <LuChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Botones numerados para selección directa */}
+                <div className="flex gap-2 flex-wrap">
+                  {sampleVideos.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentVideoIndex(index)}
+                      className={`min-w-[40px] h-10 px-3 rounded font-medium text-sm transition-all ${
+                        currentVideoIndex === index
+                          ? 'bg-white text-black'
+                          : 'bg-tertiary text-quaternary hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Button
               isWhite={false}
-              action={onWatchVideo}
+              action={handleWatchCurrentVideo}
               isWidthFull={true}
+              icon={<LuPlay size={16} />}
+              iconPosition={false}
+              isBlocked={sampleVideos.length === 0}
             >
-              Ver video tutorial
+              {hasMultipleVideos 
+                ? `Ver video ${currentVideoIndex + 1}` 
+                : 'Ver video tutorial'}
             </Button>
 
             {showBackButton && (

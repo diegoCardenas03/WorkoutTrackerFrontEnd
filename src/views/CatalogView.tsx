@@ -152,9 +152,9 @@ export const CatalogView = () => {
         return map
     }, [musclesFromStore])
 
-    const getEquipmentTag = (equipment: { id: number; name: string }[] = []) => {
+    const getEquipmentTags = (equipment: { id: number; name: string }[] = []) => {
         if (!Array.isArray(equipment) || equipment.length === 0) return []
-        return [{ name: equipment[0].name, color: "orange" as const }]
+        return equipment.map(eq => ({ name: eq.name, color: "orange" as const }))
     }
 
     const handleExerciseClick = (exercise: any) => {
@@ -165,13 +165,6 @@ export const CatalogView = () => {
     const handleCloseModal = () => {
         setIsModalOpen(false)
         setSelectedExercise(null)
-    }
-
-    const handleWatchVideo = () => {
-        // Siempre usar el primer video disponible (índice 0)
-        if (selectedExercise?.sampleVideos && selectedExercise.sampleVideos.length > 0) {
-            window.open(selectedExercise.sampleVideos[0], "_blank")
-        }
     }
 
     // Nota: la resolución de categoría se realiza en handleFinishRoutine con datos frescos
@@ -456,7 +449,7 @@ export const CatalogView = () => {
                                     key={exercise.id}
                                     name={exercise.name}
                                     description={exercise.description}
-                                    tags={getEquipmentTag(exercise.equipment)}
+                                    tags={getEquipmentTags(exercise.equipment)}
                                     targetMuscles={exercise.targetMuscles?.map(m => m.name) || []}
                                     onClick={() => handleExerciseClick(exercise)}
                                     isSelectMode={true}
@@ -465,7 +458,7 @@ export const CatalogView = () => {
                                         id: exercise.id,
                                         title: exercise.name,
                                         tags: Array.isArray(exercise.equipment) && exercise.equipment.length > 0
-                                            ? [{ label: exercise.equipment[0].name, color: 'orange' as const }]
+                                            ? exercise.equipment.map(eq => ({ label: eq.name, color: 'orange' as const }))
                                             : [],
                                         targetMuscles: exercise.targetMuscles?.map(m => m.name) || []
                                     })}
@@ -533,7 +526,7 @@ export const CatalogView = () => {
                             key={exercise.id}
                             name={exercise.name}
                             description={exercise.description}
-                            tags={getEquipmentTag(exercise.equipment)}
+                            tags={getEquipmentTags(exercise.equipment)}
                             targetMuscles={exercise.targetMuscles?.map(m => m.name) || []}
                             onClick={() => handleExerciseClick(exercise)}
                         />
@@ -573,7 +566,6 @@ export const CatalogView = () => {
                     isOpen={isModalOpen}
                     onClose={handleCloseModal}
                     exercise={selectedExercise}
-                    onWatchVideo={handleWatchVideo}
                 />
             )}
 

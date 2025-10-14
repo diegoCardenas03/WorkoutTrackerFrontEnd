@@ -66,11 +66,11 @@ export const ExerciseCard = ({
       </p>
 
       {/* Tags */}
-      <div className="flex flex-wrap gap-2 mb-3">
+      <div className="flex flex-wrap gap-1.5 mb-3">
         {tags.map((tag, index) => (
           <span
             key={index}
-            className={`px-3 py-1 rounded-full text-xs font-medium border ${getTagStyles(tag.color)} transition-all duration-200`}
+            className={`px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-medium border ${getTagStyles(tag.color)} transition-all duration-200`}
           >
             {tag.name}
           </span>
@@ -85,7 +85,7 @@ export const ExerciseCard = ({
             {targetMuscles.map((muscle, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-black text-quaternary border border-quaternary rounded-full text-xs font-medium"
+                className="px-2.5 py-0.5 bg-black text-quaternary border border-quaternary rounded-full text-[10px] md:text-xs font-medium"
               >
                 {muscle}
               </span>
