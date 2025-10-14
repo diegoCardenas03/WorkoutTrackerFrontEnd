@@ -78,17 +78,18 @@ export const NextSessionCard = () => {
                         )}
                     </div>
 
-                    {/* Botón */}
+                    {/* Botón para ir al calendario */}
                     <Button
+                        isWhite={true}
                         isWidthFull={true}
                         isBlocked={false}
                         isBold={true}
                         mobileHeight="h-11"
                         mdHeight="h-11"
                         lgHeight="h-11"
-                        action={handleStart}
+                        action={() => navigate('/calendar')}
                     >
-                        Comenzar entrenamiento
+                        Ver en calendario
                     </Button>
                 </>
             ) : (

@@ -62,22 +62,17 @@ export const DashBoardView = () => {
           /* Grid principal del dashboard */
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
             
-            {/* Primera fila - Desktop: Próxima sesión y Progreso lado a lado */}
-           
+            {/* Primera fila - Desktop: Próxima sesión y Mis rutinas lado a lado */}
             <div className="col-span-1 h-fit">
               <NextSessionCard />
             </div>
-            
-            <div className="col-span-1 h-fit">
-              <ProgressCard />
-            </div>
 
-            {/* Segunda fila - Desktop: Mis rutinas y Ejercicios destacados lado a lado */}
             <div className="col-span-1 h-fit">
               <MyRoutinesCard />
             </div>
 
-            <div className="col-span-1 h-fit">
+            {/* Segunda fila - Ejercicios destacados ocupa todo el ancho */}
+            <div className="col-span-1 lg:col-span-2 h-fit">
               <FeaturedExercisesCard />
             </div>
             

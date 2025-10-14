@@ -168,7 +168,10 @@ export const CatalogView = () => {
     }
 
     const handleWatchVideo = () => {
-        window.open(selectedExercise?.sampleVideos[1], "_blank")
+        // Siempre usar el primer video disponible (índice 0)
+        if (selectedExercise?.sampleVideos && selectedExercise.sampleVideos.length > 0) {
+            window.open(selectedExercise.sampleVideos[0], "_blank")
+        }
     }
 
     // Nota: la resolución de categoría se realiza en handleFinishRoutine con datos frescos
