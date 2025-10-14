@@ -1,5 +1,5 @@
 import { IoClose } from "react-icons/io5"
-import { LuDumbbell, LuPlay, LuPencil } from "react-icons/lu"
+import { LuDumbbell, LuPlay, LuPencil, LuCheck } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
 import { useState } from "react"
@@ -44,6 +44,7 @@ interface RoutineModalProps {
   }
   onStart?: (options?: { dayOfWeek?: DayOfWeek }) => void
   onEdit?: () => void
+  onMarkCompleted?: () => void
   exerciseDtos?: EjercicioResponseDTO[]
   // opcional: ejercicios agrupados por día (para rutinas semanales)
   exercisesByDay?: Record<string, Exercise[]>
@@ -55,6 +56,7 @@ export const RoutineModal = ({
   routine,
   onStart,
   onEdit,
+  onMarkCompleted,
   exerciseDtos,
   exercisesByDay
 }: RoutineModalProps) => {
@@ -290,38 +292,50 @@ export const RoutineModal = ({
 
         {/* Footer con botones */}
         <div className="sticky bottom-0 rounded-b-lg p-6 pt-4 border-t border-white/10 bg-primary">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              iconPosition={false}
-              icon={<LuPlay size={16} />}
-              action={() => {
-                if (onStart) {
-                  if (routine.isWeekly && selectedDay) {
-                    // intentar mapear selectedDay ya sea de exercisesByDay o etiqueta española
-                    const dayEnum = mapSpanishToEnum(selectedDay)
-                    try {
-                      // persistir el último día seleccionado por rutina
-                      window.localStorage.setItem(storageKey, selectedDay)
-                    } catch {}
-                    onStart({ dayOfWeek: dayEnum })
-                  } else {
-                    onStart()
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                iconPosition={false}
+                icon={<LuPlay size={16} />}
+                action={() => {
+                  if (onStart) {
+                    if (routine.isWeekly && selectedDay) {
+                      // intentar mapear selectedDay ya sea de exercisesByDay o etiqueta española
+                      const dayEnum = mapSpanishToEnum(selectedDay)
+                      try {
+                        // persistir el último día seleccionado por rutina
+                        window.localStorage.setItem(storageKey, selectedDay)
+                      } catch {}
+                      onStart({ dayOfWeek: dayEnum })
+                    } else {
+                      onStart()
+                    }
                   }
-                }
-              }}
-              isWidthFull={true}
-            >
-              Iniciar rutina
-            </Button>
+                }}
+                isWidthFull={true}
+              >
+                Iniciar rutina
+              </Button>
+
+              <Button
+                isWhite={false}
+                icon={<LuPencil size={16} />}
+                iconPosition={false}
+                action={onEdit}
+                isWidthFull={true}
+              >
+                Editar rutina
+              </Button>
+            </div>
 
             <Button
               isWhite={false}
-              icon={<LuPencil size={16} />}
+              icon={<LuCheck size={16} />}
               iconPosition={false}
-              action={onEdit}
+              action={onMarkCompleted}
               isWidthFull={true}
             >
-              Editar rutina
+              Marcar como completada
             </Button>
           </div>
         </div>

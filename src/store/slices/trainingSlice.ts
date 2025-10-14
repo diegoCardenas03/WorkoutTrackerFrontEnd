@@ -22,6 +22,7 @@ export interface TrainingExercise {
   restTime: string // seconds
   notes?: string
   seriesData: TrainingSet[]
+  videoUrls?: string[] // Array de URLs de videos demostrativos
 }
 
 export interface TrainingState {
@@ -50,17 +51,62 @@ const initialState: TrainingState = {
   elapsedSeconds: 0,
 }
 
+/**
+ * Convierte URLs de YouTube a formato embed
+ * - https://www.youtube.com/watch?v=VIDEO_ID → https://www.youtube.com/embed/VIDEO_ID
+ * - https://youtu.be/VIDEO_ID → https://www.youtube.com/embed/VIDEO_ID
+ */
+const convertToEmbedUrl = (url: string | undefined): string | undefined => {
+  if (!url) return undefined
+  
+  try {
+    // Si ya es una URL embed, retornarla tal cual
+    if (url.includes('/embed/')) return url
+    
+    // Convertir watch?v= a embed
+    if (url.includes('youtube.com/watch?v=')) {
+      const videoId = url.split('watch?v=')[1]?.split('&')[0]
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : url
+    }
+    
+    // Convertir youtu.be a embed
+    if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1]?.split('?')[0]
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : url
+    }
+    
+    // Si no es YouTube, retornar tal cual (puede ser Vimeo u otro)
+    return url
+  } catch (e) {
+    console.error('Error converting video URL:', e)
+    return url
+  }
+}
+
 const buildExercisesFromSessions = (sessions: RutinaResponseDTO['sessions'], filterDay?: DayOfWeek): TrainingExercise[] => {
   const selectedSessions = filterDay ? sessions.filter(s => s.dayOfWeek === filterDay) : sessions
   const result: TrainingExercise[] = []
   let setAutoId = 1
-  selectedSessions.forEach(session => {
-    session.sessionExercises.forEach((se: SesionEjercicioResponseDTO) => {
+  
+  // Ordenar sesiones por ID para mantener orden consistente
+  const sortedSessions = [...selectedSessions].sort((a, b) => a.id - b.id)
+  
+  sortedSessions.forEach(session => {
+    // Ordenar ejercicios por ID para orden consistente
+    const sortedExercises = [...(session.sessionExercises ?? [])].sort((a, b) => a.id - b.id)
+    
+    sortedExercises.forEach((se: SesionEjercicioResponseDTO) => {
   const equipmentNames = se.exercise?.equipment?.map(e => e.name).filter(Boolean) ?? []
       const tags = equipmentNames.length ? equipmentNames.map(n => ({ label: n, color: 'orange' as const })) : []
       const setsCount = Math.max(0, Number(se.sets) || 0)
       const reps = Math.max(0, Number(se.reps) || 0)
       const seriesData: TrainingSet[] = Array.from({ length: setsCount }, () => ({ id: setAutoId++, completed: false, reps }))
+      
+      // Convertir todas las URLs de video a formato embed
+      const videoUrls = (se.exercise?.sampleVideos ?? [])
+        .map(url => convertToEmbedUrl(url))
+        .filter((url): url is string => url !== undefined)
+      
       result.push({
         id: String(se.id),
         title: se.exercise?.name ?? 'Ejercicio',
@@ -72,6 +118,7 @@ const buildExercisesFromSessions = (sessions: RutinaResponseDTO['sessions'], fil
   restTime: String(se.restBetweenSets ?? 90),
         notes: se.comment,
         seriesData,
+        videoUrls: videoUrls.length > 0 ? videoUrls : undefined, // Array de URLs convertidas
       })
     })
   })

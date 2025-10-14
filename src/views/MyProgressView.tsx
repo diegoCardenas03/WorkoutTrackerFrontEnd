@@ -3,6 +3,7 @@ import { RegistersCard } from "../components/MyProgress/Cards/RegistersCard"
 import { ResumeCard } from "../components/MyProgress/Cards/ResumeCard"
 import { TrainsCard } from "../components/MyProgress/Cards/TrainsCard"
 import { WeightCard } from "../components/MyProgress/Cards/WeightCard"
+import { RoutineHistoryCard } from "../components/MyProgress/Cards/RoutineHistoryCard"
 import { SubHeader } from "../components/SubHeader"
 import { PrivateLayout } from "../layouts/PrivateLayout"
 import { useEffect, useState } from "react"
@@ -68,6 +69,12 @@ export const MyProgressView = () => {
           <EvolutionCard />
           <RegistersCard />
         </div>
+        
+        {/* Historial de rutinas completadas */}
+        <div className="w-full">
+          <RoutineHistoryCard />
+        </div>
+
         <div className="w-full pb-10">
           <ResumeCard />
         </div>

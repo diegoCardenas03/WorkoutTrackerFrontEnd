@@ -1,9 +1,11 @@
 import { LuActivity } from "react-icons/lu"
 import { useSelector } from "react-redux"
 import type { RootState } from "../../../store"
-import { useEffect, useState, useMemo } from "react"
+import { useMemo, useEffect, useState } from "react"
 import { useAuth0 } from "@auth0/auth0-react"
-import { progresoService } from "../../../services/ProgresoService"
+import { RutinaService } from "../../../services/RutinaService"
+
+const rutinaService = new RutinaService()
 
 export const TrainsCard = () => {
   const agenda = useSelector((state: RootState) => state.agenda)
@@ -12,7 +14,7 @@ export const TrainsCard = () => {
   const [isLoading, setIsLoading] = useState(true)
   
   // Obtener fecha del mes actual
-  const now = new Date()
+  const now = useMemo(() => new Date(), [])
   const currentMonth = now.getMonth()
   const currentYear = now.getFullYear()
   
@@ -26,7 +28,7 @@ export const TrainsCard = () => {
     }).length
   }, [agenda.items, currentMonth, currentYear])
   
-  // Cargar rutinas completadas del mes desde el backend
+  // Cargar rutinas completadas del mes
   useEffect(() => {
     const loadCompletedRoutines = async () => {
       try {
@@ -36,17 +38,11 @@ export const TrainsCard = () => {
           },
         })
 
-        // Obtener primer y último día del mes actual
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-
-        const completedRoutines = await progresoService.getCompletedRoutines(
-          token,
-          startOfMonth.toISOString(),
-          endOfMonth.toISOString()
-        )
-
-        setCompletedRoutinesCount(completedRoutines.length)
+        const allCompleted = await rutinaService.getCompletedRoutines(token)
+        
+        // Simplemente contar todas las rutinas completadas sin filtrar por fecha
+        // ya que el backend solo devuelve las del usuario
+        setCompletedRoutinesCount(allCompleted.length)
       } catch (error) {
         console.error('Error al cargar rutinas completadas:', error)
         setCompletedRoutinesCount(0)
@@ -56,7 +52,7 @@ export const TrainsCard = () => {
     }
 
     loadCompletedRoutines()
-  }, [getAccessTokenSilently, now])
+  }, [getAccessTokenSilently, currentMonth, currentYear])
   
   // Total de rutinas completadas = desde agenda + adicionales
   const totalCompletedTrainings = monthlyScheduledProgress + completedRoutinesCount

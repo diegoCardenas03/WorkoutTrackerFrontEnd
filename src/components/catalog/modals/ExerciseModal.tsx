@@ -1,5 +1,5 @@
 import { IoClose } from "react-icons/io5"
-import { LuDumbbell, LuPlay } from "react-icons/lu"
+import { LuDumbbell } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
 import type { EjercicioResponseDTO } from "../../../types/ejercicio/EjercicioResponseDTO"
@@ -8,7 +8,6 @@ interface ExerciseModalProps {
   isOpen: boolean
   onClose: () => void
   exercise: EjercicioResponseDTO | null
-  onAddToRoutine?: () => void
   onWatchVideo?: () => void
   showBackButton?: boolean
   onBack?: () => void
@@ -18,7 +17,6 @@ export const ExerciseModal = ({
   isOpen,
   onClose,
   exercise,
-  onAddToRoutine,
   onWatchVideo,
   showBackButton,
   onBack
@@ -120,24 +118,13 @@ export const ExerciseModal = ({
         {/* Footer con botones */}
         <div className="sticky bottom-0 rounded-b-lg p-6 pt-4 border-t border-white/10 bg-primary">
           <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row justify-between gap-3">
-              <Button
-                iconPosition={false}
-                icon={<LuPlay />}
-                action={onAddToRoutine}
-                isWidthFull={true}
-              >
-                Añadir a rutina
-              </Button>
-
-              <Button
-                isWhite={false}
-                action={onWatchVideo}
-                isWidthFull={true}
-              >
-                Ver video tutorial
-              </Button>
-            </div>
+            <Button
+              isWhite={false}
+              action={onWatchVideo}
+              isWidthFull={true}
+            >
+              Ver video tutorial
+            </Button>
 
             {showBackButton && (
               <Button

@@ -10,9 +10,11 @@ import type { RootState } from "../store"
 import { addRestSeconds, nextExercise, pauseRest, previousExercise, resumeRest, toggleSetCompleted, tickSecond, startRest, stopRest, resetTraining } from "../store/slices/trainingSlice"
 import { Navigate, useNavigate } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
-import { progresoService } from "../services/ProgresoService"
 import { markAgendaCompleted } from "../store/slices/agendaSlice"
 import { Toast } from "../components/Toast"
+import { RutinaService } from "../services/RutinaService"
+
+const rutinaService = new RutinaService()
 
 // using training slice state, no local Exercise type needed
 
@@ -69,16 +71,12 @@ export const TrainingView = () => {
             })
 
             // 1. Registrar rutina completada
-            console.log('🏋️ [TrainingView] Registrando rutina completada:', training.activeRoutineId)
-            await progresoService.completeRoutine(token, {
-                routineId: training.activeRoutineId!,
-                scheduleId: training.agendaId, // Si viene de agenda, se vincula
-                completedAt: new Date().toISOString(),
-            })
+            if (training.activeRoutineId) {
+                await rutinaService.toggleCompleteRoutine(token, training.activeRoutineId)
+            }
 
             // 2. Si viene de agenda, marcar sesión como completada
             if (training.agendaId) {
-                console.log('📅 [TrainingView] Marcando sesión de agenda como completada:', training.agendaId)
                 await (dispatch as any)(markAgendaCompleted({ 
                     id: training.agendaId, 
                     token 
@@ -148,6 +146,7 @@ export const TrainingView = () => {
                         weight={currentExercise.weight ?? ''}
                         restTime={currentExercise.restTime}
                         notes={currentExercise.notes}
+                        videoUrls={currentExercise.videoUrls}
                     />
                 )}
 

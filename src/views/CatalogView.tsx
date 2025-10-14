@@ -167,10 +167,6 @@ export const CatalogView = () => {
         setSelectedExercise(null)
     }
 
-    const handleAddToRoutine = () => {
-        // Aquí puedes manejar la lógica para añadir a rutina
-    }
-
     const handleWatchVideo = () => {
         window.open(selectedExercise?.sampleVideos[1], "_blank")
     }
@@ -574,7 +570,6 @@ export const CatalogView = () => {
                     isOpen={isModalOpen}
                     onClose={handleCloseModal}
                     exercise={selectedExercise}
-                    onAddToRoutine={handleAddToRoutine}
                     onWatchVideo={handleWatchVideo}
                 />
             )}

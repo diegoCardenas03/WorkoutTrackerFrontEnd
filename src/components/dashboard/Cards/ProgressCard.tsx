@@ -3,7 +3,9 @@ import { useSelector } from "react-redux"
 import type { RootState } from "../../../store"
 import { useMemo, useEffect, useState } from "react"
 import { useAuth0 } from "@auth0/auth0-react"
-import { progresoService } from "../../../services/ProgresoService"
+import { RutinaService } from "../../../services/RutinaService"
+
+const rutinaService = new RutinaService()
 
 export const ProgressCard = () => {
   const agendaItems = useSelector((state: RootState) => state.agenda?.items ?? [])
@@ -27,7 +29,7 @@ export const ProgressCard = () => {
     return completedCount
   }, [agendaItems])
 
-  // Cargar rutinas completadas del mes desde el backend
+  // Cargar rutinas completadas del mes
   useEffect(() => {
     const loadCompletedRoutines = async () => {
       try {
@@ -37,18 +39,10 @@ export const ProgressCard = () => {
           },
         })
 
-        // Obtener primer y último día del mes actual
-        const now = new Date()
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-
-        const completedRoutines = await progresoService.getCompletedRoutines(
-          token,
-          startOfMonth.toISOString(),
-          endOfMonth.toISOString()
-        )
-
-        setCompletedRoutinesCount(completedRoutines.length)
+        const allCompleted = await rutinaService.getCompletedRoutines(token)
+        
+        // Simplemente contar todas las rutinas completadas
+        setCompletedRoutinesCount(allCompleted.length)
       } catch (error) {
         console.error('Error al cargar rutinas completadas:', error)
         setCompletedRoutinesCount(0)
@@ -60,7 +54,7 @@ export const ProgressCard = () => {
     loadCompletedRoutines()
   }, [getAccessTokenSilently])
 
-  // Total de entrenamientos = sesiones agendadas completadas + rutinas completadas extra
+  // Total de entrenamientos = sesiones agendadas completadas + rutinas completadas adicionales
   const totalCompletedTrainings = monthlyScheduledProgress + completedRoutinesCount
 
   // Obtener nombre del mes actual
@@ -101,7 +95,7 @@ export const ProgressCard = () => {
           </span>
         </div>
         
-        {/* Información detallada (solo si hay datos) */}
+        {/* Información detallada */}
         {(monthlyScheduledProgress > 0 || completedRoutinesCount > 0) && (
           <div className="space-y-1 text-quaternary text-xs mt-2">
             {monthlyScheduledProgress > 0 && (
