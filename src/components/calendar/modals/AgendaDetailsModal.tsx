@@ -7,7 +7,6 @@ interface AgendaDetailsModalProps {
   onClose: () => void
   item?: AgendaResponseDTO | null
   onDelete?: (id: number) => void
-  onMarkCompleted?: (id: number) => void
   onEdit?: (id: number) => void
   onStartTraining?: (agendaItem: AgendaResponseDTO) => void
 }
@@ -17,7 +16,6 @@ export const AgendaDetailsModal = ({
   onClose,
   item,
   onDelete,
-  onMarkCompleted,
   onEdit,
   onStartTraining,
 }: AgendaDetailsModalProps) => {
@@ -26,17 +24,6 @@ export const AgendaDetailsModal = ({
   const start = new Date(item.startDate)
   const dateStr = start.toLocaleDateString()
   const timeStr = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-
-  // Verificar si la sesión es hoy o pasado (para permitir completar)
-  const isDateTodayOrPast = () => {
-    const today = new Date()
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const sessionDate = new Date(start.getFullYear(), start.getMonth(), start.getDate())
-    return sessionDate <= todayStart
-  }
-
-  const canMarkComplete = isDateTodayOrPast() && !item.completed
-  const canEdit = !item.completed
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -100,44 +87,22 @@ export const AgendaDetailsModal = ({
 
         {/* Footer */}
         <div className="p-6 pt-4 border-t border-white/10">
-          {item.completed ? (
-            <div className="space-y-3">
-              <div className="text-center text-green-400 text-sm bg-green-500/10 py-2 rounded-lg border border-green-500/20">
-                ✓ Completada el {item.completedAt ? new Date(item.completedAt).toLocaleDateString() : dateStr}
-              </div>
-              {onDelete && (
-                <Button isWhite={false} isWidthFull={true} action={() => onDelete(item.id)}>Eliminar</Button>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {/* Botón Comenzar entrenamiento - disponible solo si es hoy o pasado y no completada */}
-              {canMarkComplete && onStartTraining && (
-                <Button isWhite={true} isWidthFull={true} action={() => onStartTraining(item)}>
-                  Comenzar entrenamiento
+          <div className="flex flex-col gap-3">
+          
+        
+            <div className="flex flex-col md:flex-row gap-3">
+              {onEdit && (
+                <Button isWhite={false} isWidthFull={true} action={() => onEdit(item.id)}>
+                  Editar
                 </Button>
               )}
-              
-              <div className="flex flex-col md:flex-row gap-3">
-                {canMarkComplete && onMarkCompleted && (
-                  <Button isWhite={false} isWidthFull={true} action={() => onMarkCompleted(item.id)}>
-                    Marcar completada
-                  </Button>
-                )}
-                {canEdit && onEdit && (
-                  <Button isWhite={false} isWidthFull={true} action={() => onEdit(item.id)}>Editar</Button>
-                )}
-              </div>
-              {!canMarkComplete && (
-                <div className="text-center text-quaternary text-xs bg-quaternary/5 py-2 rounded border border-quaternary/10">
-                  ℹ️ Solo se puede comenzar el día de la sesión
-                </div>
-              )}
               {onDelete && (
-                <Button isWhite={false} isWidthFull={true} action={() => onDelete(item.id)}>Eliminar</Button>
+                <Button isWhite={false} isWidthFull={true} action={() => onDelete(item.id)}>
+                  Eliminar
+                </Button>
               )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

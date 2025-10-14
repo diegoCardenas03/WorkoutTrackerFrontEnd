@@ -1,4 +1,4 @@
-import { LuDumbbell, LuCalendarDays, LuPlay, LuEllipsisVertical, LuTrash2, LuPencil, LuBookmark, LuCheck } from "react-icons/lu"
+import { LuDumbbell, LuCalendarDays, LuEllipsisVertical, LuTrash2, LuPencil, LuBookmark } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
 import { useState, useRef, useEffect } from "react"
@@ -22,12 +22,10 @@ interface RoutineCardProps {
   }
   isCommunityRoutine?: boolean // Nueva prop para identificar rutinas de comunidad
   isSavedCommunityRoutine?: boolean // Nueva prop para saber si ya está guardada
-  onStart?: () => void
   onViewRoutine?: () => void
   onEdit?: () => void
   onDelete?: () => void
   onSave?: () => void // Nueva acción para guardar/quitar rutinas de comunidad
-  onMarkCompleted?: () => void // Nueva acción para marcar como completada
   className?: string
 }
 
@@ -41,12 +39,10 @@ export const RoutineCard = ({
   simpleData,
   isCommunityRoutine = false,
   isSavedCommunityRoutine = false,
-  onStart,
   onViewRoutine,
   onEdit,
   onDelete,
   onSave,
-  onMarkCompleted,
   className = ""
 }: RoutineCardProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -223,19 +219,6 @@ export const RoutineCard = ({
       {/* Action Buttons */}
       <div className="space-y-3">
         <Button
-          isWhite={true}
-          isWidthFull={true}
-          icon={<LuPlay size={16} />}
-          iconPosition={false}
-          action={onStart}
-          mobileHeight="h-10"
-          mdHeight="h-7"
-          lgHeight="h-7"
-        >
-          Iniciar rutina
-        </Button>
-        
-        <Button
           isWhite={false}
           isWidthFull={true}
           action={onViewRoutine}
@@ -245,22 +228,6 @@ export const RoutineCard = ({
         >
           Ver rutina
         </Button>
-
-        {/* Botón de marcar como completada (solo para rutinas propias) - DESPUÉS de Ver rutina */}
-        {!isCommunityRoutine && onMarkCompleted && (
-          <Button
-            isWhite={false}
-            isWidthFull={true}
-            icon={<LuCheck size={16} />}
-            iconPosition={false}
-            action={onMarkCompleted}
-            mobileHeight="h-10"
-            mdHeight="h-7"
-            lgHeight="h-7"
-          >
-            Marcar como completada
-          </Button>
-        )}
       </div>
     </div>
   )

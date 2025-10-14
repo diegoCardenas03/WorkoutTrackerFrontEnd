@@ -9,7 +9,7 @@ import { NextSessionsCard } from "../components/calendar/cards/NextSessionsCard"
 import { RegisterSessionModal } from "../components/calendar/modals/RegisterSessionModal"
 import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../store"
-import { createAgendaItem, fetchAgenda, deleteAgendaItem, markAgendaCompleted, updateAgendaItem } from "../store/slices/agendaSlice"
+import { createAgendaItem, fetchAgenda, deleteAgendaItem, updateAgendaItem } from "../store/slices/agendaSlice"
 import { fetchRoutines } from "../store/slices/routineSlice"
 import type { AgendaRequestDTO } from "../types/agenda/AgendaRequestDTO"
 import type { AgendaResponseDTO } from "../types/agenda/AgendaResponseDTO"
@@ -20,7 +20,6 @@ import { useAuth0 } from "@auth0/auth0-react"
 import { Spinner } from "../components/Spinner"
 import { startRoutineFromDto } from "../store/slices/trainingSlice"
 import { useNavigate } from "react-router-dom"
-
 
 export const CalendarView = () => {
     const dispatch = useDispatch()
@@ -36,8 +35,6 @@ export const CalendarView = () => {
     const [toast, setToast] = useState({ open: false, type: 'success' as 'success' | 'error', message: '' })
     const [isCreating, setIsCreating] = useState(false)
     const [isUpdating, setIsUpdating] = useState(false)
-    const [isDeleting, setIsDeleting] = useState(false)
-    const [isCompleting, setIsCompleting] = useState(false)
     const [initialLoading, setInitialLoading] = useState(true)
     const workoutDates = useMemo(() => {
         return (agenda.items ?? []).map(i => new Date(i.startDate))
@@ -75,32 +72,178 @@ export const CalendarView = () => {
             })
 
             const routineId = Number(sessionData?.routineId ?? 0) || 0
-            const baseDate = sessionData?.date ?? (selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
-            const baseTime = sessionData?.time ?? '09:00'
-            const startDateISO = `${baseDate}T${baseTime}:00`
             
-            // ❌ NO enviar userId - el backend lo obtiene del JWT automáticamente
-            const payload: AgendaRequestDTO = {
-                startDate: startDateISO,
-                reminderMinutes: sessionData?.reminderEnabled ? Number(sessionData.reminderTime) : undefined,
-                comment: sessionData?.notes || undefined,
-                userId: 0, // El backend ignora este valor y usa el del JWT
-                routineId,
+            // Buscar la rutina para determinar su tipo
+            const routine = routines.find(r => r.id === routineId)
+            if (!routine) {
+                throw new Error('Rutina no encontrada')
             }
 
-            const result = await (dispatch as any)(createAgendaItem({ payload, token }))
+            const isWeeklyRoutine = routine.sessions.length > 1
             
-            if (result.type.includes('fulfilled')) {
-                setToast({ open: true, type: 'success', message: '✅ Entrenamiento programado exitosamente' })
-                setIsModalOpen(false)
-                // Recargar agenda
-                await (dispatch as any)(fetchAgenda(token))
+            const baseDate = sessionData?.date ?? (selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
+            const baseTime = sessionData?.time ?? '09:00'
+            
+            // Mapa de días de la semana
+            const dayOfWeekMap: Record<string, number> = {
+                'SUNDAY': 0,
+                'MONDAY': 1,
+                'TUESDAY': 2,
+                'WEDNESDAY': 3,
+                'THURSDAY': 4,
+                'FRIDAY': 5,
+                'SATURDAY': 6
+            }
+            
+            // Obtener el día de la semana de la fecha seleccionada
+            // Usar el constructor con año, mes, día para evitar problemas de zona horaria
+            const [year, month, day] = baseDate.split('-').map(Number)
+            const selectedDateObj = new Date(year, month - 1, day) // month es 0-indexed
+            const selectedDayOfWeek = selectedDateObj.getDay()
+            
+            // VALIDACIÓN 1: No permitir fechas pasadas
+            const today = new Date()
+            const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+            const selectedDateOnly = new Date(year, month - 1, day)
+            
+            if (selectedDateOnly < todayOnly) {
+                setToast({ 
+                    open: true, 
+                    type: 'error', 
+                    message: '⚠️ No puedes agendar rutinas en fechas pasadas' 
+                })
+                return
+            }
+            
+            // Obtener los días que tiene configurados la rutina
+            const routineDays = routine.sessions.map(s => dayOfWeekMap[s.dayOfWeek])
+            
+            // Ordenar los días para encontrar el primero de la semana
+            const sortedRoutineDays = [...routineDays].sort((a, b) => a - b)
+            const firstDayOfRoutine = sortedRoutineDays[0]
+            
+            console.log('🔍 Debug agendamiento:')
+            console.log('- Fecha seleccionada (string):', baseDate)
+            console.log('- Fecha como objeto:', selectedDateObj)
+            console.log('- Día de la semana (número):', selectedDayOfWeek)
+            console.log('- Día de la semana (nombre):', ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][selectedDayOfWeek])
+            console.log('- Días de la rutina:', routine.sessions.map(s => s.dayOfWeek))
+            console.log('- Días de la rutina (números):', routineDays)
+            console.log('- Es rutina semanal:', isWeeklyRoutine)
+            console.log('- Primer día de la rutina:', firstDayOfRoutine)
+            
+            // VALIDACIÓN 2: Para rutinas semanales, solo el primer día
+            if (isWeeklyRoutine) {
+                if (selectedDayOfWeek !== firstDayOfRoutine) {
+                    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+                    const firstDayName = dayNames[firstDayOfRoutine]
+                    
+                    setToast({ 
+                        open: true, 
+                        type: 'error', 
+                        message: `⚠️ Las rutinas semanales deben agendarse desde el primer día. Esta rutina inicia el ${firstDayName}` 
+                    })
+                    return
+                }
             } else {
-                throw new Error(result.error?.message || 'Error al crear agenda')
+                // VALIDACIÓN 3: Para rutinas simples, verificar el día correcto
+                if (!routineDays.includes(selectedDayOfWeek)) {
+                    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+                    const availableDays = routineDays.map(d => dayNames[d]).join(', ')
+                    
+                    setToast({ 
+                        open: true, 
+                        type: 'error', 
+                        message: `⚠️ Esta rutina solo está disponible para: ${availableDays}` 
+                    })
+                    return
+                }
+            }
+            
+            // Verificar si ya está agendada y no completada
+            // No permitir duplicados hasta que se complete la rutina actual
+            const hasIncompleteRoutine = (agenda.items ?? []).some(item => {
+                return item.routine?.id === routineId && !item.completed
+            })
+            
+            if (hasIncompleteRoutine) {
+                setToast({ 
+                    open: true, 
+                    type: 'error', 
+                    message: `⚠️ Ya tienes esta rutina agendada y pendiente. Complétala antes de volver a agendarla.` 
+                })
+                return
+            }
+            
+            if (isWeeklyRoutine) {
+                // Rutina semanal: crear un item de agenda por cada sesión en su día correspondiente
+                // Usar la fecha seleccionada para calcular la semana correcta
+                const currentWeekStart = new Date(year, month - 1, day)
+                currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay()) // Domingo de esa semana
+                
+                console.log('📅 Calculando fechas para rutina semanal:')
+                console.log('- Fecha seleccionada:', baseDate)
+                console.log('- Domingo de esa semana:', currentWeekStart.toISOString().split('T')[0])
+                
+                const agendaPromises = routine.sessions.map(session => {
+                    const dayIndex = dayOfWeekMap[session.dayOfWeek]
+                    // Crear fecha correctamente usando año, mes, día
+                    const sessionYear = currentWeekStart.getFullYear()
+                    const sessionMonth = currentWeekStart.getMonth()
+                    const sessionDay = currentWeekStart.getDate() + dayIndex
+                    const sessionDate = new Date(sessionYear, sessionMonth, sessionDay)
+                    
+                    const sessionDateISO = sessionDate.toISOString().split('T')[0]
+                    const startDateISO = `${sessionDateISO}T${baseTime}:00`
+                    
+                    console.log(`  - Sesión ${session.dayOfWeek} (${dayIndex}): ${sessionDateISO}`)
+                    
+                    const payload: AgendaRequestDTO = {
+                        startDate: startDateISO,
+                        reminderMinutes: sessionData?.reminderEnabled ? Number(sessionData.reminderTime) : undefined,
+                        comment: sessionData?.notes || undefined,
+                        userId: 0,
+                        routineId,
+                    }
+                    
+                    return (dispatch as any)(createAgendaItem({ payload, token }))
+                })
+                
+                const results = await Promise.all(agendaPromises)
+                const allSuccessful = results.every(r => r.type.includes('fulfilled'))
+                
+                if (allSuccessful) {
+                    setToast({ open: true, type: 'success', message: `✅ Rutina semanal programada (${routine.sessions.length} sesiones)` })
+                    setIsModalOpen(false)
+                    await (dispatch as any)(fetchAgenda(token))
+                } else {
+                    throw new Error('Error al crear algunas sesiones')
+                }
+            } else {
+                // Rutina simple: crear un solo item de agenda
+                const startDateISO = `${baseDate}T${baseTime}:00`
+                
+                const payload: AgendaRequestDTO = {
+                    startDate: startDateISO,
+                    reminderMinutes: sessionData?.reminderEnabled ? Number(sessionData.reminderTime) : undefined,
+                    comment: sessionData?.notes || undefined,
+                    userId: 0,
+                    routineId,
+                }
+
+                const result = await (dispatch as any)(createAgendaItem({ payload, token }))
+                
+                if (result.type.includes('fulfilled')) {
+                    setToast({ open: true, type: 'success', message: '✅ Entrenamiento programado exitosamente' })
+                    setIsModalOpen(false)
+                    await (dispatch as any)(fetchAgenda(token))
+                } else {
+                    throw new Error(result.error?.message || 'Error al crear agenda')
+                }
             }
         } catch (e: any) {
             console.error('Error al agendar entrenamiento:', e)
-            setToast({ open: true, type: 'error', message: '❌ Error al programar entrenamiento' })
+            setToast({ open: true, type: 'error', message: `❌ ${e.message || 'Error al programar entrenamiento'}` })
         } finally {
             setIsCreating(false)
         }
@@ -194,28 +337,6 @@ export const CalendarView = () => {
                                         setIsDetailsOpen(true)
                                     }
                                 }}
-                                onMarkComplete={async (id) => {
-                                    const item = (agenda.items ?? []).find(x => String(x.id) === id)
-                                    if (!item || item.completed) return
-                                    setIsCompleting(true)
-                                    try {
-                                        const token = await getAccessTokenSilently({
-                                            authorizationParams: {
-                                                audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-                                            }
-                                        })
-                                        const result = await (dispatch as any)(markAgendaCompleted({ id: item.id, token }))
-                                        if (result && result.payload) {
-                                            setSelectedItem(result.payload as AgendaResponseDTO)
-                                            setToast({ open: true, type: 'success', message: '✅ Sesión completada' })
-                                        }
-                                    } catch (e) {
-                                        console.error('Error al marcar completada:', e)
-                                        setToast({ open: true, type: 'error', message: '❌ Error al marcar como completada' })
-                                    } finally {
-                                        setIsCompleting(false)
-                                    }
-                                }}
                             />
                         )
                     })()}
@@ -259,7 +380,6 @@ export const CalendarView = () => {
                 onClose={() => setIsDetailsOpen(false)}
                 item={selectedItem}
                 onDelete={async (id) => {
-                    setIsDeleting(true)
                     try {
                         const token = await getAccessTokenSilently({
                             authorizationParams: {
@@ -276,28 +396,6 @@ export const CalendarView = () => {
                     } catch (e) {
                         console.error('Error al eliminar agenda:', e)
                         setToast({ open: true, type: 'error', message: '❌ Error al eliminar sesión' })
-                    } finally {
-                        setIsDeleting(false)
-                    }
-                }}
-                onMarkCompleted={async (id) => {
-                    setIsCompleting(true)
-                    try {
-                        const token = await getAccessTokenSilently({
-                            authorizationParams: {
-                                audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-                            }
-                        })
-                        const resultAction = await (dispatch as any)(markAgendaCompleted({ id, token }))
-                        if (resultAction && resultAction.payload) {
-                            setSelectedItem(resultAction.payload as AgendaResponseDTO)
-                            setToast({ open: true, type: 'success', message: '✅ Sesión marcada como completada' })
-                        }
-                    } catch (e) {
-                        console.error('Error al marcar completada:', e)
-                        setToast({ open: true, type: 'error', message: '❌ Error al marcar como completada' })
-                    } finally {
-                        setIsCompleting(false)
                     }
                 }}
                 onEdit={(id) => {
@@ -330,7 +428,6 @@ export const CalendarView = () => {
                     isOpen={isEditOpen}
                     onClose={() => setIsEditOpen(false)}
                     item={selectedItem}
-                    routinesOptions={routines.map(r => ({ value: String(r.id), label: r.name }))}
                     isLoading={isUpdating}
                     onSave={async (changes) => {
                         setIsUpdating(true)

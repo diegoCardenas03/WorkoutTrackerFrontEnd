@@ -16,16 +16,12 @@ import type { RutinaResponseDTO } from "../types/rutina/RutinaResponseDTO"
 import { useDispatch, useSelector } from "react-redux"
 import { fetchRoutines, updateRoutine, deleteRoutine, fetchSavedRoutines } from "../store/slices/routineSlice"
 import { fetchCategories } from "../store/slices/categorySlice"
-import { startRoutineFromDto } from "../store/slices/trainingSlice"
 import { savePublicRoutine } from "../store/slices/communitySlice"
 import { fetchAgenda } from "../store/slices/agendaSlice"
 import { useAuth0 } from "@auth0/auth0-react"
 import { Toast } from "../components/Toast"
 import type { RootState } from "../store"
 import { ConfirmModal } from "../components/ConfirmModal"
-import { RutinaService } from "../services/RutinaService"
-
-const rutinaService = new RutinaService()
 
 interface RoutineData {
     id: string
@@ -206,22 +202,6 @@ export const MyRoutinesView = () => {
         setSelectedRoutine(null)
     }
 
-    const handleStartRoutine = (routine: RoutineData) => {
-        // Si es semanal, abrir el modal para elegir día antes de iniciar
-        if (routine.isWeekly) {
-            setSelectedRoutine(routine)
-            setIsRoutineModalOpen(true)
-            return
-        }
-        // Buscar el DTO según el tipo de rutina
-        const dto = selectedType === "community"
-            ? (savedRoutinesFromStore ?? []).find(r => String(r.id) === routine.id)
-            : (routinesFromStore ?? []).find(r => String(r.id) === routine.id)
-        if (!dto) return
-        ;(dispatch as any)(startRoutineFromDto({ routine: dto }))
-        navigate('/training')
-    }
-
     const handleDeleteRoutine = async (routine: RoutineData) => {
         setRoutineToDelete(routine)
         setShowDeleteConfirm(true)
@@ -285,37 +265,6 @@ export const MyRoutinesView = () => {
         } catch (error: any) {
             console.error('Error al guardar/quitar rutina:', error)
             setToastMessage(error.message || 'Error al procesar la rutina. Inténtalo de nuevo.')
-            setShowErrorToast(true)
-        }
-    }
-
-    const handleMarkCompleted = async () => {
-        if (!selectedRoutine) return
-
-        try {
-            const token = await getAccessTokenSilently({
-                authorizationParams: {
-                    audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-                    scope: "openid profile email",
-                },
-            })
-
-            const routineId = Number(selectedRoutine.id)
-            
-            // El backend hace toggle (marca o desmarca)
-            const result = await rutinaService.toggleCompleteRoutine(token, routineId)
-            
-            // Determinar si se marcó o desmarcó basándose en el completedRoutines del usuario
-            const isMarked = result.user?.completedRoutines > 0
-            setToastMessage(isMarked ? '¡Rutina marcada como completada!' : 'Rutina desmarcada como completada')
-            setShowSuccessToast(true)
-            
-            // Cerrar el modal
-            handleCloseRoutineModal()
-            
-        } catch (error: any) {
-            console.error('❌ [MyRoutinesView] Error al marcar rutina como completada:', error)
-            setToastMessage(error.message || 'Error al marcar la rutina como completada.')
             setShowErrorToast(true)
         }
     }
@@ -400,6 +349,9 @@ export const MyRoutinesView = () => {
     const allRoutines: RoutineData[] = selectedType === "community" 
         ? (savedRoutinesFromStore ?? []).map(mapDtoToRoutine)
         : (routinesFromStore ?? []).map(mapDtoToRoutine)
+
+    // Total de rutinas del usuario (siempre mis rutinas, no comunidad)
+    const totalUserRoutines = (routinesFromStore ?? []).length
 
     // Construir datos completos para el modal desde el DTO original
     const buildRoutineModalData = (routine: RoutineData) => {
@@ -592,12 +544,7 @@ export const MyRoutinesView = () => {
                     <FeatureCard
                         icon={<LuTarget size={20} className="text-[#89B4DB]" />}
                         title="Total rutinas"
-                        value={allRoutines.length.toString()}
-                    />
-                    <FeatureCard
-                        icon={<LuTrendingUp size={20} className="text-[#49D56E]" />}
-                        title="Completadas este mes"
-                        value={stats.completedThisMonth.toString()}
+                        value={totalUserRoutines.toString()}
                     />
                 </div>
 
@@ -656,34 +603,10 @@ export const MyRoutinesView = () => {
                                     simpleData={routine.simpleData}
                                     isCommunityRoutine={selectedType === "community"}
                                     isSavedCommunityRoutine={selectedType === "community"}
-                                    onStart={() => handleStartRoutine(routine)}
                                     onViewRoutine={() => handleOpenRoutineModal(routine)}
                                     onEdit={selectedType === "community" ? undefined : () => prepareEditAndNavigate(routine)}
                                     onDelete={selectedType === "community" ? undefined : () => handleDeleteRoutine(routine)}
                                     onSave={selectedType === "community" ? () => handleSaveCommunityRoutine(routine) : undefined}
-                                    onMarkCompleted={selectedType === "community" ? undefined : async () => {
-                                        // Marcar como completada desde la card
-                                        try {
-                                            const token = await getAccessTokenSilently({
-                                                authorizationParams: {
-                                                    audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-                                                    scope: "openid profile email",
-                                                },
-                                            })
-
-                                            const routineId = Number(routine.id)
-                                            const result = await rutinaService.toggleCompleteRoutine(token, routineId)
-                                            
-                                            // Determinar si se marcó o desmarcó
-                                            const isMarked = result.user?.completedRoutines > 0
-                                            setToastMessage(isMarked ? '¡Rutina marcada como completada!' : 'Rutina desmarcada como completada')
-                                            setShowSuccessToast(true)
-                                        } catch (error: any) {
-                                            console.error('❌ Error:', error.message)
-                                            setToastMessage(error.message || 'Error al marcar la rutina.')
-                                            setShowErrorToast(true)
-                                        }
-                                    }}
                                 />
                             ))}
                         </div>
@@ -698,24 +621,10 @@ export const MyRoutinesView = () => {
                     routine={built.routineData}
                     exercisesByDay={built.exercisesByDayForModal}
                     exerciseDtos={built.exerciseDtos}
-                    onStart={(opts) => {
-                        if (selectedRoutine) {
-                            // Buscar el DTO según el tipo de rutina
-                            const dto = selectedType === "community"
-                                ? (savedRoutinesFromStore ?? []).find(r => String(r.id) === selectedRoutine.id)
-                                : (routinesFromStore ?? []).find(r => String(r.id) === selectedRoutine.id)
-                            if (dto) {
-                                ;(dispatch as any)(startRoutineFromDto({ routine: dto, dayOfWeek: opts?.dayOfWeek }))
-                                navigate('/training')
-                            }
-                        }
-                        handleCloseRoutineModal()
-                    }}
                     onEdit={() => {
                         handleCloseRoutineModal()
                         prepareEditAndNavigate(selectedRoutine)
                     }}
-                    onMarkCompleted={handleMarkCompleted}
                 />) })()}
             <ConfigRoutineModal
                 isOpen={isConfigRoutineModalOpen}

@@ -1,7 +1,6 @@
 
 import { IoCheckmarkCircle } from "react-icons/io5"
 import { LuDumbbell } from "react-icons/lu"
-import { Button } from "../../Button"
 
 interface Workout {
   id: string
@@ -16,10 +15,9 @@ interface TrainProgramedProps {
   selectedDate?: Date
   workouts?: Workout[]
   onSelect?: (id: string) => void
-  onMarkComplete?: (id: string) => void
 }
 
-export const TrainProgramed = ({ selectedDate, workouts = [], onSelect, onMarkComplete }: TrainProgramedProps) => {
+export const TrainProgramed = ({ selectedDate, workouts = [], onSelect }: TrainProgramedProps) => {
   
   const formatDate = (date: Date) => {
     const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
@@ -33,16 +31,6 @@ export const TrainProgramed = ({ selectedDate, workouts = [], onSelect, onMarkCo
   }
 
   const defaultDate = selectedDate || new Date()
-
-  // Verificar si la fecha seleccionada es hoy o pasado (para permitir completar)
-  const isDateTodayOrPast = () => {
-    const today = new Date()
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const selectedStart = new Date(defaultDate.getFullYear(), defaultDate.getMonth(), defaultDate.getDate())
-    return selectedStart <= todayStart
-  }
-
-  const canMarkComplete = isDateTodayOrPast()
 
   return (
     <div className="bg-tertiary rounded-lg border border-white/10 p-6 w-full ">
@@ -97,33 +85,9 @@ export const TrainProgramed = ({ selectedDate, workouts = [], onSelect, onMarkCo
                   )}
                 </div>
                 <div className="shrink-0">
-                  {!workout.isCompleted ? (
-                    canMarkComplete ? (
-                      <Button
-                        isWhite={true}
-                        isWidthFull={false}
-                        paddingLine="px-3"
-                        mdPaddingLine="md:px-3"
-                        lgPaddingLine="lg:px-3"
-                        mobileText="text-[12px]"
-                        mdHeight="h-9"
-                        lgHeight="h-9"
-                        action={(e?: any) => {
-                          // Evitar abrir detalles cuando se marca completada
-                          if (e && e.stopPropagation) e.stopPropagation()
-                          onMarkComplete && onMarkComplete(workout.id)
-                        }}
-                      >
-                        Marcar completada
-                      </Button>
-                    ) : (
-                      <span className="text-quaternary text-xs bg-quaternary/10 px-3 py-1.5 rounded">
-                        Programada
-                      </span>
-                    )
-                  ) : (
-                    <span className="text-green-400 text-xs">Completada</span>
-                  )}
+                  <span className="text-quaternary text-xs bg-quaternary/10 px-3 py-1.5 rounded">
+                    Programada
+                  </span>
                 </div>
               </div>
             </div>

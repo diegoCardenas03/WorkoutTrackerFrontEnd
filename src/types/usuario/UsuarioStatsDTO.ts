@@ -9,4 +9,5 @@ export interface UsuarioStatsDTO {
   savedRoutines: number;
   completedRoutines: number;
   favoriteExercises: number;
+  
 }

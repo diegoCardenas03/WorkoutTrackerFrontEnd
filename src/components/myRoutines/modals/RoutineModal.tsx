@@ -1,9 +1,8 @@
 import { IoClose } from "react-icons/io5"
-import { LuDumbbell, LuPlay, LuPencil, LuCheck } from "react-icons/lu"
+import { LuDumbbell, LuPencil } from "react-icons/lu"
 import { getTagStyles } from "../../../utils/getTagStyles"
 import { Button } from "../../Button"
 import { useState } from "react"
-import { DayOfWeek } from "../../../types/enums/DayOfWeek"
 import type { EjercicioResponseDTO } from "../../../types/ejercicio/EjercicioResponseDTO"
 import { ExerciseModal } from "../../catalog/modals/ExerciseModal"
 
@@ -42,9 +41,7 @@ interface RoutineModalProps {
       lastCompleted?: string
     }
   }
-  onStart?: (options?: { dayOfWeek?: DayOfWeek }) => void
   onEdit?: () => void
-  onMarkCompleted?: () => void
   exerciseDtos?: EjercicioResponseDTO[]
   // opcional: ejercicios agrupados por día (para rutinas semanales)
   exercisesByDay?: Record<string, Exercise[]>
@@ -54,9 +51,7 @@ export const RoutineModal = ({
   isOpen,
   onClose,
   routine,
-  onStart,
   onEdit,
-  onMarkCompleted,
   exerciseDtos,
   exercisesByDay
 }: RoutineModalProps) => {
@@ -96,18 +91,6 @@ export const RoutineModal = ({
     ?? availableDayLabels[0]
     ?? null
   const [selectedDay, setSelectedDay] = useState<string | null>(initialDay)
-  // helper para mapear etiqueta española a DayOfWeek enum
-  const mapSpanishToEnum = (label: string): DayOfWeek | undefined => {
-    const l = label.toLowerCase()
-    if (l.startsWith('lun')) return DayOfWeek.MONDAY
-    if (l.startsWith('mar')) return DayOfWeek.TUESDAY
-    if (l.startsWith('mié') || l.startsWith('mie')) return DayOfWeek.WEDNESDAY
-    if (l.startsWith('jue')) return DayOfWeek.THURSDAY
-    if (l.startsWith('vie')) return DayOfWeek.FRIDAY
-    if (l.startsWith('sáb') || l.startsWith('sab')) return DayOfWeek.SATURDAY
-    if (l.startsWith('dom')) return DayOfWeek.SUNDAY
-    return undefined
-  }
 
   const visibleExercises = exercisesByDay && selectedDay && exercisesByDay[selectedDay]?.length
     ? exercisesByDay[selectedDay]!
@@ -290,54 +273,17 @@ export const RoutineModal = ({
           </div>
         </div>
 
-        {/* Footer con botones */}
+        {/* Footer con botón de editar */}
         <div className="sticky bottom-0 rounded-b-lg p-6 pt-4 border-t border-white/10 bg-primary">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                iconPosition={false}
-                icon={<LuPlay size={16} />}
-                action={() => {
-                  if (onStart) {
-                    if (routine.isWeekly && selectedDay) {
-                      // intentar mapear selectedDay ya sea de exercisesByDay o etiqueta española
-                      const dayEnum = mapSpanishToEnum(selectedDay)
-                      try {
-                        // persistir el último día seleccionado por rutina
-                        window.localStorage.setItem(storageKey, selectedDay)
-                      } catch {}
-                      onStart({ dayOfWeek: dayEnum })
-                    } else {
-                      onStart()
-                    }
-                  }
-                }}
-                isWidthFull={true}
-              >
-                Iniciar rutina
-              </Button>
-
-              <Button
-                isWhite={false}
-                icon={<LuPencil size={16} />}
-                iconPosition={false}
-                action={onEdit}
-                isWidthFull={true}
-              >
-                Editar rutina
-              </Button>
-            </div>
-
-            <Button
-              isWhite={false}
-              icon={<LuCheck size={16} />}
-              iconPosition={false}
-              action={onMarkCompleted}
-              isWidthFull={true}
-            >
-              Marcar como completada
-            </Button>
-          </div>
+          <Button
+            isWhite={false}
+            icon={<LuPencil size={16} />}
+            iconPosition={false}
+            action={onEdit}
+            isWidthFull={true}
+          >
+            Editar rutina
+          </Button>
         </div>
       </div>
 

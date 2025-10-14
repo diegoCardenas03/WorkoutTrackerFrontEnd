@@ -82,7 +82,7 @@ export const ConfigRoutineModal = ({
   ]
 
   const handleSubmit = () => {
-    if (formData.name && formData.category && formData.difficulty) {
+    if (formData.name && formData.category && formData.difficulty && formData.description) {
       onContinueToSelection(formData)
     }
   }
@@ -175,7 +175,7 @@ export const ConfigRoutineModal = ({
           {/* Descripción */}
           <div>
             <label className="text-white text-sm font-medium block mb-2">
-              Descripción
+              Descripción <span className="text-red-400">*</span>
             </label>
             <textarea
               placeholder="Describe el objetivo y características de esta rutina..."
@@ -214,7 +214,7 @@ export const ConfigRoutineModal = ({
               isWhite={true}
               action={handleSubmit}
               isWidthFull={true}
-              isBlocked={!formData.name || !formData.category || !formData.difficulty}
+              isBlocked={!formData.name || !formData.category || !formData.difficulty || !formData.description}
               onlyMobileText
             >
               Continuar a selección de ejercicios

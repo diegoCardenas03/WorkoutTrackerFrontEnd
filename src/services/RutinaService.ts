@@ -179,4 +179,40 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
         console.log('✅ [RutinaService] Rutinas completadas:', data.length);
         return data;
     }
+
+    /**
+     * Completar una rutina (registra todas sus sesiones como completadas)
+     * POST /api/routines/{id}/complete
+     * 
+     * El backend verifica que todos los días de las sesiones hayan pasado antes de registrarlas.
+     * Úsalo cuando:
+     * - Se completa la única sesión de una rutina simple
+     * - Se completa la última sesión pendiente de una rutina semanal
+     * 
+     * @returns Lista de SesionCompletadaResponseDTO registradas
+     */
+    async completeRoutine(token: string, routineId: number): Promise<any[]> {
+        console.log(`🔵 POST /api/routines/${routineId}/complete`);
+        const url = `${this.baseUrl}/${routineId}/complete`
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        console.log(`📡 Response: ${response.status} ${response.ok ? 'OK' : 'ERROR'}`);
+
+        if (!response.ok) {
+            const error = await response.text();
+            console.error('❌ Error:', error);
+            throw new Error(error || 'Error al completar la rutina');
+        }
+
+        const data = await response.json();
+        console.log(`✅ Sesiones registradas como completadas:`, data.length);
+        return data;
+    }
 }

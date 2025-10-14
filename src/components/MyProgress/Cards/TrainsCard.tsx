@@ -1,16 +1,13 @@
 import { LuActivity } from "react-icons/lu"
-import { useSelector } from "react-redux"
-import type { RootState } from "../../../store"
 import { useMemo, useEffect, useState } from "react"
 import { useAuth0 } from "@auth0/auth0-react"
-import { RutinaService } from "../../../services/RutinaService"
+import { SesionCompletadaService } from "../../../services/SesionCompletadaService"
 
-const rutinaService = new RutinaService()
+const sesionCompletadaService = new SesionCompletadaService()
 
 export const TrainsCard = () => {
-  const agenda = useSelector((state: RootState) => state.agenda)
   const { getAccessTokenSilently } = useAuth0()
-  const [completedRoutinesCount, setCompletedRoutinesCount] = useState(0)
+  const [completedSessionsCount, setCompletedSessionsCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   
   // Obtener fecha del mes actual
@@ -18,19 +15,9 @@ export const TrainsCard = () => {
   const currentMonth = now.getMonth()
   const currentYear = now.getFullYear()
   
-  // Calcular entrenamientos completados del mes desde la agenda
-  const monthlyScheduledProgress = useMemo(() => {
-    return (agenda.items ?? []).filter(item => {
-      const itemDate = new Date(item.startDate)
-      return item.completed && 
-             itemDate.getMonth() === currentMonth && 
-             itemDate.getFullYear() === currentYear
-    }).length
-  }, [agenda.items, currentMonth, currentYear])
-  
-  // Cargar rutinas completadas del mes
+  // Cargar sesiones completadas del mes
   useEffect(() => {
-    const loadCompletedRoutines = async () => {
+    const loadCompletedSessions = async () => {
       try {
         const token = await getAccessTokenSilently({
           authorizationParams: {
@@ -38,24 +25,26 @@ export const TrainsCard = () => {
           },
         })
 
-        const allCompleted = await rutinaService.getCompletedRoutines(token)
+        const allSessions = await sesionCompletadaService.getAllCompletedSessions(token)
         
-        // Simplemente contar todas las rutinas completadas sin filtrar por fecha
-        // ya que el backend solo devuelve las del usuario
-        setCompletedRoutinesCount(allCompleted.length)
+        // Filtrar sesiones del mes actual
+        const monthlySessions = allSessions.filter(session => {
+          const sessionDate = new Date(session.sessionDate)
+          return sessionDate.getMonth() === currentMonth && 
+                 sessionDate.getFullYear() === currentYear
+        })
+        
+        setCompletedSessionsCount(monthlySessions.length)
       } catch (error) {
-        console.error('Error al cargar rutinas completadas:', error)
-        setCompletedRoutinesCount(0)
+        console.error('Error al cargar sesiones completadas:', error)
+        setCompletedSessionsCount(0)
       } finally {
         setIsLoading(false)
       }
     }
 
-    loadCompletedRoutines()
+    loadCompletedSessions()
   }, [getAccessTokenSilently, currentMonth, currentYear])
-  
-  // Total de rutinas completadas = desde agenda + adicionales
-  const totalCompletedTrainings = monthlyScheduledProgress + completedRoutinesCount
   
   if (isLoading) {
     return (
@@ -78,25 +67,13 @@ export const TrainsCard = () => {
       {/* Header con título y icono */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-quaternary text-[12px] md:text-sm font-light">Rutinas Completadas</h3>
+          <h3 className="text-quaternary text-[12px] md:text-sm font-light">Sesiones Completadas</h3>
           <div className="flex items-baseline gap-1">
-            <span className="md:text-[1.3em] lg:text-[1.5em] font-bold text-white">{totalCompletedTrainings}</span>
+            <span className="md:text-[1.3em] lg:text-[1.5em] font-bold text-white">{completedSessionsCount}</span>
           </div>
           <p className="text-quaternary font-light text-[10px] md:text-xs mt-1">
             este mes
           </p>
-          
-          {/* Detalles si hay datos */}
-          {(monthlyScheduledProgress > 0 || completedRoutinesCount > 0) && (
-            <div className="space-y-0.5 text-quaternary font-light text-[9px] md:text-[10px] mt-2">
-              {monthlyScheduledProgress > 0 && (
-                <p>• {monthlyScheduledProgress} desde agenda</p>
-              )}
-              {completedRoutinesCount > 0 && (
-                <p>• {completedRoutinesCount} adicionales</p>
-              )}
-            </div>
-          )}
         </div>
         <div className="text-blue-400">
           <LuActivity size={24} />
