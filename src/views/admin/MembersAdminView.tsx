@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { LuSearch, LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { MemberDataModal } from "../../components/admin/Members/MemberDataModal"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
@@ -7,6 +7,8 @@ import { Toast } from "../../components/Toast"
 import { usuarioService } from "../../services/UsuarioService"
 import type { UsuarioResponseDTO } from "../../types/usuario/UsuarioResponseDTO"
 import { useAuth0 } from "@auth0/auth0-react"
+import { AdminTableFilters } from "../../components/admin/AdminTableFilters"
+import { useAdminTableFilters } from "../../hooks/useAdminTableFilters"
 
 export const MembersAdminView = () => {
   const { getAccessTokenSilently } = useAuth0()
@@ -20,6 +22,19 @@ export const MembersAdminView = () => {
   const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [showErrorToast, setShowErrorToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
+
+  // Hook de filtros
+  const {
+    activeFilter,
+    setActiveFilter,
+    dateFilter,
+    setDateFilter,
+    sortOrder,
+    setSortOrder,
+    filteredAndSorted,
+    clearFilters,
+    hasActiveFilters
+  } = useAdminTableFilters(members)
 
   // Cargar usuarios
   useEffect(() => {
@@ -85,10 +100,14 @@ export const MembersAdminView = () => {
   }
 
   // Filtrar miembros por búsqueda
-  const filteredMembers = members.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredMembers = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+    if (!term) return filteredAndSorted
+    return filteredAndSorted.filter(member =>
+      member.name.toLowerCase().includes(term) ||
+      member.email.toLowerCase().includes(term)
+    )
+  }, [filteredAndSorted, searchTerm])
 
   // Paginación
   const itemsPerPage = 10
@@ -140,6 +159,22 @@ export const MembersAdminView = () => {
           <Spinner size="lg" message="Cargando usuarios..." />
         ) : (
           <>
+            {/* Filtros */}
+            <AdminTableFilters
+              config={{
+                showActiveFilter: true,
+                showDateFilters: true
+              }}
+              activeFilter={activeFilter}
+              onActiveFilterChange={setActiveFilter}
+              dateFilter={dateFilter}
+              onDateFilterChange={setDateFilter}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
+              onClearFilters={clearFilters}
+              hasActiveFilters={hasActiveFilters}
+            />
+
             {/* Search Bar */}
             <div className="mb-6">
           <div className="relative max-w-md">

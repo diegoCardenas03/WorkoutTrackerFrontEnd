@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight, LuPencil } from "react-icons/lu"
 import { Button } from "../../components/Button"
 import { EmployeeModal } from "../../components/admin/Employees/EmployeeModal"
@@ -10,6 +10,8 @@ import type { UsuarioResponseDTO } from "../../types/usuario/UsuarioResponseDTO"
 import type { SignupRequestDTO } from "../../types/usuario/auth0/SignupRequestDTO"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "../../hooks/useUser"
+import { AdminTableFilters } from "../../components/admin/AdminTableFilters"
+import { useAdminTableFilters } from "../../hooks/useAdminTableFilters"
 
 export const EmployeesAdminView = () => {
   const { getAccessTokenSilently } = useAuth0()
@@ -25,6 +27,19 @@ export const EmployeesAdminView = () => {
   const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [showErrorToast, setShowErrorToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
+  
+  // Hook de filtros
+  const {
+    activeFilter,
+    setActiveFilter,
+    dateFilter,
+    setDateFilter,
+    sortOrder,
+    setSortOrder,
+    filteredAndSorted,
+    clearFilters,
+    hasActiveFilters
+  } = useAdminTableFilters(employees)
 
   // Cargar empleados/admins
   useEffect(() => {
@@ -132,10 +147,14 @@ export const EmployeesAdminView = () => {
   }
 
   // Filtrar empleados por búsqueda
-  const filteredEmployees = employees.filter(employee =>
-    employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredEmployees = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+    if (!term) return filteredAndSorted
+    return filteredAndSorted.filter(employee =>
+      employee.name.toLowerCase().includes(term) ||
+      employee.email.toLowerCase().includes(term)
+    )
+  }, [filteredAndSorted, searchTerm])
 
   // Paginación
   const itemsPerPage = 10
@@ -198,6 +217,22 @@ export const EmployeesAdminView = () => {
           <Spinner size="lg" message="Cargando empleados..." />
         ) : (
           <>
+            {/* Filtros */}
+            <AdminTableFilters
+              config={{
+                showActiveFilter: true,
+                showDateFilters: true
+              }}
+              activeFilter={activeFilter}
+              onActiveFilterChange={setActiveFilter}
+              dateFilter={dateFilter}
+              onDateFilterChange={setDateFilter}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
+              onClearFilters={clearFilters}
+              hasActiveFilters={hasActiveFilters}
+            />
+
             {/* Search Bar */}
             <div className="mb-6">
           <div className="relative max-w-md">

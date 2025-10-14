@@ -12,6 +12,8 @@ import type { EjercicioRequestDTO } from "../../types/ejercicio/EjercicioRequest
 import { Toast } from "../../components/Toast"
 import { Spinner } from "../../components/Spinner"
 import { useAuth0 } from "@auth0/auth0-react"
+import { AdminTableFilters } from "../../components/admin/AdminTableFilters"
+import { useAdminTableFilters } from "../../hooks/useAdminTableFilters"
 
 
 interface Exercise {
@@ -27,12 +29,28 @@ export const ExercisesAdminView = () => {
   const dispatch = useDispatch()
   const { getAccessTokenSilently } = useAuth0()
   const { exercises, loading } = useSelector((s: RootState) => s.exercises)
+  const { equipments } = useSelector((s: RootState) => s.equipments)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const [editingDetails, setEditingDetails] = useState<any | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const [muscleFilter, setMuscleFilter] = useState<string>('all')
+  const [equipmentFilter, setEquipmentFilter] = useState<string>('all')
+  
+  // Hook de filtros
+  const {
+    activeFilter,
+    setActiveFilter,
+    dateFilter,
+    setDateFilter,
+    sortOrder,
+    setSortOrder,
+    filteredAndSorted,
+    clearFilters,
+    hasActiveFilters
+  } = useAdminTableFilters(exercises)
   
   useEffect(() => {
     const loadData = async () => {
@@ -55,12 +73,32 @@ export const ExercisesAdminView = () => {
   }, [dispatch, getAccessTokenSilently])
 
   const filtered = useMemo(() => {
+    let result = filteredAndSorted
+    
+    // Filtro por músculo objetivo
+    if (muscleFilter !== 'all') {
+      result = result.filter((e) => 
+        e.targetMuscles?.some(m => m.name.toLowerCase() === muscleFilter.toLowerCase())
+      )
+    }
+    
+    // Filtro por equipamiento
+    if (equipmentFilter !== 'all') {
+      result = result.filter((e) => 
+        e.equipment?.some(eq => eq.name.toLowerCase() === equipmentFilter.toLowerCase())
+      )
+    }
+    
+    // Filtro por búsqueda
     const term = searchTerm.trim().toLowerCase()
-    if (!term) return exercises
-    return exercises.filter((e) =>
-      e.name.toLowerCase().includes(term) || e.description?.toLowerCase().includes(term)
-    )
-  }, [exercises, searchTerm])
+    if (term) {
+      result = result.filter((e) =>
+        e.name.toLowerCase().includes(term) || e.description?.toLowerCase().includes(term)
+      )
+    }
+    
+    return result
+  }, [filteredAndSorted, searchTerm, muscleFilter, equipmentFilter])
 
   // Paginación
   const itemsPerPage = 10
@@ -238,6 +276,56 @@ export const ExercisesAdminView = () => {
             <Spinner size="lg" message="Cargando ejercicios..." />
           ) : (
             <>
+              {/* Filtros */}
+              <AdminTableFilters
+                config={{
+                  showActiveFilter: true,
+                  showDateFilters: true,
+                  customFilters: [
+                    {
+                      label: 'Músculo Objetivo',
+                      options: [
+                        { value: 'all', label: 'Todos los músculos' },
+                        ...Array.from(new Set(
+                          exercises.flatMap(e => e.targetMuscles?.map(m => m.name) || [])
+                        )).sort().map(muscle => ({ 
+                          value: muscle, 
+                          label: muscle 
+                        }))
+                      ],
+                      onChange: setMuscleFilter,
+                      value: muscleFilter
+                    },
+                    {
+                      label: 'Equipamiento',
+                      options: [
+                        { value: 'all', label: 'Todo el equipamiento' },
+                        ...equipments
+                          .filter(eq => eq.active !== false)
+                          .map(eq => ({ 
+                            value: eq.name, 
+                            label: eq.name 
+                          }))
+                      ],
+                      onChange: setEquipmentFilter,
+                      value: equipmentFilter
+                    }
+                  ]
+                }}
+                activeFilter={activeFilter}
+                onActiveFilterChange={setActiveFilter}
+                dateFilter={dateFilter}
+                onDateFilterChange={setDateFilter}
+                sortOrder={sortOrder}
+                onSortOrderChange={setSortOrder}
+                onClearFilters={() => {
+                  clearFilters()
+                  setMuscleFilter('all')
+                  setEquipmentFilter('all')
+                }}
+                hasActiveFilters={hasActiveFilters || muscleFilter !== 'all' || equipmentFilter !== 'all'}
+              />
+
               {/* Search Bar */}
               <div className="mb-6">
             <div className="relative max-w-md">

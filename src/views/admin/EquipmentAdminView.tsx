@@ -16,6 +16,8 @@ import type { EquipamientoRequestDTO } from "../../types/equipamiento/Equipamien
 import { Toast } from "../../components/Toast"
 import { Spinner } from "../../components/Spinner"
 import { useAuth0 } from "@auth0/auth0-react"
+import { AdminTableFilters } from "../../components/admin/AdminTableFilters"
+import { useAdminTableFilters } from "../../hooks/useAdminTableFilters"
 
 interface Equipment {
   id: string
@@ -34,6 +36,19 @@ export const EquipmentAdminView = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
+
+  // Hook de filtros
+  const {
+    activeFilter,
+    setActiveFilter,
+    dateFilter,
+    setDateFilter,
+    sortOrder,
+    setSortOrder,
+    filteredAndSorted,
+    clearFilters,
+    hasActiveFilters
+  } = useAdminTableFilters(equipments)
 
   useEffect(() => {
     const loadData = async () => {
@@ -54,9 +69,9 @@ export const EquipmentAdminView = () => {
 
   const filtered = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
-    if (!term) return equipments
-    return equipments.filter((e) => e.name.toLowerCase().includes(term))
-  }, [equipments, searchTerm])
+    if (!term) return filteredAndSorted
+    return filteredAndSorted.filter((e) => e.name.toLowerCase().includes(term))
+  }, [filteredAndSorted, searchTerm])
 
   // Paginación
   const itemsPerPage = 10
@@ -222,6 +237,22 @@ export const EquipmentAdminView = () => {
             <Spinner size="lg" message="Cargando equipamiento..." />
           ) : (
             <>
+              {/* Filtros */}
+              <AdminTableFilters
+                config={{
+                  showActiveFilter: true,
+                  showDateFilters: true
+                }}
+                activeFilter={activeFilter}
+                onActiveFilterChange={setActiveFilter}
+                dateFilter={dateFilter}
+                onDateFilterChange={setDateFilter}
+                sortOrder={sortOrder}
+                onSortOrderChange={setSortOrder}
+                onClearFilters={clearFilters}
+                hasActiveFilters={hasActiveFilters}
+              />
+
               {/* Search Bar */}
               <div className="mb-6">
             <div className="relative max-w-md">

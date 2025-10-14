@@ -11,6 +11,8 @@ import type { MusculoRequestDTO } from "../../types/musculo/MusculoRequestDTO"
 import { Toast } from "../../components/Toast"
 import { Spinner } from "../../components/Spinner"
 import { useAuth0 } from "@auth0/auth0-react"
+import { AdminTableFilters } from "../../components/admin/AdminTableFilters"
+import { useAdminTableFilters } from "../../hooks/useAdminTableFilters"
 
 interface Muscle {
   id: string
@@ -25,11 +27,26 @@ export const MusclesAdminView = () => {
   const dispatch = useDispatch()
   const { getAccessTokenSilently } = useAuth0()
   const { muscles, loading } = useSelector((s: RootState) => s.muscles)
+  const { muscleZones } = useSelector((s: RootState) => s.muscleZones)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMuscle, setEditingMuscle] = useState<Muscle | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const [muscleGroupFilter, setMuscleGroupFilter] = useState<string>('all')
+  
+  // Hook de filtros
+  const {
+    activeFilter,
+    setActiveFilter,
+    dateFilter,
+    setDateFilter,
+    sortOrder,
+    setSortOrder,
+    filteredAndSorted,
+    clearFilters,
+    hasActiveFilters
+  } = useAdminTableFilters(muscles)
 
   useEffect(() => {
     const loadData = async () => {
@@ -50,13 +67,26 @@ export const MusclesAdminView = () => {
   }, [dispatch, getAccessTokenSilently])
 
   const filtered = useMemo(() => {
+    let result = filteredAndSorted
+    
+    // Filtro por grupo muscular
+    if (muscleGroupFilter !== 'all') {
+      result = result.filter((m) => 
+        m.muscleGroup?.name?.toLowerCase() === muscleGroupFilter.toLowerCase()
+      )
+    }
+    
+    // Filtro por búsqueda
     const term = searchTerm.trim().toLowerCase()
-    if (!term) return muscles
-    return muscles.filter((m) =>
-      m.name.toLowerCase().includes(term) || 
-      m.muscleGroup?.name?.toLowerCase().includes(term)
-    )
-  }, [muscles, searchTerm])
+    if (term) {
+      result = result.filter((m) =>
+        m.name.toLowerCase().includes(term) || 
+        m.muscleGroup?.name?.toLowerCase().includes(term)
+      )
+    }
+    
+    return result
+  }, [filteredAndSorted, searchTerm, muscleGroupFilter])
 
   // Paginación
   const itemsPerPage = 10
@@ -200,6 +230,39 @@ export const MusclesAdminView = () => {
             <Spinner size="lg" message="Cargando músculos..." />
           ) : (
             <>
+              {/* Filtros */}
+              <AdminTableFilters
+                config={{
+                  showActiveFilter: true,
+                  showDateFilters: true,
+                  customFilters: [
+                    {
+                      label: 'Zona Muscular',
+                      options: [
+                        { value: 'all', label: 'Todas las zonas' },
+                        ...muscleZones.map(zone => ({ 
+                          value: zone.name, 
+                          label: zone.name 
+                        }))
+                      ],
+                      onChange: setMuscleGroupFilter,
+                      value: muscleGroupFilter
+                    }
+                  ]
+                }}
+                activeFilter={activeFilter}
+                onActiveFilterChange={setActiveFilter}
+                dateFilter={dateFilter}
+                onDateFilterChange={setDateFilter}
+                sortOrder={sortOrder}
+                onSortOrderChange={setSortOrder}
+                onClearFilters={() => {
+                  clearFilters()
+                  setMuscleGroupFilter('all')
+                }}
+                hasActiveFilters={hasActiveFilters || muscleGroupFilter !== 'all'}
+              />
+
               {/* Search Bar */}
               <div className="mb-6">
             <div className="relative max-w-md">

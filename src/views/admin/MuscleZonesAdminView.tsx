@@ -10,6 +10,8 @@ import type { ZonaMuscularRequestDTO } from "../../types/zonaMuscular/ZonaMuscul
 import { Toast } from "../../components/Toast"
 import { Spinner } from "../../components/Spinner"
 import { useAuth0 } from "@auth0/auth0-react"
+import { AdminTableFilters } from "../../components/admin/AdminTableFilters"
+import { useAdminTableFilters } from "../../hooks/useAdminTableFilters"
 
 interface MuscleZone {
   id: string
@@ -27,6 +29,19 @@ export const MuscleZonesAdminView = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+
+  // Hook de filtros
+  const {
+    activeFilter,
+    setActiveFilter,
+    dateFilter,
+    setDateFilter,
+    sortOrder,
+    setSortOrder,
+    filteredAndSorted,
+    clearFilters,
+    hasActiveFilters
+  } = useAdminTableFilters(muscleZones)
 
   useEffect(() => {
     const loadData = async () => {
@@ -47,9 +62,9 @@ export const MuscleZonesAdminView = () => {
 
   const filtered = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
-    if (!term) return muscleZones
-    return muscleZones.filter((z) => z.name.toLowerCase().includes(term))
-  }, [muscleZones, searchTerm])
+    if (!term) return filteredAndSorted
+    return filteredAndSorted.filter((z) => z.name.toLowerCase().includes(term))
+  }, [filteredAndSorted, searchTerm])
 
   // Paginación
   const itemsPerPage = 10
@@ -203,6 +218,22 @@ export const MuscleZonesAdminView = () => {
             <Spinner size="lg" message="Cargando zonas musculares..." />
           ) : (
             <>
+              {/* Filtros */}
+              <AdminTableFilters
+                config={{
+                  showActiveFilter: true,
+                  showDateFilters: true
+                }}
+                activeFilter={activeFilter}
+                onActiveFilterChange={setActiveFilter}
+                dateFilter={dateFilter}
+                onDateFilterChange={setDateFilter}
+                sortOrder={sortOrder}
+                onSortOrderChange={setSortOrder}
+                onClearFilters={clearFilters}
+                hasActiveFilters={hasActiveFilters}
+              />
+
               {/* Search Bar */}
               <div className="mb-6">
             <div className="relative max-w-md">
