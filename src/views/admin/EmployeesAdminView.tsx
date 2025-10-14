@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
-import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight, LuPencil } from "react-icons/lu"
+import { LuPlus, LuSearch, LuPencil } from "react-icons/lu"
 import { Button } from "../../components/Button"
+import { AdminTable, type Column } from "../../components/admin/AdminTable"
 import { EmployeeModal } from "../../components/admin/Employees/EmployeeModal"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 import { Spinner } from "../../components/Spinner"
@@ -146,6 +147,81 @@ export const EmployeesAdminView = () => {
     }
   }
 
+  // Definición de columnas para AdminTable
+  const columns: Column<UsuarioResponseDTO>[] = [
+    {
+      key: 'pictureUrl',
+      label: 'Imagen',
+      width: 'col-span-1',
+      render: (employee) => (
+        <img
+          src={employee.pictureUrl || 'https://cdn.auth0.com/avatars/default.png'}
+          alt={employee.name}
+          className="w-10 h-10 rounded-full object-cover"
+        />
+      )
+    },
+    {
+      key: 'name',
+      label: 'Nombre',
+      width: 'col-span-2',
+      render: (employee) => (
+        <p className="text-white text-sm font-medium">{employee.name}</p>
+      )
+    },
+    {
+      key: 'email',
+      label: 'Correo electrónico',
+      width: 'col-span-2',
+      render: (employee) => (
+        <p className="text-quaternary text-sm">{employee.email}</p>
+      )
+    },
+    {
+      key: 'role',
+      label: 'Rol',
+      width: 'col-span-1',
+      render: (employee) => (
+        <p className="text-white text-sm capitalize">{employee.role?.name || 'Admin'}</p>
+      )
+    },
+    {
+      key: 'active',
+      label: 'Estado',
+      width: 'col-span-1',
+      render: (employee) => (
+        <button
+          onClick={() => handleToggleStatus(employee.id)}
+          disabled={currentUser?.id === employee.id}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            employee.active ? 'bg-green-500' : 'bg-red-500'
+          } ${currentUser?.id === employee.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title={currentUser?.id === employee.id ? 'No puedes desactivar tu propio usuario' : ''}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              employee.active ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      width: 'col-span-1',
+      render: (employee) => (
+        <button
+          onClick={() => handleEditEmployee(employee)}
+          className="p-2 rounded-lg bg-itemsCard border border-white/20 text-quaternary hover:text-white hover:border-white/40 transition-colors"
+          title="Editar empleado"
+        >
+          <LuPencil size={16} />
+        </button>
+      )
+    }
+  ]
+
   // Filtrar empleados por búsqueda
   const filteredEmployees = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
@@ -248,131 +324,19 @@ export const EmployeesAdminView = () => {
         </div>
 
         {/* Table */}
-        <div className="bg-tertiary rounded-lg border border-white/20 overflow-hidden">
-          {/* Table Header */}
-          <div className="grid grid-cols-6 gap-4 p-4 border-b border-white/10 bg-itemsCard">
-            <div className="text-quaternary text-sm font-medium">Imagen</div>
-            <div className="text-quaternary text-sm font-medium">Nombre</div>
-            <div className="text-quaternary text-sm font-medium">Correo electrónico</div>
-            <div className="text-quaternary text-sm font-medium">Rol</div>
-            <div className="text-quaternary text-sm font-medium">Estado</div>
-            <div className="text-quaternary text-sm font-medium">Acciones</div>
-          </div>
-
-          {/* Table Rows */}
-          <div className="divide-y divide-white/10">
-            {paginatedEmployees.length > 0 ? (
-              paginatedEmployees.map((employee) => (
-                <div key={employee.id} className="grid grid-cols-6 gap-4 p-4 items-center">
-                  {/* Image */}
-                  <div>
-                    <img
-                      src={employee.pictureUrl || 'https://cdn.auth0.com/avatars/default.png'}
-                      alt={employee.name}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  </div>
-
-                  {/* Name */}
-                  <div>
-                    <p className="text-white text-sm font-medium">{employee.name}</p>
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <p className="text-quaternary text-sm">{employee.email}</p>
-                  </div>
-
-                  {/* Role */}
-                  <div>
-                    <p className="text-white text-sm capitalize">{employee.role?.name || 'Admin'}</p>
-                  </div>
-
-                  {/* Status Toggle */}
-                  <div>
-                    <button
-                      onClick={() => handleToggleStatus(employee.id)}
-                      disabled={currentUser?.id === employee.id}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        employee.active ? 'bg-green-500' : 'bg-red-500'
-                      } ${currentUser?.id === employee.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      title={currentUser?.id === employee.id ? 'No puedes desactivar tu propio usuario' : ''}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          employee.active ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  {/* Actions */}
-                  <div>
-                    <button
-                      onClick={() => handleEditEmployee(employee)}
-                      className="p-2 rounded-lg bg-itemsCard border border-white/20 text-quaternary hover:text-white hover:border-white/40 transition-colors"
-                      title="Editar empleado"
-                    >
-                      <LuPencil size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="p-8 text-center">
-                <p className="text-quaternary">
-                  {searchTerm ? `No se encontraron empleados con "${searchTerm}"` : 'No hay empleados registrados'}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center mt-6 gap-2">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <LuChevronLeft size={16} />
-            </button>
-            
-            <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                    currentPage === page
-                      ? 'bg-white text-black'
-                      : 'bg-tertiary border border-white/20 text-quaternary hover:text-white'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-            
-            <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <LuChevronRight size={16} />
-            </button>
-          </div>
-        )}
-
-        {/* Info de paginación */}
-        {filteredEmployees.length > 0 && (
-          <div className="text-center mt-4">
-            <p className="text-quaternary text-sm">
-              Mostrando {startIndex + 1} - {Math.min(endIndex, filteredEmployees.length)} de {filteredEmployees.length} empleado{filteredEmployees.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-        )}
+        <AdminTable
+          columns={columns}
+          data={paginatedEmployees}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={filteredEmployees.length}
+          itemName="empleado"
+          itemNamePlural="empleados"
+          emptyMessage={searchTerm ? `No se encontraron empleados con "${searchTerm}"` : 'No hay empleados registrados'}
+        />
           </>
         )}
       </div>

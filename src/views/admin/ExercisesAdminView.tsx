@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
-import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight } from "react-icons/lu"
+import { LuPlus, LuSearch } from "react-icons/lu"
 import { Button } from "../../components/Button"
+import { AdminTable, type Column } from "../../components/admin/AdminTable"
 import { ExerciseAdminModal } from "../../components/admin/Exercises/ExerciseAdminModal"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 import { useDispatch, useSelector } from "react-redux"
@@ -71,6 +72,71 @@ export const ExercisesAdminView = () => {
     }
     loadData()
   }, [dispatch, getAccessTokenSilently])
+
+  // Definición de columnas para AdminTable
+  const columns: Column<any>[] = [
+    {
+      key: 'name',
+      label: 'Nombre',
+      width: 'col-span-1',
+      render: (exercise) => (
+        <p className="text-white text-sm font-medium">{exercise.name}</p>
+      )
+    },
+    {
+      key: 'description',
+      label: 'Descripción',
+      width: 'col-span-1',
+      render: (exercise) => (
+        <p className="text-quaternary text-sm line-clamp-2">{exercise.description}</p>
+      )
+    },
+    {
+      key: 'targetZone',
+      label: 'Zona a trabajar',
+      width: 'col-span-1',
+      render: (exercise) => (
+        <p className="text-white text-sm">{exercise.targetMuscles?.map((m: any) => m.name).join(', ')}</p>
+      )
+    },
+    {
+      key: 'active',
+      label: 'Estado',
+      width: 'col-span-1',
+      render: (exercise) => (
+        <button
+          onClick={() => handleToggleActive(exercise.id, exercise.active)}
+          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            exercise.active
+              ? 'border-green-500 text-green-400 hover:bg-green-500/10'
+              : 'border-red-500 text-red-400 hover:bg-red-500/10'
+          }`}
+        >
+          {exercise.active ? 'Activo' : 'Inactivo'}
+        </button>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      width: 'col-span-1',
+      render: (exercise) => (
+        <button
+          onClick={() => handleEditExercise({
+            id: String(exercise.id),
+            image: '',
+            name: exercise.name,
+            description: exercise.description,
+            targetZone: exercise.targetMuscles?.map((m: any) => m.name).join(', ') ?? '',
+            status: exercise.active ? 'active' : 'inactive',
+          })}
+          className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+        >
+          Editar
+        </button>
+      )
+    }
+  ]
 
   const filtered = useMemo(() => {
     let result = filteredAndSorted
@@ -341,116 +407,18 @@ export const ExercisesAdminView = () => {
           </div>
 
           {/* Table */}
-          <div className="bg-tertiary rounded-lg border border-white/20 overflow-hidden">
-            {/* Table Header */}
-            <div className="grid grid-cols-5 gap-4 p-4 border-b border-white/10 bg-itemsCard">
-              <div className="text-quaternary text-sm font-medium">Nombre</div>
-              <div className="text-quaternary text-sm font-medium">Descripción</div>
-              <div className="text-quaternary text-sm font-medium">Zona a trabajar</div>
-              <div className="text-quaternary text-sm font-medium">Estado</div>
-              <div className="text-quaternary text-sm font-medium">Acciones</div>
-            </div>
-
-            {/* Table Rows */}
-            <div className="divide-y divide-white/10">
-              {paginated.length === 0 && (
-                <div className="p-6 text-quaternary text-sm">No hay ejercicios para mostrar.</div>
-              )}
-              {paginated.map((exercise) => (
-                <div key={exercise.id} className="grid grid-cols-5 gap-4 p-4 items-center">
-        
-                  {/* Name */}
-                  <div>
-                    <p className="text-white text-sm font-medium">{exercise.name}</p>
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <p className="text-quaternary text-sm line-clamp-2">{exercise.description}</p>
-                  </div>
-
-                  {/* Target Zone */}
-                  <div>
-                    <p className="text-white text-sm">{(exercise as any).targetMuscles?.map((m: any) => m.name).join(', ')}</p>
-                  </div>
-
-                  {/* Status Toggle */}
-                  <div>
-                    <button
-                      onClick={() => handleToggleActive(exercise.id, (exercise as any).active)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                        (exercise as any).active
-                          ? 'border-green-500 text-green-400 hover:bg-green-500/10'
-                          : 'border-red-500 text-red-400 hover:bg-red-500/10'
-                      }`}
-                    >
-                      {(exercise as any).active ? 'Activo' : 'Inactivo'}
-                    </button>
-                  </div>
-
-                  {/* Actions */}
-                  <div>
-                    <button
-                      onClick={() => handleEditExercise({
-                        id: String(exercise.id),
-                        image: '',
-                        name: exercise.name,
-                        description: exercise.description,
-                        targetZone: (exercise as any).targetMuscles?.map((m: any) => m.name).join(', ') ?? '',
-                        status: (exercise as any).active ? 'active' : 'inactive',
-                      })}
-                      className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
-                    >
-                      Editar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex flex-col items-center mt-6 gap-3">
-            {totalPages > 1 && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <LuChevronLeft size={16} />
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                        currentPage === page
-                          ? 'bg-white text-black'
-                          : 'bg-tertiary border border-white/20 text-quaternary hover:text-white'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <LuChevronRight size={16} />
-                </button>
-              </div>
-            )}
-
-            <p className="text-sm text-quaternary">
-              Mostrando {startIndex + 1} - {Math.min(endIndex, filtered.length)} de {filtered.length} ejercicio(s)
-            </p>
-          </div>
+          <AdminTable
+            columns={columns}
+            data={paginated}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            totalItems={filtered.length}
+            itemName="ejercicio"
+            itemNamePlural="ejercicios"
+          />
             </>
           )}
         </div>

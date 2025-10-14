@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
-import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight } from "react-icons/lu"
+import { LuPlus, LuSearch } from "react-icons/lu"
 import { Button } from "../../components/Button"
+import { AdminTable, type Column } from "../../components/admin/AdminTable"
 import { MuscleAdminModal } from "../../components/admin/Muscles/MuscleAdminModal"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 import { useDispatch, useSelector } from "react-redux"
@@ -65,6 +66,63 @@ export const MusclesAdminView = () => {
     }
     loadData()
   }, [dispatch, getAccessTokenSilently])
+
+  // Definición de columnas para AdminTable
+  const columns: Column<any>[] = [
+    {
+      key: 'name',
+      label: 'Nombre',
+      width: 'col-span-1',
+      render: (muscle) => (
+        <p className="text-white text-sm font-medium">{muscle.name}</p>
+      )
+    },
+    {
+      key: 'muscleGroup',
+      label: 'Zona Muscular',
+      width: 'col-span-1',
+      render: (muscle) => (
+        <p className="text-quaternary text-sm">{muscle.muscleGroup?.name || 'N/A'}</p>
+      )
+    },
+    {
+      key: 'active',
+      label: 'Estado',
+      width: 'col-span-1',
+      render: (muscle) => (
+        <button
+          onClick={() => handleToggleActive(muscle.id, muscle.active)}
+          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            muscle.active
+              ? 'border-green-500 text-green-400 hover:bg-green-500/10'
+              : 'border-red-500 text-red-400 hover:bg-red-500/10'
+          }`}
+        >
+          {muscle.active ? 'Activo' : 'Inactivo'}
+        </button>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      width: 'col-span-1',
+      render: (muscle) => (
+        <button
+          onClick={() => handleEditMuscle({
+            id: String(muscle.id),
+            name: muscle.name,
+            muscleGroupId: muscle.muscleGroup?.id || 0,
+            muscleGroupName: muscle.muscleGroup?.name || '',
+            active: muscle.active,
+            imageUrl: muscle.imageUrl,
+          })}
+          className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+        >
+          Editar
+        </button>
+      )
+    }
+  ]
 
   const filtered = useMemo(() => {
     let result = filteredAndSorted
@@ -278,112 +336,18 @@ export const MusclesAdminView = () => {
           </div>
 
           {/* Table */}
-          <div className="bg-tertiary rounded-lg border border-white/20 overflow-hidden">
-            {/* Table Header */}
-            <div className="grid grid-cols-4 gap-4 p-4 border-b border-white/10 bg-itemsCard">
-              <div className="text-quaternary text-sm font-medium">Nombre</div>
-              <div className="text-quaternary text-sm font-medium">Zona Muscular</div>
-              <div className="text-quaternary text-sm font-medium">Estado</div>
-              <div className="text-quaternary text-sm font-medium">Acciones</div>
-            </div>
-
-            {/* Table Rows */}
-            <div className="divide-y divide-white/10">
-              {paginated.length === 0 && (
-                <div className="p-6 text-quaternary text-sm">No hay músculos para mostrar.</div>
-              )}
-              {paginated.map((muscle) => (
-                <div key={muscle.id} className="grid grid-cols-4 gap-4 p-4 items-center">
-                  {/* Name */}
-                  <div>
-                    <p className="text-white text-sm font-medium">{muscle.name}</p>
-                  </div>
-
-                  {/* Muscle Group */}
-                  <div>
-                    <p className="text-quaternary text-sm">{muscle.muscleGroup?.name || 'N/A'}</p>
-                  </div>
-
-                  {/* Status Toggle */}
-                  <div>
-                    <button
-                      onClick={() => handleToggleActive(muscle.id, muscle.active)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                        muscle.active
-                          ? 'border-green-500 text-green-400 hover:bg-green-500/10'
-                          : 'border-red-500 text-red-400 hover:bg-red-500/10'
-                      }`}
-                    >
-                      {muscle.active ? 'Activo' : 'Inactivo'}
-                    </button>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleEditMuscle({
-                        id: String(muscle.id),
-                        name: muscle.name,
-                        muscleGroupId: muscle.muscleGroup?.id || 0,
-                        muscleGroupName: muscle.muscleGroup?.name || '',
-                        active: muscle.active,
-                        imageUrl: muscle.imageUrl,
-                      })}
-                      className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
-                    >
-                      Editar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center mt-6 gap-2">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <LuChevronLeft size={16} />
-              </button>
-
-              <div className="flex items-center gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                      currentPage === page
-                        ? 'bg-white text-black'
-                        : 'bg-tertiary border border-white/20 text-quaternary hover:text-white'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <LuChevronRight size={16} />
-              </button>
-            </div>
-          )}
-
-          {/* Info de paginación */}
-          {filtered.length > 0 && (
-            <div className="text-center mt-4">
-              <p className="text-quaternary text-sm">
-                Mostrando {startIndex + 1} - {Math.min(endIndex, filtered.length)} de {filtered.length} músculo{filtered.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-          )}
+          <AdminTable
+            columns={columns}
+            data={paginated}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            totalItems={filtered.length}
+            itemName="músculo"
+            itemNamePlural="músculos"
+          />
             </>
           )}
         </div>

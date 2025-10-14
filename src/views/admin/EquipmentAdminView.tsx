@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
-import { LuPlus, LuSearch, LuChevronLeft, LuChevronRight, LuTrash2 } from "react-icons/lu"
+import { LuPlus, LuSearch, LuTrash2 } from "react-icons/lu"
 import { Button } from "../../components/Button"
+import { AdminTable, type Column } from "../../components/admin/AdminTable"
 import { EquipmentAdminModal } from "../../components/admin/Equipment/EquipmentAdminModal"
 import { AdminLayout } from "../../layouts/admin/AdminLayout"
 import { useDispatch, useSelector } from "react-redux"
@@ -66,6 +67,80 @@ export const EquipmentAdminView = () => {
     }
     loadData()
   }, [dispatch, getAccessTokenSilently])
+
+  // Definición de columnas para AdminTable
+  const columns: Column<any>[] = [
+    {
+      key: 'name',
+      label: 'Nombre',
+      width: 'col-span-2',
+      render: (equipment) => (
+        <p className="text-white text-sm font-medium">{equipment.name}</p>
+      )
+    },
+    {
+      key: 'active',
+      label: 'Estado',
+      width: 'col-span-1',
+      render: (equipment) => (
+        <button
+          onClick={() => handleToggleActive(equipment.id, equipment.active)}
+          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            equipment.active
+              ? 'border-green-500 text-green-400 hover:bg-green-500/10'
+              : 'border-red-500 text-red-400 hover:bg-red-500/10'
+          }`}
+        >
+          {equipment.active ? 'Activo' : 'Inactivo'}
+        </button>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      width: 'col-span-1',
+      render: (equipment) => (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => handleEditEquipment({
+              id: String(equipment.id),
+              name: equipment.name,
+              active: equipment.active,
+              imageUrl: equipment.imageUrl,
+            })}
+            className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+          >
+            Editar
+          </button>
+          
+          {showDeleteConfirm === equipment.id ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleDeleteEquipment(equipment.id)}
+                className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors"
+              >
+                Confirmar
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="text-quaternary hover:text-white text-xs font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowDeleteConfirm(equipment.id)}
+              className="text-red-400 hover:text-red-300 transition-colors"
+              title="Eliminar permanentemente"
+            >
+              <LuTrash2 size={16} />
+            </button>
+          )}
+        </div>
+      )
+    }
+  ]
 
   const filtered = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
@@ -268,129 +343,17 @@ export const EquipmentAdminView = () => {
           </div>
 
           {/* Table */}
-          <div className="bg-tertiary rounded-lg border border-white/20 overflow-hidden">
-            {/* Table Header */}
-            <div className="grid grid-cols-4 gap-4 p-4 border-b border-white/10 bg-itemsCard">
-              <div className="text-quaternary text-sm font-medium col-span-2">Nombre</div>
-              <div className="text-quaternary text-sm font-medium">Estado</div>
-              <div className="text-quaternary text-sm font-medium">Acciones</div>
-            </div>
-
-            {/* Table Rows */}
-            <div className="divide-y divide-white/10">
-              {paginated.length === 0 && (
-                <div className="p-6 text-quaternary text-sm">No hay equipamiento para mostrar.</div>
-              )}
-              {paginated.map((equipment) => (
-                <div key={equipment.id} className="grid grid-cols-4 gap-4 p-4 items-center">
-                  {/* Name */}
-                  <div className="col-span-2">
-                    <p className="text-white text-sm font-medium">{equipment.name}</p>
-                  </div>
-
-                  {/* Status Toggle */}
-                  <div>
-                    <button
-                      onClick={() => handleToggleActive(equipment.id, equipment.active)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                        equipment.active
-                          ? 'border-green-500 text-green-400 hover:bg-green-500/10'
-                          : 'border-red-500 text-red-400 hover:bg-red-500/10'
-                      }`}
-                    >
-                      {equipment.active ? 'Activo' : 'Inactivo'}
-                    </button>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleEditEquipment({
-                        id: String(equipment.id),
-                        name: equipment.name,
-                        active: equipment.active,
-                        imageUrl: equipment.imageUrl,
-                      })}
-                      className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
-                    >
-                      Editar
-                    </button>
-                    
-                    {showDeleteConfirm === equipment.id ? (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleDeleteEquipment(equipment.id)}
-                          className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors"
-                        >
-                          Confirmar
-                        </button>
-                        <button
-                          onClick={() => setShowDeleteConfirm(null)}
-                          className="text-quaternary hover:text-white text-xs font-medium transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setShowDeleteConfirm(equipment.id)}
-                        className="text-red-400 hover:text-red-300 transition-colors"
-                        title="Eliminar permanentemente"
-                      >
-                        <LuTrash2 size={16} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center mt-6 gap-2">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <LuChevronLeft size={16} />
-              </button>
-
-              <div className="flex items-center gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                      currentPage === page
-                        ? 'bg-white text-black'
-                        : 'bg-tertiary border border-white/20 text-quaternary hover:text-white'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-tertiary border border-white/20 text-quaternary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <LuChevronRight size={16} />
-              </button>
-            </div>
-          )}
-
-          {/* Info de paginación */}
-          {filtered.length > 0 && (
-            <div className="text-center mt-4">
-              <p className="text-quaternary text-sm">
-                Mostrando {startIndex + 1} - {Math.min(endIndex, filtered.length)} de {filtered.length} equipamiento{filtered.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-          )}
+          <AdminTable
+            columns={columns}
+            data={paginated}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            totalItems={filtered.length}
+            itemName="equipamiento"
+          />
             </>
           )}
         </div>
