@@ -47,46 +47,87 @@ export const CalendarView = () => {
             'FRIDAY': 5,
             'SATURDAY': 6
         }
-
-        // Para cada item de agenda, destaca todos los días correspondientes a sus sesiones
+        
+        console.log('🔍 Calculando días a destacar en calendario...')
+        
+        // SOLUCIÓN: Obtener información completa de rutinas para cada agenda
+        // Para cada agenda, buscamos la rutina completa en el store
         const agendaItems = agenda.items ?? []
-        agendaItems.forEach(item => {
-            // Si la rutina tiene sesiones (rutina semanal)
-            if (item.routine?.sessions?.length) {
-                // Obtener la fecha base desde startDate
-                const startDate = new Date(item.startDate)
-                const startDateDay = startDate.getDay() // 0-6 (domingo a sábado)
+        
+        agendaItems.forEach((agendaItem, index) => {
+            console.log(`\n📝 Agenda #${index + 1}: ${agendaItem.id}`)
+            console.log(`- Fecha de inicio: ${new Date(agendaItem.startDate).toLocaleDateString()}`)
+            
+            // Obtener el ID de la rutina desde el item de agenda
+            const routineId = agendaItem.routine?.id
+            if (!routineId) {
+                console.log('❌ No se encontró ID de rutina en este item de agenda')
+                return
+            }
+            
+            // Buscar la rutina completa en el store para asegurar que tenemos todos los datos
+            const fullRoutine = routines.find(r => r.id === routineId)
+            
+            if (!fullRoutine) {
+                console.log(`❌ No se encontró la rutina ID=${routineId} en el store`)
+                // Fallback: usar solo la fecha de la agenda
+                highlightedDates.push(new Date(agendaItem.startDate))
+                return
+            }
+            
+            console.log(`✅ Rutina encontrada: ${fullRoutine.name} (ID=${fullRoutine.id})`)
+            console.log(`- Sesiones en la rutina: ${fullRoutine.sessions?.length || 0}`)
+            
+            // Si la rutina tiene sesiones, procesar cada una para destacar sus días
+            if (fullRoutine.sessions?.length) {
+                // Fecha base para calcular los días
+                const startDate = new Date(agendaItem.startDate)
+                const startDateDay = startDate.getDay() // Día de la semana (0-6)
                 
-                // Destacar todos los días de la semana correspondientes a las sesiones
-                // para un periodo de 12 semanas (3 meses)
-                const weeks = 12
-                const daysInMs = 24 * 60 * 60 * 1000
+                console.log(`- Fecha inicio: ${startDate.toLocaleDateString()} (${['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][startDateDay]})`)
                 
-                // Para cada sesión, destaca su día de la semana correspondiente
-                item.routine.sessions.forEach(session => {
-                    // Obtener el día de la semana de esta sesión (0-6)
-                    const sessionDay = dayOfWeekMap[session.dayOfWeek]
-                    if (sessionDay === undefined) return
+                // Para cada sesión, destacar su día de la semana correspondiente
+                fullRoutine.sessions.forEach(session => {
+                    // Obtener el día de la semana para esta sesión
+                    const dayOfWeek = session.dayOfWeek
+                    const sessionDay = dayOfWeekMap[dayOfWeek]
                     
-                    // Calcular el desplazamiento para llegar al primer día de esta sesión
-                    // a partir de la fecha de inicio
+                    if (sessionDay === undefined) {
+                        console.log(`❌ Día de semana no reconocido: ${dayOfWeek}`)
+                        return
+                    }
+                    
+                    console.log(`- Procesando sesión: ${session.name} (${dayOfWeek}) - día ${sessionDay}`)
+                    
+                    // Calcular el desplazamiento desde el día de inicio hasta el día de la sesión
                     const daysDiff = (sessionDay - startDateDay + 7) % 7
+                    const daysInMs = 24 * 60 * 60 * 1000
+                    
+                    // Obtener la primera fecha para esta sesión
                     const firstSessionDate = new Date(startDate.getTime() + daysDiff * daysInMs)
                     
-                    // Destacar este día para todas las semanas
-                    for (let week = 0; week < weeks; week++) {
-                        const date = new Date(firstSessionDate.getTime() + (week * 7 * daysInMs))
-                        highlightedDates.push(date)
+                    console.log(`  Primera fecha: ${firstSessionDate.toLocaleDateString()} (${['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][firstSessionDate.getDay()]})`)
+                    
+                    // Generar fechas para 12 semanas (3 meses)
+                    for (let week = 0; week < 12; week++) {
+                        const sessionDate = new Date(firstSessionDate.getTime() + week * 7 * daysInMs)
+                        highlightedDates.push(sessionDate)
+                        
+                        if (week < 3) { // Mostrar solo las primeras 3 para no sobrecargar la consola
+                            console.log(`  Semana ${week + 1}: ${sessionDate.toLocaleDateString()}`)
+                        }
                     }
                 })
             } else {
-                // Si no tiene sesiones o es una rutina simple, solo destaca la fecha original
-                highlightedDates.push(new Date(item.startDate))
+                // Si es una rutina sin sesiones, solo destacar la fecha original
+                console.log(`- Rutina simple: destacando solo fecha original`)
+                highlightedDates.push(new Date(agendaItem.startDate))
             }
         })
         
+        console.log(`📊 Total de fechas destacadas: ${highlightedDates.length}`)
         return highlightedDates
-    }, [agenda.items])
+    }, [agenda.items, routines])
 
     const nextSessions = useMemo(() => {
         const now = new Date()
@@ -286,6 +327,29 @@ export const CalendarView = () => {
             agenda.items.forEach((item, index) => {
                 console.log(`📌 Agenda item #${index + 1}:`)
                 console.log(item)
+                console.log('- ID:', item.id)
+                console.log('- Rutina:', item.routine?.name)
+                console.log('- Fecha inicio:', new Date(item.startDate).toLocaleDateString())
+                
+                // Detalles adicionales sobre la rutina y sus sesiones
+                if (item.routine) {
+                    console.log('- Datos de la rutina:')
+                    console.log('  - ID:', item.routine.id)
+                    console.log('  - Nombre:', item.routine.name)
+                    console.log('  - Sesiones disponibles:', (item.routine.sessions || []).length)
+                    
+                    if (item.routine.sessions && item.routine.sessions.length > 0) {
+                        console.log('  - Lista de sesiones:')
+                        item.routine.sessions.forEach((session, sIndex) => {
+                            console.log(`    - Sesión #${sIndex + 1}: ${session.name} (${session.dayOfWeek})`)
+                        })
+                    } else {
+                        console.log('  ⚠️ No hay sesiones en la rutina o no se han cargado correctamente')
+                    }
+                } else {
+                    console.log('⚠️ No hay datos de rutina disponibles')
+                }
+                
                 console.log('----------------------------------------')
             })
             console.log('========================================')

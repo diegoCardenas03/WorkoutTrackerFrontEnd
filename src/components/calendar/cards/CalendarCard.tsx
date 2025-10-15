@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { IoChevronBack, IoChevronForward } from "react-icons/io5"
 import { HiCalendarDays } from "react-icons/hi2"
 
@@ -79,6 +79,36 @@ export const Calendar = ({
            selectedDate.getMonth() === currentMonth && 
            selectedDate.getFullYear() === currentYear
   }
+  
+  // Añade un useEffect para depurar las fechas destacadas
+  useEffect(() => {
+    if (highlightedDates.length > 0) {
+      // Obtener solo las fechas del mes actual
+      const relevantDates = highlightedDates.filter(date => 
+        date.getMonth() === currentMonth && 
+        date.getFullYear() === currentYear
+      )
+      
+      if (relevantDates.length > 0) {
+        console.log('🔎 CalendarCard - Fechas destacadas para', monthNames[currentMonth], currentYear, ':')
+        console.log('- Total fechas recibidas:', highlightedDates.length)
+        console.log('- Fechas relevantes para este mes:', relevantDates.length)
+        
+        // Agrupar fechas por día para ver qué días se destacarán
+        const dayGroups: Record<number, Date[]> = {}
+        relevantDates.forEach(date => {
+          const day = date.getDate()
+          if (!dayGroups[day]) dayGroups[day] = []
+          dayGroups[day].push(date)
+        })
+        
+        console.log('- Días que se destacarán:', Object.keys(dayGroups).length)
+        console.log('- Días destacados:', Object.keys(dayGroups).join(', '))
+      } else {
+        console.log('🔎 CalendarCard - No hay fechas destacadas para', monthNames[currentMonth], currentYear)
+      }
+    }
+  }, [highlightedDates, currentMonth, currentYear, monthNames])
   
   const isHighlighted = (day: number) => {
     return highlightedDates.some(date => 
