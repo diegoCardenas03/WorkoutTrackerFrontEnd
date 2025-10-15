@@ -621,7 +621,7 @@ export const MyRoutinesView = () => {
                     routine={built.routineData}
                     exercisesByDay={built.exercisesByDayForModal}
                     exerciseDtos={built.exerciseDtos}
-                    onEdit={() => {
+                    onEdit={selectedType === "community" ? undefined : () => {
                         handleCloseRoutineModal()
                         prepareEditAndNavigate(selectedRoutine)
                     }}

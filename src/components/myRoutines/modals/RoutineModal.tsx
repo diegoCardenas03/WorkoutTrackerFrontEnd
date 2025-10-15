@@ -273,18 +273,20 @@ export const RoutineModal = ({
           </div>
         </div>
 
-        {/* Footer con botón de editar */}
-        <div className="sticky bottom-0 rounded-b-lg p-6 pt-4 border-t border-white/10 bg-primary">
-          <Button
-            isWhite={false}
-            icon={<LuPencil size={16} />}
-            iconPosition={false}
-            action={onEdit}
-            isWidthFull={true}
-          >
-            Editar rutina
-          </Button>
-        </div>
+        {/* Footer con botón de editar (solo si onEdit está definido) */}
+        {onEdit && (
+          <div className="sticky bottom-0 rounded-b-lg p-6 pt-4 border-t border-white/10 bg-primary">
+            <Button
+              isWhite={false}
+              icon={<LuPencil size={16} />}
+              iconPosition={false}
+              action={onEdit}
+              isWidthFull={true}
+            >
+              Editar rutina
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Exercise Modal overlayed from routine modal */}
