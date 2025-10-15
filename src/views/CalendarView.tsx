@@ -31,6 +31,7 @@ export const CalendarView = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<AgendaResponseDTO | null>(null);
+    const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [toast, setToast] = useState({ open: false, type: 'success' as 'success' | 'error', message: '' })
     const [isCreating, setIsCreating] = useState(false)
@@ -338,7 +339,7 @@ export const CalendarView = () => {
     return (
         <PrivateLayout>
             <SubHeader nameView="Agenda" description="Planifica y gestiona tus entrenamientos">
-                <Button customWidthMobile="w-[10.7em]" mobileText="text-[11px]" iconPosition={false} icon={<LuPlus />} action={handleToggleModal}>Nuevo entrenamiento</Button>
+                <Button customWidthMobile="w-[10.7em]" mobileText="text-[11px]" iconPosition={false} icon={<LuPlus />} action={handleToggleModal}>Agendar rutina</Button>
             </SubHeader>
             <div className="mt-6 flex flex-col lg:flex-row justify-between gap-6">
                 <div className="lg:w-[27em] 2xl:w-[50em] ]">
@@ -382,7 +383,7 @@ export const CalendarView = () => {
                                         duration: 0,
                                         exercises: 0,
                                         isCompleted: agendaItem.completed,
-                                        time: '00:00',
+                                        time: '',
                                     })
                                 }
                                 return acc
@@ -394,12 +395,12 @@ export const CalendarView = () => {
                                     if (session.dayOfWeek === selectedDayName) {
                                         // Encontramos una sesión para este día de la semana
                                         acc.push({
-                                            id: String(agendaItem.id),
+                                            id: `${agendaItem.id}-${session.id}`, // Combinar agendaId y sessionId
                                             name: `${routine.name} - ${session.name}`,
                                             duration: 0,
                                             exercises: session.sessionExercises?.length ?? 0,
                                             isCompleted: agendaItem.completed,
-                                            time: '00:00',
+                                            time: '',
                                         })
                                     }
                                 })
@@ -413,7 +414,7 @@ export const CalendarView = () => {
                                         duration: 0,
                                         exercises: 0,
                                         isCompleted: agendaItem.completed,
-                                        time: '00:00',
+                                        time: '',
                                     })
                                 }
                             }
@@ -428,9 +429,15 @@ export const CalendarView = () => {
                                 selectedDate={selectedDate}
                                 workouts={workouts}
                                 onSelect={(id) => {
-                                    const found = (agenda.items ?? []).find(i => String(i.id) === id)
+                                    // El ID puede ser "agendaId" o "agendaId-sessionId"
+                                    const parts = id.split('-')
+                                    const agendaId = parts[0]
+                                    const sessionId = parts[1] ? parseInt(parts[1]) : null
+                                    
+                                    const found = (agenda.items ?? []).find(i => String(i.id) === agendaId)
                                     if (found) {
                                         setSelectedItem(found)
+                                        setSelectedSessionId(sessionId)
                                         setIsDetailsOpen(true)
                                     }
                                 }}
@@ -486,8 +493,13 @@ export const CalendarView = () => {
             {/* Details Modal */}
             <AgendaDetailsModal
                 isOpen={isDetailsOpen}
-                onClose={() => setIsDetailsOpen(false)}
+                onClose={() => {
+                    setIsDetailsOpen(false)
+                    setSelectedSessionId(null)
+                }}
                 item={selectedItem}
+                sessionId={selectedSessionId}
+                fullRoutine={selectedItem ? routines.find(r => r.id === selectedItem.routine?.id) : null}
                 onDelete={async (id) => {
                     try {
                         const token = await getAccessTokenSilently({

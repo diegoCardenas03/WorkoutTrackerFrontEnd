@@ -1,11 +1,14 @@
-import { LuCalendar, LuX } from "react-icons/lu"
+import { LuCalendar, LuX, LuDumbbell } from "react-icons/lu"
 import { Button } from "../../Button"
 import type { AgendaResponseDTO } from "../../../types/agenda/AgendaResponseDTO"
+import type { RutinaResponseDTO } from "../../../types/rutina/RutinaResponseDTO"
 
 interface AgendaDetailsModalProps {
   isOpen: boolean
   onClose: () => void
   item?: AgendaResponseDTO | null
+  sessionId?: number | null
+  fullRoutine?: RutinaResponseDTO | null
   onDelete?: (id: number) => void
   onEdit?: (id: number) => void
   onStartTraining?: (agendaItem: AgendaResponseDTO) => void
@@ -15,6 +18,8 @@ export const AgendaDetailsModal = ({
   isOpen,
   onClose,
   item,
+  sessionId,
+  fullRoutine,
   onDelete,
   onEdit,
   onStartTraining,
@@ -22,7 +27,28 @@ export const AgendaDetailsModal = ({
   if (!isOpen || !item) return null
 
   const start = new Date(item.startDate)
-  const dateStr = start.toLocaleDateString()
+  const dateStr = start.toLocaleDateString('es-ES', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+  
+  // Usar fullRoutine si está disponible, si no usar la del item
+  const routineToUse = fullRoutine || item.routine
+  
+  // Buscar la sesión específica si se proporcionó sessionId
+  const currentSession = sessionId 
+    ? routineToUse?.sessions?.find(s => s.id === sessionId)
+    : null
+  
+  // Debug: ver qué datos tenemos
+  console.log('🔍 Debug AgendaDetailsModal:')
+  console.log('- sessionId:', sessionId)
+  console.log('- fullRoutine:', fullRoutine)
+  console.log('- routineToUse:', routineToUse)
+  console.log('- routineToUse.sessions:', routineToUse?.sessions)
+  console.log('- currentSession:', currentSession)
+  console.log('- currentSession?.sessionExercises:', currentSession?.sessionExercises)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -70,6 +96,53 @@ export const AgendaDetailsModal = ({
             <div className="bg-itemsCard rounded-lg p-4 border border-white/10">
               <p className="text-quaternary text-xs mb-1">Notas</p>
               <p className="text-white text-sm md:text-base whitespace-pre-wrap">{item.comment}</p>
+            </div>
+          )}
+
+          {/* Mostrar ejercicios de la sesión si existe */}
+          {currentSession && currentSession.sessionExercises && currentSession.sessionExercises.length > 0 && (
+            <div className="bg-itemsCard rounded-lg p-4 border border-white/10">
+              <div className="flex items-center gap-2 mb-3">
+                <LuDumbbell size={16} className="text-quaternary" />
+                <p className="text-quaternary text-xs">Ejercicios de la sesión: {currentSession.name}</p>
+              </div>
+              <div className="space-y-3">
+                {currentSession.sessionExercises.map((sessionExercise, idx) => (
+                  <div 
+                    key={sessionExercise.id} 
+                    className="bg-primary/50 rounded-lg p-3 border border-white/5"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="text-white text-sm font-medium mb-2">
+                          {idx + 1}. {sessionExercise.exercise.name}
+                        </p>
+                        <div className="flex flex-wrap gap-3 text-xs">
+                          <div className="flex items-center gap-1">
+                            <span className="text-quaternary">Series:</span>
+                            <span className="text-white font-medium">{sessionExercise.sets}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-quaternary">Reps:</span>
+                            <span className="text-white font-medium">{sessionExercise.reps}</span>
+                          </div>
+                          {sessionExercise.restBetweenSets && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-quaternary">Descanso:</span>
+                              <span className="text-white font-medium">{sessionExercise.restBetweenSets} min</span>
+                            </div>
+                          )}
+                        </div>
+                        {sessionExercise.comment && (
+                          <p className="text-quaternary text-xs mt-2 italic">
+                            {sessionExercise.comment}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
