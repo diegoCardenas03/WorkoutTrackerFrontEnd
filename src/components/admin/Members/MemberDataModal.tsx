@@ -118,7 +118,7 @@ export const MemberDataModal = ({
             </div>
 
             {/* Estadísticas */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <div>
                 <label className="text-quaternary text-sm font-medium block mb-1">
                   Rutinas creadas
@@ -127,14 +127,14 @@ export const MemberDataModal = ({
                   {member.createdRoutines || 0}
                 </p>
               </div>
-              <div>
+              {/* <div>
                 <label className="text-quaternary text-sm font-medium block mb-1">
                   Rutinas completadas
                 </label>
                 <p className="text-white text-sm bg-tertiary border border-white/20 rounded-lg p-3 text-center">
                   {member.completedRoutines || 0}
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
