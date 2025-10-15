@@ -353,26 +353,76 @@ export const CalendarView = () => {
                 <div className="flex-1 flex flex-col gap-4 mb-6 min-w-0">
                     {(() => {
                         const sel = selectedDate ?? new Date()
-                        const dayStart = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate())
-                        const dayEnd = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate() + 1)
-                        const workouts = (agenda.items ?? [])
-                            .filter(i => {
-                                const d = new Date(i.startDate)
-                                return d >= dayStart && d < dayEnd
-                            })
-                            .map(i => {
-                                const d = new Date(i.startDate)
-                                const hh = String(d.getHours()).padStart(2, '0')
-                                const mm = String(d.getMinutes()).padStart(2, '0')
-                                return {
-                                    id: String(i.id),
-                                    name: i.routine?.name ?? 'Rutina',
-                                    duration: 0,
-                                    exercises: 0,
-                                    isCompleted: i.completed,
-                                    time: `${hh}:${mm}`,
+                        const selectedDayOfWeek = sel.getDay() // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+                        
+                        // Mapeo de día de la semana a nombre en inglés (como en el backend)
+                        const dayOfWeekMap = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
+                        const selectedDayName = dayOfWeekMap[selectedDayOfWeek]
+                        
+                        console.log('📅 Día seleccionado:', selectedDayName, `(${selectedDayOfWeek})`)
+                        
+                        // Filtrar todas las agendas que tengan sesiones para este día de la semana
+                        const workouts = (agenda.items ?? []).reduce<Array<{
+                            id: string
+                            name: string
+                            duration: number
+                            exercises: number
+                            isCompleted: boolean
+                            time: string
+                        }>>((acc, agendaItem) => {
+                            const routine = routines.find(r => r.id === agendaItem.routine?.id)
+                            
+                            if (!routine) {
+                                // Si no encontramos la rutina completa, verificar si la fecha coincide
+                                const itemDate = new Date(agendaItem.startDate)
+                                if (itemDate.getDay() === selectedDayOfWeek) {
+                                    acc.push({
+                                        id: String(agendaItem.id),
+                                        name: agendaItem.routine?.name ?? 'Rutina',
+                                        duration: 0,
+                                        exercises: 0,
+                                        isCompleted: agendaItem.completed,
+                                        time: '00:00',
+                                    })
                                 }
-                            })
+                                return acc
+                            }
+                            
+                            // Si la rutina tiene sesiones, buscar las que coincidan con el día seleccionado
+                            if (routine.sessions && routine.sessions.length > 0) {
+                                routine.sessions.forEach(session => {
+                                    if (session.dayOfWeek === selectedDayName) {
+                                        // Encontramos una sesión para este día de la semana
+                                        acc.push({
+                                            id: String(agendaItem.id),
+                                            name: `${routine.name} - ${session.name}`,
+                                            duration: 0,
+                                            exercises: session.sessionExercises?.length ?? 0,
+                                            isCompleted: agendaItem.completed,
+                                            time: '00:00',
+                                        })
+                                    }
+                                })
+                            } else {
+                                // Rutina sin sesiones: verificar si la fecha de inicio coincide con el día de la semana
+                                const itemDate = new Date(agendaItem.startDate)
+                                if (itemDate.getDay() === selectedDayOfWeek) {
+                                    acc.push({
+                                        id: String(agendaItem.id),
+                                        name: routine.name,
+                                        duration: 0,
+                                        exercises: 0,
+                                        isCompleted: agendaItem.completed,
+                                        time: '00:00',
+                                    })
+                                }
+                            }
+                            
+                            return acc
+                        }, [])
+                        
+                        console.log('💪 Entrenamientos encontrados para', selectedDayName, ':', workouts.length)
+                        
                         return (
                             <TrainProgramed
                                 selectedDate={selectedDate}
