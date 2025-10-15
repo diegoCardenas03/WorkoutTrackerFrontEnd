@@ -637,12 +637,7 @@ export const CommunityView = () => {
                             defaultValue={selectedDifficulty}
                             onChange={setSelectedDifficulty}
                         />
-                        <CustomSelect
-                            name="Ordenar por"
-                            options={sortOptions}
-                            defaultValue={selectedSort}
-                            onChange={setSelectedSort}
-                        />
+                
                     </div>
                 </div>
 
