@@ -37,7 +37,55 @@ export const CalendarView = () => {
     const [isUpdating, setIsUpdating] = useState(false)
     const [initialLoading, setInitialLoading] = useState(true)
     const workoutDates = useMemo(() => {
-        return (agenda.items ?? []).map(i => new Date(i.startDate))
+        const highlightedDates: Date[] = []
+        const dayOfWeekMap: Record<string, number> = {
+            'SUNDAY': 0,
+            'MONDAY': 1,
+            'TUESDAY': 2,
+            'WEDNESDAY': 3,
+            'THURSDAY': 4,
+            'FRIDAY': 5,
+            'SATURDAY': 6
+        }
+
+        // Para cada item de agenda, destaca todos los días correspondientes a sus sesiones
+        const agendaItems = agenda.items ?? []
+        agendaItems.forEach(item => {
+            // Si la rutina tiene sesiones (rutina semanal)
+            if (item.routine?.sessions?.length) {
+                // Obtener la fecha base desde startDate
+                const startDate = new Date(item.startDate)
+                const startDateDay = startDate.getDay() // 0-6 (domingo a sábado)
+                
+                // Destacar todos los días de la semana correspondientes a las sesiones
+                // para un periodo de 12 semanas (3 meses)
+                const weeks = 12
+                const daysInMs = 24 * 60 * 60 * 1000
+                
+                // Para cada sesión, destaca su día de la semana correspondiente
+                item.routine.sessions.forEach(session => {
+                    // Obtener el día de la semana de esta sesión (0-6)
+                    const sessionDay = dayOfWeekMap[session.dayOfWeek]
+                    if (sessionDay === undefined) return
+                    
+                    // Calcular el desplazamiento para llegar al primer día de esta sesión
+                    // a partir de la fecha de inicio
+                    const daysDiff = (sessionDay - startDateDay + 7) % 7
+                    const firstSessionDate = new Date(startDate.getTime() + daysDiff * daysInMs)
+                    
+                    // Destacar este día para todas las semanas
+                    for (let week = 0; week < weeks; week++) {
+                        const date = new Date(firstSessionDate.getTime() + (week * 7 * daysInMs))
+                        highlightedDates.push(date)
+                    }
+                })
+            } else {
+                // Si no tiene sesiones o es una rutina simple, solo destaca la fecha original
+                highlightedDates.push(new Date(item.startDate))
+            }
+        })
+        
+        return highlightedDates
     }, [agenda.items])
 
     const nextSessions = useMemo(() => {
@@ -119,9 +167,7 @@ export const CalendarView = () => {
             // Obtener los días que tiene configurados la rutina
             const routineDays = routine.sessions.map(s => dayOfWeekMap[s.dayOfWeek])
             
-            // Ordenar los días para encontrar el primero de la semana
-            const sortedRoutineDays = [...routineDays].sort((a, b) => a - b)
-            const firstDayOfRoutine = sortedRoutineDays[0]
+            // Ya no necesitamos determinar el primer día, eso lo maneja el backend
             
             console.log('🔍 Debug agendamiento:')
             console.log('- Fecha seleccionada (string):', baseDate)
@@ -131,22 +177,9 @@ export const CalendarView = () => {
             console.log('- Días de la rutina:', routine.sessions.map(s => s.dayOfWeek))
             console.log('- Días de la rutina (números):', routineDays)
             console.log('- Es rutina semanal:', isWeeklyRoutine)
-            console.log('- Primer día de la rutina:', firstDayOfRoutine)
             
-            // VALIDACIÓN 2: Para rutinas semanales, solo el primer día
-            if (isWeeklyRoutine) {
-                if (selectedDayOfWeek !== firstDayOfRoutine) {
-                    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-                    const firstDayName = dayNames[firstDayOfRoutine]
-                    
-                    setToast({ 
-                        open: true, 
-                        type: 'error', 
-                        message: `⚠️ Las rutinas semanales deben agendarse desde el primer día. Esta rutina inicia el ${firstDayName}` 
-                    })
-                    return
-                }
-            } else {
+            // La validación de días para rutinas semanales se hace en el backend
+            if (!isWeeklyRoutine) {
                 // VALIDACIÓN 3: Para rutinas simples, verificar el día correcto
                 if (!routineDays.includes(selectedDayOfWeek)) {
                     const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
@@ -176,67 +209,36 @@ export const CalendarView = () => {
                 return
             }
             
+            // Ya sea rutina semanal o simple, crear un solo item de agenda
+            console.log('📅 Agendando rutina:', routine.name)
+            console.log('- ID de rutina:', routineId)
+            console.log('- Tipo de rutina:', isWeeklyRoutine ? 'Semanal' : 'Simple')
+            console.log('- Fecha seleccionada:', baseDate)
+            
             if (isWeeklyRoutine) {
-                // Rutina semanal: crear un item de agenda por cada sesión en su día correspondiente
-                // Usar la fecha seleccionada para calcular la semana correcta
-                const currentWeekStart = new Date(year, month - 1, day)
-                currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay()) // Domingo de esa semana
-                
-                console.log('📅 Calculando fechas para rutina semanal:')
-                console.log('- Fecha seleccionada:', baseDate)
-                console.log('- Domingo de esa semana:', currentWeekStart.toISOString().split('T')[0])
-                
-                const agendaPromises = routine.sessions.map(session => {
-                    const dayIndex = dayOfWeekMap[session.dayOfWeek]
-                    // Crear fecha correctamente usando año, mes, día
-                    const sessionYear = currentWeekStart.getFullYear()
-                    const sessionMonth = currentWeekStart.getMonth()
-                    const sessionDay = currentWeekStart.getDate() + dayIndex
-                    const sessionDate = new Date(sessionYear, sessionMonth, sessionDay)
-                    
-                    const sessionDateISO = sessionDate.toISOString().split('T')[0]
-                    
-                    console.log(`  - Sesión ${session.dayOfWeek} (${dayIndex}): ${sessionDateISO}`)
-                    
-                    const payload: AgendaRequestDTO = {
-                        reminderMinutes: sessionData?.reminderEnabled ? Number(sessionData.reminderTime) : undefined,
-                        comment: sessionData?.notes || undefined,
-                        userId: 0,
-                        routineId,
-                    }
-                    
-                    return (dispatch as any)(createAgendaItem({ payload, token }))
-                })
-                
-                const results = await Promise.all(agendaPromises)
-                const allSuccessful = results.every(r => r.type.includes('fulfilled'))
-                
-                if (allSuccessful) {
-                    setToast({ open: true, type: 'success', message: `✅ Rutina semanal programada (${routine.sessions.length} sesiones)` })
-                    setIsModalOpen(false)
-                    await (dispatch as any)(fetchAgenda(token))
-                } else {
-                    throw new Error('Error al crear algunas sesiones')
-                }
-            } else {
-                // Rutina simple: crear un solo item de agenda
-                
-                const payload: AgendaRequestDTO = {
-                    reminderMinutes: sessionData?.reminderEnabled ? Number(sessionData.reminderTime) : undefined,
-                    comment: sessionData?.notes || undefined,
-                    userId: 0,
-                    routineId,
-                }
+                console.log('- Días de la semana:', routine.sessions.map(s => s.dayOfWeek).join(', '))
+                console.log('- Total sesiones:', routine.sessions.length)
+            }
+            
+            const payload: AgendaRequestDTO = {
+                reminderMinutes: sessionData?.reminderEnabled ? Number(sessionData.reminderTime) : undefined,
+                comment: sessionData?.notes || undefined,
+                userId: 0,
+                routineId,
+            }
 
-                const result = await (dispatch as any)(createAgendaItem({ payload, token }))
-                
-                if (result.type.includes('fulfilled')) {
-                    setToast({ open: true, type: 'success', message: '✅ Entrenamiento programado exitosamente' })
-                    setIsModalOpen(false)
-                    await (dispatch as any)(fetchAgenda(token))
-                } else {
-                    throw new Error(result.error?.message || 'Error al crear agenda')
-                }
+            const result = await (dispatch as any)(createAgendaItem({ payload, token }))
+            
+            if (result.type.includes('fulfilled')) {
+                const message = isWeeklyRoutine 
+                    ? `✅ Rutina semanal programada (${routine.sessions.length} sesiones)` 
+                    : '✅ Entrenamiento programado exitosamente'
+                    
+                setToast({ open: true, type: 'success', message })
+                setIsModalOpen(false)
+                await (dispatch as any)(fetchAgenda(token))
+            } else {
+                throw new Error(result.error?.message || 'Error al crear agenda')
             }
         } catch (e: any) {
             console.error('Error al agendar entrenamiento:', e)
@@ -275,6 +277,22 @@ export const CalendarView = () => {
         }
         loadData()
     }, [dispatch, getAccessTokenSilently])
+    
+    // Efecto para imprimir las rutinas agendadas en consola
+    useEffect(() => {
+        if (agenda.items?.length) {
+            console.log('📅 Rutinas agendadas:', agenda.items.length, 'encontradas')
+            console.log('========================================')
+            agenda.items.forEach((item, index) => {
+                console.log(`📌 Agenda item #${index + 1}:`)
+                console.log(item)
+                console.log('----------------------------------------')
+            })
+            console.log('========================================')
+        } else if (!agenda.loading && agenda.items) {
+            console.log('📅 No hay rutinas agendadas')
+        }
+    }, [agenda.items, agenda.loading])
     
     if (initialLoading) {
         return (
