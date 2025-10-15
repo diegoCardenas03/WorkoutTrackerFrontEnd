@@ -4,6 +4,8 @@ import { IoChevronDown, IoChevronUp } from "react-icons/io5";
 type Option = {
   value: string;
   label: string;
+  disabled?: boolean;
+  note?: string; // Para mostrar una nota adicional, como "Ya agendada"
 };
 
 type CustomSelectProps = {
@@ -50,7 +52,10 @@ export const CustomSelect = ({
     label: name,
   };
 
-  const handleSelect = (value: string) => {
+  const handleSelect = (value: string, disabled?: boolean) => {
+    // No hacer nada si la opción está deshabilitada
+    if (disabled) return;
+    
     setSelectedValue(value);
     onChange?.(value);
     setIsOpen(false);
@@ -90,13 +95,22 @@ export const CustomSelect = ({
             {options.map((option) => (
               <li
                 key={option.value}
-                onClick={() => handleSelect(option.value)}
-                className={`px-4 py-3 cursor-pointer transition-colors text-sm md:text-base
-                  ${selectedValue === option.value ? "bg-primary/50 text-quaternary" : "hover:bg-linksNavbar text-quaternary"}`}
+                onClick={() => handleSelect(option.value, option.disabled)}
+                className={`px-4 py-3 transition-colors text-sm md:text-base
+                  ${option.disabled 
+                    ? "opacity-50 cursor-not-allowed text-quaternary/60" 
+                    : "cursor-pointer hover:bg-linksNavbar text-quaternary"}
+                  ${selectedValue === option.value ? "bg-primary/50 text-quaternary" : ""}`}
                 role="option"
                 aria-selected={selectedValue === option.value}
+                aria-disabled={option.disabled}
               >
-                {option.label}
+                <div>
+                  {option.label}
+                  {option.note && (
+                    <span className="block text-xs text-orange-400">{option.note}</span>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

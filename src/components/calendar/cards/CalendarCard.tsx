@@ -2,10 +2,17 @@ import { useState, useRef, useEffect } from "react"
 import { IoChevronBack, IoChevronForward } from "react-icons/io5"
 import { HiCalendarDays } from "react-icons/hi2"
 
+// Añadimos una interfaz para el contador de días
+interface DayCounter {
+  date: string; // formato: "YYYY-MM-DD"
+  count: number; // número de rutinas en este día
+}
+
 interface CalendarProps {
   selectedDate?: Date
   onDateSelect?: (date: Date | undefined) => void
   highlightedDates?: Date[]
+  dayCounts?: DayCounter[] // Añadimos el contador de rutinas por día
   className?: string
 }
 
@@ -13,6 +20,7 @@ export const Calendar = ({
   selectedDate, 
   onDateSelect, 
   highlightedDates = [],
+  dayCounts = [],
   className = "" 
 }: CalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -117,6 +125,18 @@ export const Calendar = ({
       date.getFullYear() === currentYear
     )
   }
+  
+  // Función para obtener el contador de rutinas para un día específico
+  const getHighlightedCount = (day: number) => {
+    // Formato de fecha: YYYY-MM-DD
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    
+    // Buscar el día en el array de contadores
+    const dayCounter = dayCounts.find(counter => counter.date === dateStr)
+    
+    // Si hay contador y es mayor que 1, lo devolvemos
+    return dayCounter && dayCounter.count > 1 ? dayCounter.count : 0
+  }
 
  // ...existing code...
 
@@ -176,11 +196,11 @@ export const Calendar = ({
                     handleDateClick(day)
                   }}
                   className={`
-                    w-full h-full rounded-lg text-sm md:text-base  font-medium cursor-pointer
+                    w-full h-full rounded-lg text-sm md:text-base font-medium cursor-pointer relative
                     ${isSelected(day) 
                       ? 'text-white border border-white' 
                       : isToday(day)
-                      ? ' text-black bg-white'
+                      ? 'text-black bg-white'
                       : isHighlighted(day)
                       ? 'bg-yellow-500/20 text-yellow-400'
                       : 'text-quaternary hover:text-white hover:bg-white/5 transition-colors duration-200'
@@ -188,6 +208,13 @@ export const Calendar = ({
                   `}
                 >
                   {day}
+                  
+                  {/* Badge con contador de rutinas */}
+                  {isHighlighted(day) && getHighlightedCount(day) > 1 && (
+                    <div className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-primary rounded-full text-white text-xs font-bold">
+                      {getHighlightedCount(day)}
+                    </div>
+                  )}
                 </button>
               )}
             </div>

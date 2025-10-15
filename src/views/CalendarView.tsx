@@ -36,8 +36,11 @@ export const CalendarView = () => {
     const [isCreating, setIsCreating] = useState(false)
     const [isUpdating, setIsUpdating] = useState(false)
     const [initialLoading, setInitialLoading] = useState(true)
-    const workoutDates = useMemo(() => {
+    const { workoutDates, dayCounts } = useMemo(() => {
         const highlightedDates: Date[] = []
+        // Objeto para contar rutinas por día
+        const dayCountMap: Record<string, Set<number>> = {} // clave: YYYY-MM-DD, valor: conjunto de IDs de rutinas
+        
         const dayOfWeekMap: Record<string, number> = {
             'SUNDAY': 0,
             'MONDAY': 1,
@@ -71,7 +74,14 @@ export const CalendarView = () => {
             if (!fullRoutine) {
                 console.log(`❌ No se encontró la rutina ID=${routineId} en el store`)
                 // Fallback: usar solo la fecha de la agenda
-                highlightedDates.push(new Date(agendaItem.startDate))
+                const date = new Date(agendaItem.startDate)
+                highlightedDates.push(date)
+                
+                // Registrar la rutina para el contador
+                const dateStr = date.toISOString().split('T')[0]
+                if (!dayCountMap[dateStr]) dayCountMap[dateStr] = new Set()
+                dayCountMap[dateStr].add(routineId)
+                
                 return
             }
             
@@ -113,6 +123,11 @@ export const CalendarView = () => {
                         const sessionDate = new Date(firstSessionDate.getTime() + week * 7 * daysInMs)
                         highlightedDates.push(sessionDate)
                         
+                        // Registrar la rutina para el contador
+                        const dateStr = sessionDate.toISOString().split('T')[0]
+                        if (!dayCountMap[dateStr]) dayCountMap[dateStr] = new Set()
+                        dayCountMap[dateStr].add(routineId)
+                        
                         if (week < 3) { // Mostrar solo las primeras 3 para no sobrecargar la consola
                             console.log(`  Semana ${week + 1}: ${sessionDate.toLocaleDateString()}`)
                         }
@@ -121,12 +136,26 @@ export const CalendarView = () => {
             } else {
                 // Si es una rutina sin sesiones, solo destacar la fecha original
                 console.log(`- Rutina simple: destacando solo fecha original`)
-                highlightedDates.push(new Date(agendaItem.startDate))
+                const date = new Date(agendaItem.startDate)
+                highlightedDates.push(date)
+                
+                // Registrar la rutina para el contador
+                const dateStr = date.toISOString().split('T')[0]
+                if (!dayCountMap[dateStr]) dayCountMap[dateStr] = new Set()
+                dayCountMap[dateStr].add(routineId)
             }
         })
         
+        // Convertir el mapa de conteo a la estructura necesaria para el calendario
+        const dayCounts = Object.entries(dayCountMap).map(([date, routineIds]) => ({
+            date,
+            count: routineIds.size  // Número de rutinas únicas para ese día
+        }))
+        
         console.log(`📊 Total de fechas destacadas: ${highlightedDates.length}`)
-        return highlightedDates
+        console.log(`📊 Días con múltiples rutinas: ${dayCounts.filter(d => d.count > 1).length}`)
+        
+        return { workoutDates: highlightedDates, dayCounts }
     }, [agenda.items, routines])
 
     const nextSessions = useMemo(() => {
@@ -170,69 +199,18 @@ export const CalendarView = () => {
 
             const isWeeklyRoutine = routine.sessions.length > 1
             
-            // La fecha y hora son manejadas por el backend
-            // Solo necesitamos guardar la referencia a la fecha seleccionada para validaciones locales
+            // La fecha seleccionada en el calendario se envía al backend para
+            // que sepa a partir de qué día programar la rutina
             const baseDate = selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
             
-            // Mapa de días de la semana
-            const dayOfWeekMap: Record<string, number> = {
-                'SUNDAY': 0,
-                'MONDAY': 1,
-                'TUESDAY': 2,
-                'WEDNESDAY': 3,
-                'THURSDAY': 4,
-                'FRIDAY': 5,
-                'SATURDAY': 6
-            }
+            console.log('📅 Agendando rutina:', routine.name)
+            console.log('- ID de rutina:', routineId)
+            console.log('- Tipo de rutina:', isWeeklyRoutine ? 'Semanal' : 'Simple')
+            console.log('- Fecha seleccionada:', baseDate)
             
-            // Obtener el día de la semana de la fecha seleccionada
-            // Usar el constructor con año, mes, día para evitar problemas de zona horaria
-            const [year, month, day] = baseDate.split('-').map(Number)
-            const selectedDateObj = new Date(year, month - 1, day) // month es 0-indexed
-            const selectedDayOfWeek = selectedDateObj.getDay()
-            
-            // VALIDACIÓN 1: No permitir fechas pasadas
-            const today = new Date()
-            const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-            const selectedDateOnly = new Date(year, month - 1, day)
-            
-            if (selectedDateOnly < todayOnly) {
-                setToast({ 
-                    open: true, 
-                    type: 'error', 
-                    message: '⚠️ No puedes agendar rutinas en fechas pasadas' 
-                })
-                return
-            }
-            
-            // Obtener los días que tiene configurados la rutina
-            const routineDays = routine.sessions.map(s => dayOfWeekMap[s.dayOfWeek])
-            
-            // Ya no necesitamos determinar el primer día, eso lo maneja el backend
-            
-            console.log('🔍 Debug agendamiento:')
-            console.log('- Fecha seleccionada (string):', baseDate)
-            console.log('- Fecha como objeto:', selectedDateObj)
-            console.log('- Día de la semana (número):', selectedDayOfWeek)
-            console.log('- Día de la semana (nombre):', ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][selectedDayOfWeek])
-            console.log('- Días de la rutina:', routine.sessions.map(s => s.dayOfWeek))
-            console.log('- Días de la rutina (números):', routineDays)
-            console.log('- Es rutina semanal:', isWeeklyRoutine)
-            
-            // La validación de días para rutinas semanales se hace en el backend
-            if (!isWeeklyRoutine) {
-                // VALIDACIÓN 3: Para rutinas simples, verificar el día correcto
-                if (!routineDays.includes(selectedDayOfWeek)) {
-                    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-                    const availableDays = routineDays.map(d => dayNames[d]).join(', ')
-                    
-                    setToast({ 
-                        open: true, 
-                        type: 'error', 
-                        message: `⚠️ Esta rutina solo está disponible para: ${availableDays}` 
-                    })
-                    return
-                }
+            if (isWeeklyRoutine) {
+                console.log('- Días de la semana:', routine.sessions.map(s => s.dayOfWeek).join(', '))
+                console.log('- Total sesiones:', routine.sessions.length)
             }
             
             // Verificar si ya está agendada y no completada
@@ -248,17 +226,6 @@ export const CalendarView = () => {
                     message: `⚠️ Ya tienes esta rutina agendada y pendiente. Complétala antes de volver a agendarla.` 
                 })
                 return
-            }
-            
-            // Ya sea rutina semanal o simple, crear un solo item de agenda
-            console.log('📅 Agendando rutina:', routine.name)
-            console.log('- ID de rutina:', routineId)
-            console.log('- Tipo de rutina:', isWeeklyRoutine ? 'Semanal' : 'Simple')
-            console.log('- Fecha seleccionada:', baseDate)
-            
-            if (isWeeklyRoutine) {
-                console.log('- Días de la semana:', routine.sessions.map(s => s.dayOfWeek).join(', '))
-                console.log('- Total sesiones:', routine.sessions.length)
             }
             
             const payload: AgendaRequestDTO = {
@@ -379,6 +346,7 @@ export const CalendarView = () => {
                         selectedDate={selectedDate}
                         onDateSelect={setSelectedDate}
                         highlightedDates={workoutDates}
+                        dayCounts={dayCounts}
                     />
                 </div>
 
@@ -441,7 +409,19 @@ export const CalendarView = () => {
                 onClose={handleToggleModal}
                 selectedDate={selectedDate}
                 onRegisterSession={handleRegisterSession}
-                routinesOptions={routines.map(r => ({ value: String(r.id), label: r.name }))}
+                routinesOptions={routines.map(r => {
+                    // Verificar si la rutina ya está agendada y no completada
+                    const alreadyScheduled = (agenda.items ?? []).some(
+                        item => item.routine?.id === r.id && !item.completed
+                    );
+                    
+                    return { 
+                        value: String(r.id), 
+                        label: r.name,
+                        disabled: alreadyScheduled,
+                        note: alreadyScheduled ? "Ya agendada" : undefined
+                    };
+                })}
                 isLoading={isCreating}
             />
 
