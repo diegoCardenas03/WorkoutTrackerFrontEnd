@@ -1,4 +1,4 @@
-import { LuCalendar, LuClock, LuX } from "react-icons/lu"
+import { LuCalendar, LuX } from "react-icons/lu"
 import { Button } from "../../Button"
 import type { AgendaResponseDTO } from "../../../types/agenda/AgendaResponseDTO"
 
@@ -23,7 +23,6 @@ export const AgendaDetailsModal = ({
 
   const start = new Date(item.startDate)
   const dateStr = start.toLocaleDateString()
-  const timeStr = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -53,18 +52,10 @@ export const AgendaDetailsModal = ({
             <p className="text-white text-sm md:text-base font-medium">{item.routine?.name ?? 'Rutina'}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-itemsCard rounded-lg p-4 border border-white/10">
-              <p className="text-quaternary text-xs mb-1">Fecha</p>
-              <div className="flex items-center gap-2 text-white text-sm md:text-base">
-                <LuCalendar size={16} /> {dateStr}
-              </div>
-            </div>
-            <div className="bg-itemsCard rounded-lg p-4 border border-white/10">
-              <p className="text-quaternary text-xs mb-1">Hora</p>
-              <div className="flex items-center gap-2 text-white text-sm md:text-base">
-                <LuClock size={16} /> {timeStr}
-              </div>
+          <div className="bg-itemsCard rounded-lg p-4 border border-white/10">
+            <p className="text-quaternary text-xs mb-1">Fecha de creación</p>
+            <div className="flex items-center gap-2 text-white text-sm md:text-base">
+              <LuCalendar size={16} /> {dateStr}
             </div>
           </div>
 

@@ -20,33 +20,16 @@ export const EditSessionModal = ({
   onSave,
   isLoading = false,
 }: EditSessionModalProps) => {
-  const [date, setDate] = useState("")
-  const [time, setTime] = useState("")
   const [notes, setNotes] = useState("")
 
   useEffect(() => {
     if (item) {
-      setDate(new Date(item.startDate).toISOString().split('T')[0])
-      const d = new Date(item.startDate)
-      const hh = String(d.getHours()).padStart(2, '0')
-      const mm = String(d.getMinutes()).padStart(2, '0')
-      setTime(`${hh}:${mm}`)
       setNotes(item.comment ?? "")
     }
   }, [item])
 
   const handleSave = async () => {
-    // Validación - solo requerimos hora
-    if (!time) {
-      return
-    }
-
     const changes: Partial<AgendaRequestDTO> = {}
-    // Solo enviamos la hora actualizada (combinando la fecha original con la nueva hora)
-    if (date && time) {
-      const base = `${date}T${time}:00`
-      changes.startDate = base
-    }
     changes.comment = notes || undefined
     
     if (onSave) {
@@ -88,25 +71,7 @@ export const EditSessionModal = ({
             </div>
           </div>
 
-          {/* Programación */}
-          <div>
-            <h3 className="text-white text-base font-medium mb-4">Programación</h3>
-            {/* Fecha (Solo lectura) */}
-            <div className="mb-4">
-              <label className="text-quaternary text-sm block mb-2">Fecha</label>
-              <input 
-                type="date" 
-                value={date} 
-                disabled
-                className="w-full h-12 px-4 bg-itemsCard/50 border border-white/5 rounded-lg text-quaternary cursor-not-allowed" 
-              />
-            </div>
-            {/* Hora (Editable) */}
-            <div className="mb-4">
-              <label className="text-quaternary text-sm block mb-2">Hora</label>
-              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="w-full h-12 px-4 bg-itemsCard border border-white/5 rounded-lg text-white focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/20 transition-all" />
-            </div>
-          </div>
+
 
           {/* Notas (Editable) */}
           <div>
@@ -122,7 +87,7 @@ export const EditSessionModal = ({
               isWhite={true} 
               action={handleSave} 
               isWidthFull={true}
-              isBlocked={!time || isLoading}
+              isBlocked={isLoading}
             >
               {isLoading ? 'Guardando...' : 'Guardar cambios'}
             </Button>

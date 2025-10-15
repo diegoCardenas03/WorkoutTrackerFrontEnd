@@ -15,8 +15,6 @@ interface RegisterSessionModalProps {
 
 interface SessionData {
   routineId: string
-  date: string
-  time: string
   reminderEnabled: boolean
   reminderTime: string
   notes: string
@@ -31,13 +29,6 @@ export const RegisterSessionModal = ({
   isLoading = false,
 }: RegisterSessionModalProps) => {
   const [routineId, setRoutineId] = useState("")
-  const [date, setDate] = useState(selectedDate.toISOString().split('T')[0])
-  const [time, setTime] = useState(() => {
-    const d = selectedDate || new Date()
-    const hh = String(d.getHours()).padStart(2, '0')
-    const mm = String(d.getMinutes()).padStart(2, '0')
-    return `${hh}:${mm}`
-  })
   const [reminderEnabled, setReminderEnabled] = useState(false)
   const [reminderTime, setReminderTime] = useState("30")
   const [notes, setNotes] = useState("")
@@ -54,14 +45,9 @@ export const RegisterSessionModal = ({
     if (!routineId) {
       return
     }
-    if (!date || !time) {
-      return
-    }
 
     const sessionData: SessionData = {
       routineId,
-      date,
-      time,
       reminderEnabled,
       reminderTime,
       notes
@@ -77,11 +63,6 @@ export const RegisterSessionModal = ({
   // Reinicializar el formulario cuando se abre el modal
   const resetForm = () => {
     setRoutineId("")
-    setDate(selectedDate.toISOString().split('T')[0])
-    const d = selectedDate || new Date()
-    const hh = String(d.getHours()).padStart(2, '0')
-    const mm = String(d.getMinutes()).padStart(2, '0')
-    setTime(`${hh}:${mm}`)
     setReminderEnabled(false)
     setReminderTime("30")
     setNotes("")
@@ -146,27 +127,6 @@ export const RegisterSessionModal = ({
           <div>
             <h3 className="text-white text-base font-medium mb-4">Programación</h3>
             
-            {/* Fecha */}
-            <div className="mb-4">
-              <label className="text-quaternary text-sm block mb-2">Fecha</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full h-12 px-4 bg-itemsCard border border-white/5 rounded-lg text-white focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/20 transition-all"
-              />
-            </div>
-
-            {/* Hora */}
-            <div className="mb-4">
-              <label className="text-quaternary text-sm block mb-2">Hora</label>
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="w-full h-12 px-4 bg-itemsCard border border-white/5 rounded-lg text-white focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/20 transition-all"
-              />
-            </div>
 
             {/* Recordatorio */}
             <div className="mb-4">
@@ -228,7 +188,7 @@ export const RegisterSessionModal = ({
               isWidthFull={true}
               icon={<LuCalendar size={16} />}
               iconPosition={false}
-              isBlocked={!routineId || !date || !time || isLoading}
+              isBlocked={!routineId || isLoading}
             >
               {isLoading ? 'Programando...' : 'Programar entrenamiento'}
             </Button>

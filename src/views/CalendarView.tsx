@@ -81,8 +81,9 @@ export const CalendarView = () => {
 
             const isWeeklyRoutine = routine.sessions.length > 1
             
-            const baseDate = sessionData?.date ?? (selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
-            const baseTime = sessionData?.time ?? '09:00'
+            // La fecha y hora son manejadas por el backend
+            // Solo necesitamos guardar la referencia a la fecha seleccionada para validaciones locales
+            const baseDate = selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
             
             // Mapa de días de la semana
             const dayOfWeekMap: Record<string, number> = {
@@ -194,12 +195,10 @@ export const CalendarView = () => {
                     const sessionDate = new Date(sessionYear, sessionMonth, sessionDay)
                     
                     const sessionDateISO = sessionDate.toISOString().split('T')[0]
-                    const startDateISO = `${sessionDateISO}T${baseTime}:00`
                     
                     console.log(`  - Sesión ${session.dayOfWeek} (${dayIndex}): ${sessionDateISO}`)
                     
                     const payload: AgendaRequestDTO = {
-                        startDate: startDateISO,
                         reminderMinutes: sessionData?.reminderEnabled ? Number(sessionData.reminderTime) : undefined,
                         comment: sessionData?.notes || undefined,
                         userId: 0,
@@ -221,10 +220,8 @@ export const CalendarView = () => {
                 }
             } else {
                 // Rutina simple: crear un solo item de agenda
-                const startDateISO = `${baseDate}T${baseTime}:00`
                 
                 const payload: AgendaRequestDTO = {
-                    startDate: startDateISO,
                     reminderMinutes: sessionData?.reminderEnabled ? Number(sessionData.reminderTime) : undefined,
                     comment: sessionData?.notes || undefined,
                     userId: 0,
