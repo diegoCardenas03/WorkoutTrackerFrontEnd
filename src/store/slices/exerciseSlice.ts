@@ -71,10 +71,10 @@ export const createExercise = createAsyncThunk(
   'exercises/createExercise',
   async ({ token, data }: { token: string; data: EjercicioRequestDTO }, { rejectWithValue }) => {
     try {
-      console.log('🚀 [exerciseSlice] Creando ejercicio...')
+      // console.log('🚀 [exerciseSlice] Creando ejercicio...')
       ejercicioService.setToken(token)
       const created = await ejercicioService.postAdmin(data)
-      console.log('✅ [exerciseSlice] Ejercicio creado:', created)
+      // console.log('✅ [exerciseSlice] Ejercicio creado:', created)
       return created as unknown as EjercicioResponseDTO
     } catch (error) {
       console.error('❌ [exerciseSlice] Error al crear ejercicio:', error)
@@ -90,10 +90,10 @@ export const updateExercise = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      console.log('🔄 [exerciseSlice] Actualizando ejercicio:', id)
+      // console.log('🔄 [exerciseSlice] Actualizando ejercicio:', id)
       ejercicioService.setToken(token)
       const updated = await ejercicioService.patchAdmin(id, data)
-      console.log('✅ [exerciseSlice] Ejercicio actualizado:', updated)
+      // console.log('✅ [exerciseSlice] Ejercicio actualizado:', updated)
       return updated as unknown as EjercicioResponseDTO
     } catch (error) {
       console.error('❌ [exerciseSlice] Error al actualizar ejercicio:', error)
@@ -107,10 +107,10 @@ export const toggleExerciseActive = createAsyncThunk(
   'exercises/toggleActive',
   async ({ token, id }: { token: string; id: number }, { rejectWithValue }) => {
     try {
-      console.log('🔄 [exerciseSlice] Toggle exercise:', id)
+      // console.log('🔄 [exerciseSlice] Toggle exercise:', id)
       ejercicioService.setToken(token)
       const result = await ejercicioService.toggleActiveAdmin(id)
-      console.log('✅ [exerciseSlice] Estado cambiado:', result)
+      // console.log('✅ [exerciseSlice] Estado cambiado:', result)
       return result
     } catch (error) {
       console.error('❌ [exerciseSlice] Error al toggle exercise:', error)

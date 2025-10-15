@@ -24,12 +24,12 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
   }
 
   async getAll(): Promise<ResponseType[]> {
-    console.log(`🔵 [BackendClient.getAll] GET ${this.baseUrl}?relations=true`)
+    // console.log(`🔵 [BackendClient.getAll] GET ${this.baseUrl}?relations=true`)
     const response = await fetch(`${this.baseUrl}?relations=true`, {
       headers: this.getHeaders(),
     });
     
-    console.log(`🟡 [BackendClient.getAll] Response status: ${response.status}`)
+    // console.log(`🟡 [BackendClient.getAll] Response status: ${response.status}`)
     
     if (!response.ok) {
       const errorText = await response.text()
@@ -38,7 +38,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     }
     
     const data = await response.json();
-    console.log(`✅ [BackendClient.getAll] Datos obtenidos:`, data.length, 'elementos')
+    // console.log(`✅ [BackendClient.getAll] Datos obtenidos:`, data.length, 'elementos')
     return data as ResponseType[];
   }
 
@@ -182,7 +182,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
    * GET /api/{resource}/admin?relations=true
    */
   async getAllAdmin(relations = true): Promise<ResponseType[]> {
-    console.log(`🔵 [BackendClient.getAllAdmin] GET ${this.baseUrl}/admin?relations=${relations}`);
+    // console.log(`🔵 [BackendClient.getAllAdmin] GET ${this.baseUrl}/admin?relations=${relations}`);
     const response = await fetch(`${this.baseUrl}/admin?relations=${relations}`, {
       headers: this.getHeaders(),
     });
@@ -193,7 +193,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     }
     
     const data = await response.json();
-    console.log(`✅ [BackendClient.getAllAdmin] Obtenidos: ${data.length} elementos`);
+    // console.log(`✅ [BackendClient.getAllAdmin] Obtenidos: ${data.length} elementos`);
     return data as ResponseType[];
   }
 
@@ -202,7 +202,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
    * GET /api/{resource}/admin/{id}?relations=true
    */
   async getByIdAdmin(id: number, relations = true): Promise<ResponseType | null> {
-    console.log(`🔵 [BackendClient.getByIdAdmin] GET ${this.baseUrl}/admin/${id}?relations=${relations}`);
+    // console.log(`🔵 [BackendClient.getByIdAdmin] GET ${this.baseUrl}/admin/${id}?relations=${relations}`);
     const response = await fetch(`${this.baseUrl}/admin/${id}?relations=${relations}`, {
       headers: this.getHeaders(),
     });
@@ -213,7 +213,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     }
     
     const data = await response.json();
-    console.log(`✅ [BackendClient.getByIdAdmin] Elemento obtenido:`, data);
+    // console.log(`✅ [BackendClient.getByIdAdmin] Elemento obtenido:`, data);
     return data as ResponseType;
   }
 
@@ -222,7 +222,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
    * POST /api/{resource}/admin
    */
   async postAdmin(data: RequestType): Promise<ResponseType> {
-    console.log(`🔵 [BackendClient.postAdmin] POST ${this.baseUrl}/admin`, data);
+    // console.log(`🔵 [BackendClient.postAdmin] POST ${this.baseUrl}/admin`, data);
     const response = await fetch(`${this.baseUrl}/admin`, {
       method: "POST",
       headers: this.getHeaders(),
@@ -236,7 +236,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     }
     
     const newData = await response.json();
-    console.log(`✅ [BackendClient.postAdmin] Elemento creado:`, newData);
+    // console.log(`✅ [BackendClient.postAdmin] Elemento creado:`, newData);
     return newData as ResponseType;
   }
 
@@ -245,7 +245,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
    * PATCH /api/{resource}/admin/{id}
    */
   async patchAdmin(id: number | string, data: RequestType | Partial<RequestType>): Promise<ResponseType> {
-    console.log(`🔵 [BackendClient.patchAdmin] PATCH ${this.baseUrl}/admin/${id}`, data);
+    // console.log(`🔵 [BackendClient.patchAdmin] PATCH ${this.baseUrl}/admin/${id}`, data);
     const response = await fetch(`${this.baseUrl}/admin/${id}`, {
       method: "PATCH",
       headers: this.getHeaders(),
@@ -259,7 +259,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     }
     
     const newData = await response.json();
-    console.log(`✅ [BackendClient.patchAdmin] Elemento actualizado:`, newData);
+    // console.log(`✅ [BackendClient.patchAdmin] Elemento actualizado:`, newData);
     return newData as ResponseType;
   }
 
@@ -268,7 +268,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
    * PATCH /api/{resource}/admin/{id}/toggle-active
    */
   async toggleActiveAdmin(id: number): Promise<any> {
-    console.log(`🔵 [BackendClient.toggleActiveAdmin] PATCH ${this.baseUrl}/admin/${id}/toggle-active`);
+    // console.log(`🔵 [BackendClient.toggleActiveAdmin] PATCH ${this.baseUrl}/admin/${id}/toggle-active`);
     const response = await fetch(`${this.baseUrl}/admin/${id}/toggle-active`, {
       method: "PATCH",
       headers: this.getHeaders(),
@@ -281,7 +281,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     }
 
     const result = await response.json();
-    console.log(`✅ [BackendClient.toggleActiveAdmin] Estado cambiado:`, result);
+    // console.log(`✅ [BackendClient.toggleActiveAdmin] Estado cambiado:`, result);
     return result;
   }
 
@@ -290,7 +290,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
    * PATCH /api/{resource}/admin/{id}/deactivate
    */
   async deactivateAdmin(id: number): Promise<any> {
-    console.log(`🔵 [BackendClient.deactivateAdmin] PATCH ${this.baseUrl}/admin/${id}/deactivate`);
+    // console.log(`🔵 [BackendClient.deactivateAdmin] PATCH ${this.baseUrl}/admin/${id}/deactivate`);
     const response = await fetch(`${this.baseUrl}/admin/${id}/deactivate`, {
       method: "PATCH",
       headers: this.getHeaders(),
@@ -303,7 +303,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
     }
 
     const result = await response.json();
-    console.log(`✅ [BackendClient.deactivateAdmin] Elemento desactivado:`, result);
+    // console.log(`✅ [BackendClient.deactivateAdmin] Elemento desactivado:`, result);
     return result;
   }
 
@@ -312,7 +312,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
    * DELETE /api/{resource}/admin/{id}
    */
   async hardDeleteAdmin(id: number): Promise<void> {
-    console.log(`🔵 [BackendClient.hardDeleteAdmin] DELETE ${this.baseUrl}/admin/${id}`);
+    // console.log(`🔵 [BackendClient.hardDeleteAdmin] DELETE ${this.baseUrl}/admin/${id}`);
     const response = await fetch(`${this.baseUrl}/admin/${id}`, {
       method: "DELETE",
       headers: this.getHeaders(),
@@ -323,7 +323,7 @@ export abstract class BackendClient<RequestType, ResponseType> extends AbstractB
       throw new Error(`Error al eliminar: ${response.statusText}`);
     }
 
-    console.log(`✅ [BackendClient.hardDeleteAdmin] Elemento eliminado permanentemente`);
+    // console.log(`✅ [BackendClient.hardDeleteAdmin] Elemento eliminado permanentemente`);
   }
 
 }

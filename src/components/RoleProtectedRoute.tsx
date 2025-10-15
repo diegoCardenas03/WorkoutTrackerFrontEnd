@@ -52,12 +52,12 @@ export const RoleProtectedRoute = ({
     
     // Redirigir según el rol del usuario
     if (isOwner) {
-      console.log('🔄 Propietario redirigido a /admin/profile');
+      // console.log('🔄 Propietario redirigido a /admin/profile');
       return <Navigate to="/admin/profile" replace />;
     }
     
     if (isAdmin) {
-      console.log('🔄 Admin redirigido a /admin/profile');
+      // console.log('🔄 Admin redirigido a /admin/profile');
       return <Navigate to="/admin/profile" replace />;
     }
     

@@ -25,10 +25,10 @@ export class ZonaMuscularService extends BackendClient<ZonaMuscularRequestDTO, Z
      * Crear una zona muscular (requiere token de admin)
      */
     async createMuscleZone(token: string, data: ZonaMuscularRequestDTO, image?: File): Promise<ZonaMuscularResponseDTO> {
-        console.log('🔵 [ZonaMuscularService.createMuscleZone] Creando zona muscular...');
-        console.log('🔵 [ZonaMuscularService.createMuscleZone] URL:', `${this.baseUrl}/admin`);
-        console.log('🔵 [ZonaMuscularService.createMuscleZone] Data:', data);
-        console.log('🔵 [ZonaMuscularService.createMuscleZone] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
+        // console.log('🔵 [ZonaMuscularService.createMuscleZone] Creando zona muscular...');
+        // console.log('🔵 [ZonaMuscularService.createMuscleZone] URL:', `${this.baseUrl}/admin`);
+        // console.log('🔵 [ZonaMuscularService.createMuscleZone] Data:', data);
+        // console.log('🔵 [ZonaMuscularService.createMuscleZone] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
         
         // El backend siempre espera multipart/form-data
         const formData = new FormData();
@@ -47,7 +47,7 @@ export class ZonaMuscularService extends BackendClient<ZonaMuscularRequestDTO, Z
             body: formData,
         });
 
-        console.log('🔵 [ZonaMuscularService.createMuscleZone] Response status:', response.status);
+        // console.log('🔵 [ZonaMuscularService.createMuscleZone] Response status:', response.status);
         
         if (!response.ok) {
             const error = await response.json().catch(() => ({ message: 'Error al crear zona muscular' }))
@@ -57,7 +57,7 @@ export class ZonaMuscularService extends BackendClient<ZonaMuscularRequestDTO, Z
         }
 
         const result = await response.json();
-        console.log(`✅ [ZonaMuscularService.createMuscleZone] Zona muscular creada ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
+        // console.log(`✅ [ZonaMuscularService.createMuscleZone] Zona muscular creada ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
         return result;
     }
 
@@ -116,10 +116,10 @@ export class ZonaMuscularService extends BackendClient<ZonaMuscularRequestDTO, Z
      * Actualizar una zona muscular (requiere token de admin)
      */
     async updateMuscleZone(token: string, id: number, data: ZonaMuscularRequestDTO, image?: File): Promise<ZonaMuscularResponseDTO> {
-        console.log('🔄 [ZonaMuscularService.updateMuscleZone] Actualizando zona muscular...');
-        console.log('🔄 [ZonaMuscularService.updateMuscleZone] URL:', `${this.baseUrl}/admin/${id}`);
-        console.log('🔄 [ZonaMuscularService.updateMuscleZone] Data:', data);
-        console.log('🔄 [ZonaMuscularService.updateMuscleZone] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
+        // console.log('🔄 [ZonaMuscularService.updateMuscleZone] Actualizando zona muscular...');
+        // console.log('🔄 [ZonaMuscularService.updateMuscleZone] URL:', `${this.baseUrl}/admin/${id}`);
+        // console.log('🔄 [ZonaMuscularService.updateMuscleZone] Data:', data);
+        // console.log('🔄 [ZonaMuscularService.updateMuscleZone] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
         
         // El backend siempre espera multipart/form-data
         const formData = new FormData();
@@ -138,7 +138,7 @@ export class ZonaMuscularService extends BackendClient<ZonaMuscularRequestDTO, Z
             body: formData,
         });
 
-        console.log('🔄 [ZonaMuscularService.updateMuscleZone] Response status:', response.status);
+        // console.log('🔄 [ZonaMuscularService.updateMuscleZone] Response status:', response.status);
         
         if (!response.ok) {
             const error = await response.json().catch(() => ({ message: 'Error al actualizar zona muscular' }))
@@ -147,7 +147,7 @@ export class ZonaMuscularService extends BackendClient<ZonaMuscularRequestDTO, Z
         }
 
         const result = await response.json();
-        console.log(`✅ [ZonaMuscularService.updateMuscleZone] Zona muscular actualizada ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
+        // console.log(`✅ [ZonaMuscularService.updateMuscleZone] Zona muscular actualizada ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
         return result;
     }
 

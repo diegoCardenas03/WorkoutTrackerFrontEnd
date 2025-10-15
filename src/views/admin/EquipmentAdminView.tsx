@@ -155,10 +155,10 @@ export const EquipmentAdminView = () => {
         },
       })
 
-      console.log('🔑 [EquipmentAdminView] Token obtenido');
+      // console.log('🔑 [EquipmentAdminView] Token obtenido');
 
       if (editingEquipment) {
-        console.log('🔄 [EquipmentAdminView] Actualizando equipamiento...');
+        // console.log('🔄 [EquipmentAdminView] Actualizando equipamiento...');
         const result = await (dispatch as any)(updateEquipment({ 
           token, 
           id: Number(editingEquipment.id), 
@@ -171,11 +171,11 @@ export const EquipmentAdminView = () => {
           throw new Error(result.payload || 'Error al actualizar equipamiento');
         }
         
-        console.log('✅ [EquipmentAdminView] Equipamiento actualizado exitosamente');
+        // console.log('✅ [EquipmentAdminView] Equipamiento actualizado exitosamente');
         setToast({ msg: 'Equipamiento actualizado exitosamente', type: 'success' })
         setTimeout(() => setToast(null), 3000)
       } else {
-        console.log('🚀 [EquipmentAdminView] Llamando a createEquipment...');
+        // console.log('🚀 [EquipmentAdminView] Llamando a createEquipment...');
         const result = await (dispatch as any)(createEquipment({ token, data: payload, image }))
         
         if (result.type.endsWith('/rejected')) {
@@ -183,7 +183,7 @@ export const EquipmentAdminView = () => {
           throw new Error(result.payload || 'Error al crear equipamiento');
         }
         
-        console.log('✅ [EquipmentAdminView] Equipamiento creado exitosamente');
+        // console.log('✅ [EquipmentAdminView] Equipamiento creado exitosamente');
         setToast({ msg: 'Equipamiento creado exitosamente', type: 'success' })
         setTimeout(() => setToast(null), 3000)
       }

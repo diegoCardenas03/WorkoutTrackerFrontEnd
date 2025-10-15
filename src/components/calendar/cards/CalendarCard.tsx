@@ -98,9 +98,9 @@ export const Calendar = ({
       )
       
       if (relevantDates.length > 0) {
-        console.log('🔎 CalendarCard - Fechas destacadas para', monthNames[currentMonth], currentYear, ':')
-        console.log('- Total fechas recibidas:', highlightedDates.length)
-        console.log('- Fechas relevantes para este mes:', relevantDates.length)
+        // console.log('🔎 CalendarCard - Fechas destacadas para', monthNames[currentMonth], currentYear, ':')
+        // console.log('- Total fechas recibidas:', highlightedDates.length)
+        // console.log('- Fechas relevantes para este mes:', relevantDates.length)
         
         // Agrupar fechas por día para ver qué días se destacarán
         const dayGroups: Record<number, Date[]> = {}
@@ -110,10 +110,10 @@ export const Calendar = ({
           dayGroups[day].push(date)
         })
         
-        console.log('- Días que se destacarán:', Object.keys(dayGroups).length)
-        console.log('- Días destacados:', Object.keys(dayGroups).join(', '))
+        // console.log('- Días que se destacarán:', Object.keys(dayGroups).length)
+        // console.log('- Días destacados:', Object.keys(dayGroups).join(', '))
       } else {
-        console.log('🔎 CalendarCard - No hay fechas destacadas para', monthNames[currentMonth], currentYear)
+        // console.log('🔎 CalendarCard - No hay fechas destacadas para', monthNames[currentMonth], currentYear)
       }
     }
   }, [highlightedDates, currentMonth, currentYear, monthNames])

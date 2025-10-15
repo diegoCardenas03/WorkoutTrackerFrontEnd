@@ -25,7 +25,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
      * GET /api/exercises/admin?relations=true
      */
     override async getAll(): Promise<EjercicioResponseDTO[]> {
-        console.log('🔵 [EjercicioService.getAll] Obteniendo todos los ejercicios (admin)...');
+        // console.log('🔵 [EjercicioService.getAll] Obteniendo todos los ejercicios (admin)...');
         const response = await fetch(`${this.baseUrl}/admin?relations=true`, {
             headers: this.getHeaders(),
         });
@@ -36,7 +36,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
         }
         
         const data = await response.json();
-        console.log('✅ [EjercicioService.getAll] Ejercicios obtenidos:', data.length);
+        // console.log('✅ [EjercicioService.getAll] Ejercicios obtenidos:', data.length);
         return data as EjercicioResponseDTO[];
     }
 
@@ -45,7 +45,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
      * GET /api/exercises/admin/{id}?relations=true
      */
     override async getById(id: number): Promise<EjercicioResponseDTO | null> {
-        console.log('🔵 [EjercicioService.getById] Obteniendo ejercicio:', id);
+        // console.log('🔵 [EjercicioService.getById] Obteniendo ejercicio:', id);
         const response = await fetch(`${this.baseUrl}/admin/${id}?relations=true`, {
             headers: this.getHeaders(),
         });
@@ -56,7 +56,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
         }
         
         const data = await response.json();
-        console.log('✅ [EjercicioService.getById] Ejercicio obtenido:', data);
+        // console.log('✅ [EjercicioService.getById] Ejercicio obtenido:', data);
         return data as EjercicioResponseDTO;
     }
 
@@ -65,7 +65,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
      * POST /api/exercises/admin
      */
     override async post(data: EjercicioRequestDTO): Promise<EjercicioResponseDTO> {
-        console.log('🔵 [EjercicioService.post] Creando ejercicio...', data);
+        // console.log('🔵 [EjercicioService.post] Creando ejercicio...', data);
         const response = await fetch(`${this.baseUrl}/admin`, {
             method: "POST",
             headers: this.getHeaders(),
@@ -79,7 +79,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
         }
         
         const newData = await response.json();
-        console.log('✅ [EjercicioService.post] Ejercicio creado:', newData);
+        // console.log('✅ [EjercicioService.post] Ejercicio creado:', newData);
         return newData as EjercicioResponseDTO;
     }
 
@@ -88,7 +88,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
      * PATCH /api/exercises/admin/{id}
      */
     override async patch(id: number | string, data: EjercicioRequestDTO): Promise<EjercicioResponseDTO> {
-        console.log('🔵 [EjercicioService.patch] Actualizando ejercicio:', id);
+        // console.log('🔵 [EjercicioService.patch] Actualizando ejercicio:', id);
         const response = await fetch(`${this.baseUrl}/admin/${id}`, {
             method: "PATCH",
             headers: this.getHeaders(),
@@ -102,7 +102,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
         }
         
         const newData = await response.json();
-        console.log('✅ [EjercicioService.patch] Ejercicio actualizado:', newData);
+        // console.log('✅ [EjercicioService.patch] Ejercicio actualizado:', newData);
         return newData as EjercicioResponseDTO;
     }
 
@@ -111,7 +111,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
      * PATCH /api/exercises/admin/{id}/toggle-active
      */
     async toggleActive(id: number): Promise<any> {
-        console.log('🔵 [EjercicioService.toggleActive] Toggle ejercicio:', id);
+        // console.log('🔵 [EjercicioService.toggleActive] Toggle ejercicio:', id);
         const response = await fetch(`${this.baseUrl}/admin/${id}/toggle-active`, {
             method: 'PATCH',
             headers: this.getHeaders(),
@@ -124,7 +124,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
         }
 
         const result = await response.json();
-        console.log('✅ [EjercicioService.toggleActive] Estado cambiado:', result);
+        // console.log('✅ [EjercicioService.toggleActive] Estado cambiado:', result);
         return result;
     }
 
@@ -133,7 +133,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
      * PATCH /api/exercises/admin/{id}/deactivate
      */
     async deactivateExercise(id: number): Promise<any> {
-        console.log('🔵 [EjercicioService.deactivateExercise] Desactivando ejercicio:', id);
+        // console.log('🔵 [EjercicioService.deactivateExercise] Desactivando ejercicio:', id);
         const response = await fetch(`${this.baseUrl}/admin/${id}/deactivate`, {
             method: 'PATCH',
             headers: this.getHeaders(),
@@ -146,7 +146,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
         }
 
         const result = await response.json();
-        console.log('✅ [EjercicioService.deactivateExercise] Ejercicio desactivado:', result);
+        // console.log('✅ [EjercicioService.deactivateExercise] Ejercicio desactivado:', result);
         return result;
     }
 
@@ -155,7 +155,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
      * GET /api/exercises?relations=true
      */
     async getAllActive(): Promise<EjercicioResponseDTO[]> {
-        console.log('🔵 [EjercicioService.getAllActive] Obteniendo ejercicios activos...');
+        // console.log('🔵 [EjercicioService.getAllActive] Obteniendo ejercicios activos...');
         const response = await fetch(`${this.baseUrl}?relations=true`, {
             headers: this.getHeaders(),
         });
@@ -165,7 +165,7 @@ export class EjercicioService extends BackendClient<EjercicioRequestDTO, Ejercic
         }
         
         const data = await response.json();
-        console.log('✅ [EjercicioService.getAllActive] Ejercicios activos obtenidos:', data.length);
+        // console.log('✅ [EjercicioService.getAllActive] Ejercicios activos obtenidos:', data.length);
         return data as EjercicioResponseDTO[];
     }
 }

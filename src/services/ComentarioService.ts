@@ -126,7 +126,7 @@ export class ComentarioService {
    * GET /api/comments/liked
    */
   async getLikedComentarios(token: string): Promise<any[]> {
-    console.log('🔵 [ComentarioService.getLikedComentarios] Obteniendo comentarios con like del usuario');
+    // console.log('🔵 [ComentarioService.getLikedComentarios] Obteniendo comentarios con like del usuario');
     const response = await fetch(`${this.baseUrl}/liked`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -139,7 +139,7 @@ export class ComentarioService {
     }
 
     const data = await response.json();
-    console.log('✅ [ComentarioService.getLikedComentarios] Comentarios obtenidos:', data.length);
+    // console.log('✅ [ComentarioService.getLikedComentarios] Comentarios obtenidos:', data.length);
     return data;
   }
 

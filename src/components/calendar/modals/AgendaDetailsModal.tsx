@@ -42,13 +42,13 @@ export const AgendaDetailsModal = ({
     : null
   
   // Debug: ver qué datos tenemos
-  console.log('🔍 Debug AgendaDetailsModal:')
-  console.log('- sessionId:', sessionId)
-  console.log('- fullRoutine:', fullRoutine)
-  console.log('- routineToUse:', routineToUse)
-  console.log('- routineToUse.sessions:', routineToUse?.sessions)
-  console.log('- currentSession:', currentSession)
-  console.log('- currentSession?.sessionExercises:', currentSession?.sessionExercises)
+  // console.log('🔍 Debug AgendaDetailsModal:')
+  // console.log('- sessionId:', sessionId)
+  // console.log('- fullRoutine:', fullRoutine)
+  // console.log('- routineToUse:', routineToUse)
+  // console.log('- routineToUse.sessions:', routineToUse?.sessions)
+  // console.log('- currentSession:', currentSession)
+  // console.log('- currentSession?.sessionExercises:', currentSession?.sessionExercises)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

@@ -75,7 +75,7 @@ export const MyRoutinesView = () => {
         const loadRoutines = async () => {
             // Siempre intentar cargar rutinas al montar el componente
             try {
-                console.log('🔵 [MyRoutinesView] Cargando rutinas...')
+                // console.log('🔵 [MyRoutinesView] Cargando rutinas...')
                 const startTime = Date.now()
                 
                 const token = await getAccessTokenSilently({
@@ -84,9 +84,9 @@ export const MyRoutinesView = () => {
                         scope: "openid profile email",
                     },
                 });
-                console.log('🔑 [MyRoutinesView] Token obtenido')
+                // console.log('🔑 [MyRoutinesView] Token obtenido') 
                 await (dispatch as any)(fetchRoutines(token))
-                console.log('✅ [MyRoutinesView] Rutinas cargadas desde el store')
+                // console.log('✅ [MyRoutinesView] Rutinas cargadas desde el store')
                 
                 // Delay mínimo de 500ms para UX profesional
                 const elapsed = Date.now() - startTime
@@ -252,7 +252,7 @@ export const MyRoutinesView = () => {
             // Verificar si la rutina ya está guardada
             const isSaved = savedRoutinesFromStore.some(r => r.id === routineId)
             
-            console.log('🔵 Toggle save en rutina:', routineId, 'actualmente guardada:', isSaved)
+            // console.log('🔵 Toggle save en rutina:', routineId, 'actualmente guardada:', isSaved)
             
             // El backend hace toggle automáticamente
             await (dispatch as any)(savePublicRoutine({ token, routineId })).unwrap()
@@ -495,7 +495,7 @@ export const MyRoutinesView = () => {
     }
 
     const handleContinueToSelection = (data: any) => {
-        console.log("📝 Datos recibidos del modal:", data)
+        // console.log("📝 Datos recibidos del modal:", data)
     // setRoutineFormData(data)
         setIsConfigRoutineModalOpen(false)
 
@@ -503,17 +503,17 @@ export const MyRoutinesView = () => {
         localStorage.setItem('pendingRoutineData', JSON.stringify(data))
 
         // Disparar evento personalizado para abrir el catálogo en modo selección
-        console.log("🔥 Disparando evento openCatalogSelectMode")
+        // console.log("🔥 Disparando evento openCatalogSelectMode")
         const event = new CustomEvent('openCatalogSelectMode', {
             detail: data
         })
         window.dispatchEvent(event)
-        console.log("✅ Evento disparado")
+        // console.log("✅ Evento disparado")
 
-        console.log("Datos de rutina:", data)
-        console.log("Continuando a selección de ejercicios...")
+        // console.log("Datos de rutina:", data)
+        // console.log("Continuando a selección de ejercicios...")
 
-        console.log("🧭 Navegando a /catalog")
+        // console.log("🧭 Navegando a /catalog")
         navigate('/catalog')
     }
 

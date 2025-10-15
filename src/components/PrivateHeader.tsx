@@ -24,7 +24,7 @@ export const PrivateHeader = ({ onToggleSidebar, isSidebarOpen, isMessage }: Pri
     // Escuchar evento de actualización de perfil
     useEffect(() => {
         const handleProfileUpdate = () => {
-            console.log('🔄 [PrivateHeader] Perfil actualizado, recargando datos...');
+            // console.log('🔄 [PrivateHeader] Perfil actualizado, recargando datos...');
             refetch();
         };
 

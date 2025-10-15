@@ -20,7 +20,7 @@ export const CallbackView = () => {
     const urlErrorDescription = searchParams.get('error_description');
 
     if (urlError) {
-      console.error('🚨 [CallbackView] Error de Auth0 en URL:', urlError, urlErrorDescription);
+      // console.error('🚨 [CallbackView] Error de Auth0 en URL:', urlError, urlErrorDescription);
       
       let message = '';
       if (urlError === 'access_denied') {
@@ -38,16 +38,16 @@ export const CallbackView = () => {
           key.startsWith('@@auth0spajs@@') || key.startsWith('a0.spajs')
         );
         auth0Keys.forEach(key => {
-          console.log('🗑️ Limpiando clave de Auth0:', key);
+          // console.log('🗑️ Limpiando clave de Auth0:', key);
           localStorage.removeItem(key);
         });
       } catch (e) {
-        console.error('Error al limpiar localStorage:', e);
+        // console.error('Error al limpiar localStorage:', e);
       }
     }
 
     if (auth0Error) {
-      console.error('🚨 [CallbackView] Error de Auth0 hook:', auth0Error);
+      // console.error('🚨 [CallbackView] Error de Auth0 hook:', auth0Error);
       setError(auth0Error.message || 'Error de autenticación.');
     }
   }, [searchParams, auth0Error]);
@@ -56,7 +56,7 @@ export const CallbackView = () => {
     const handleAuthCallback = async () => {
       // Si hay error, no proceder
       if (error) {
-        console.log('⚠️ [CallbackView] Callback detenido por error:', error);
+        // console.log('⚠️ [CallbackView] Callback detenido por error:', error);
         return;
       }
 
@@ -71,8 +71,8 @@ export const CallbackView = () => {
             },
           });
 
-          console.log("Token obtenido correctamente");
-          console.log("Usuario de Auth0:", user);
+          // console.log("Token obtenido correctamente");
+          // console.log("Usuario de Auth0:", user);
 
           // Guardar el token para uso posterior
           setAccessToken(token);
@@ -81,27 +81,27 @@ export const CallbackView = () => {
           let userData;
           let userWasCreated = false;
           
-          console.log('📋 [CallbackView] Verificando si usuario ya existe en backend...');
+          // console.log('📋 [CallbackView] Verificando si usuario ya existe en backend...');
           try {
             userData = await usuarioService.getCurrentUser(token);
             
-            console.log('✅ [CallbackView] Usuario YA EXISTE en backend:', userData);
+            // console.log('✅ [CallbackView] Usuario YA EXISTE en backend:', userData);
           } catch (error) {
             // Usuario no existe, crear uno nuevo
-            console.log('❌ [CallbackView] Usuario NO EXISTE en backend, procediendo a registrar...');
-            console.log('🚀 [CallbackView] Llamando a usuarioService.signupUser()...');
+            // console.log('❌ [CallbackView] Usuario NO EXISTE en backend, procediendo a registrar...');
+            // console.log('🚀 [CallbackView] Llamando a usuarioService.signupUser()...');
             userData = await usuarioService.signupUser(token);
             userWasCreated = true;
-            console.log('✅ [CallbackView] Usuario CREADO exitosamente:', userData);
-            console.log('📊 [CallbackView] userWasCreated =', userWasCreated);
+            // console.log('✅ [CallbackView] Usuario CREADO exitosamente:', userData);
+            // console.log('📊 [CallbackView] userWasCreated =', userWasCreated);
 
             // IMPORTANTE: Cuando se crea un usuario nuevo, Auth0 necesita tiempo para asignar roles
             // Esperamos un momento y luego forzamos la renovación del token para obtener los roles
-            console.log('⏱️ [CallbackView] Usuario NUEVO creado - esperando 2s para que Auth0 asigne roles...');
+            // console.log('⏱️ [CallbackView] Usuario NUEVO creado - esperando 2s para que Auth0 asigne roles...');
             await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2 segundos
 
             // Forzar renovación del token sin caché para obtener los claims con roles
-            console.log('🔄 [CallbackView] Renovando token con cacheMode: off para obtener roles actualizados...');
+            // console.log('🔄 [CallbackView] Renovando token con cacheMode: off para obtener roles actualizados...');
             const refreshedToken = await getAccessTokenSilently({
               authorizationParams: {
                 audience: import.meta.env.VITE_AUTH0_AUDIENCE,
@@ -109,17 +109,17 @@ export const CallbackView = () => {
               },
               cacheMode: 'off', // No usar caché, forzar renovación
             });
-            console.log('✅ [CallbackView] Token renovado exitosamente');
-            console.log('🔍 [CallbackView] Nuevo token obtenido (primeros 50 chars):', refreshedToken.substring(0, 50) + '...');
+            // console.log('✅ [CallbackView] Token renovado exitosamente');
+            // console.log('🔍 [CallbackView] Nuevo token obtenido (primeros 50 chars):', refreshedToken.substring(0, 50) + '...');
           }
 
           // Verificar si es primera vez que inicia sesión
-          console.log('🔍 [CallbackView] Verificando si mostrar modal de username...');
-          console.log('📊 [CallbackView] userWasCreated:', userWasCreated);
-          console.log('📊 [CallbackView] userData.createdAt:', userData?.createdAt);
-          console.log('📊 [CallbackView] userData.lastAccess:', userData?.lastAccess);
-          console.log('📊 [CallbackView] userData.name:', userData?.name);
-          console.log('📊 [CallbackView] userData.pictureUrl:', userData?.pictureUrl);
+          // console.log('🔍 [CallbackView] Verificando si mostrar modal de username...');
+          // console.log('📊 [CallbackView] userWasCreated:', userWasCreated);
+          // console.log('📊 [CallbackView] userData.createdAt:', userData?.createdAt);
+          // console.log('📊 [CallbackView] userData.lastAccess:', userData?.lastAccess);
+          // console.log('📊 [CallbackView] userData.name:', userData?.name);
+          // console.log('📊 [CallbackView] userData.pictureUrl:', userData?.pictureUrl);
           
           // Calcular si debe mostrar el modal:
           // 1. Si userWasCreated = true (usuario acabó de crearse en este login)
@@ -134,7 +134,7 @@ export const CallbackView = () => {
             if (!userData.lastAccess) {
               // Si no tiene lastAccess, es primera vez
               isFirstLogin = true;
-              console.log('🆕 [CallbackView] Primera vez: lastAccess es null');
+              // console.log('🆕 [CallbackView] Primera vez: lastAccess es null');
             } else {
               // Comparar createdAt con lastAccess (si son muy cercanos, es primera vez)
               const createdAt = new Date(userData.createdAt);
@@ -143,7 +143,7 @@ export const CallbackView = () => {
               
               if (diffInSeconds < 10) {
                 isFirstLogin = true;
-                console.log(`🆕 [CallbackView] Primera vez: createdAt y lastAccess muy cercanos (${diffInSeconds.toFixed(2)} seg)`);
+                // console.log(`🆕 [CallbackView] Primera vez: createdAt y lastAccess muy cercanos (${diffInSeconds.toFixed(2)} seg)`);
               }
             }
           }
@@ -158,27 +158,27 @@ export const CallbackView = () => {
             (userData.role.name === 'ADMIN' || userData.role.name === 'PROPIETARIO');
           
           if (alreadyConfigured) {
-            console.log('✅ [CallbackView] Usuario ya configuró su perfil previamente');
-            console.log('📊 [CallbackView] hasCustomName:', hasCustomName, '| hasCloudinaryImage:', hasCloudinaryImage);
+            // console.log('✅ [CallbackView] Usuario ya configuró su perfil previamente');
+            // console.log('📊 [CallbackView] hasCustomName:', hasCustomName, '| hasCloudinaryImage:', hasCloudinaryImage);
             isFirstLogin = false;
           }
           
           if (isAdminOrOwner) {
-            console.log('👔 [CallbackView] Usuario es ADMIN o PROPIETARIO - No mostrar modal de configuración');
+            // console.log('👔 [CallbackView] Usuario es ADMIN o PROPIETARIO - No mostrar modal de configuración');
             isFirstLogin = false;
           }
           
           if (isFirstLogin && !alreadyConfigured && !isAdminOrOwner) {
-            console.log('📝 [CallbackView] Primera vez Y sin configurar - Mostrando modal de username');
+            // console.log('📝 [CallbackView] Primera vez Y sin configurar - Mostrando modal de username');
             setShowUsernameModal(true);
           } else {
             // Si no es primera vez o ya está configurado, ir directo al dashboard
-            console.log("✅ [CallbackView] Usuario existente o ya configurado - Navegando a /");
-            console.log("📊 [CallbackView] Usuario final:", userData);
+            // console.log("✅ [CallbackView] Usuario existente o ya configurado - Navegando a /");
+            // console.log("📊 [CallbackView] Usuario final:", userData);
             navigate("/", { replace: true });
           }
         } catch (err: any) {
-          console.error("Error en callback de autenticación:", err);
+          // console.error("Error en callback de autenticación:", err);
           setError(err.message || "Error al conectar con el servidor. Por favor, intenta nuevamente.");
         }
       }
@@ -195,13 +195,13 @@ export const CallbackView = () => {
     setIsSavingUsername(true);
     try {
       await usuarioService.setUsername(accessToken, username, profileImage);
-      console.log("✅ Username y foto de perfil establecidos correctamente:", username);
+      // console.log("✅ Username y foto de perfil establecidos correctamente:", username);
       
       // Cerrar modal y redirigir
       setShowUsernameModal(false);
       navigate("/", { replace: true });
     } catch (err: any) {
-      console.error("Error al establecer username:", err);
+      // console.error("Error al establecer username:", err);
       setError(err.message || "Error al guardar el nombre de usuario. Por favor, intenta nuevamente.");
       setShowUsernameModal(false);
     } finally {
@@ -211,7 +211,7 @@ export const CallbackView = () => {
 
   const handleSkipUsername = async () => {
     if (!accessToken || !user?.email) {
-      console.log("⚠️ Usuario saltó la configuración sin token o email");
+      // console.log("⚠️ Usuario saltó la configuración sin token o email");
       setShowUsernameModal(false);
       navigate("/", { replace: true });
       return;
@@ -228,24 +228,24 @@ export const CallbackView = () => {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
       
-      console.log(`📧 [CallbackView] Usuario saltó configuración - usando nombre del email: "${formattedName}"`);
+      // console.log(`📧 [CallbackView] Usuario saltó configuración - usando nombre del email: "${formattedName}"`);
       
       // Obtener imagen de Auth0 si existe
       const auth0Picture = user.picture;
       if (auth0Picture) {
-        console.log(`🖼️ [CallbackView] Asignando imagen de Auth0: ${auth0Picture}`);
+        // console.log(`🖼️ [CallbackView] Asignando imagen de Auth0: ${auth0Picture}`);
         await usuarioService.setUsername(accessToken, formattedName, undefined, auth0Picture);
       } else {
-        console.log(`📷 [CallbackView] Sin imagen de Auth0 - usando imagen por defecto`);
+        // console.log(`📷 [CallbackView] Sin imagen de Auth0 - usando imagen por defecto`);
         await usuarioService.setUsername(accessToken, formattedName);
       }
       
-      console.log("✅ Nombre e imagen por defecto establecidos correctamente:", formattedName);
+      // console.log("✅ Nombre e imagen por defecto establecidos correctamente:", formattedName);
       
       setShowUsernameModal(false);
       navigate("/", { replace: true });
     } catch (err: any) {
-      console.error("Error al establecer nombre por defecto:", err);
+      // console.error("Error al establecer nombre por defecto:", err);
       // Aunque falle, dejamos que el usuario entre
       setShowUsernameModal(false);
       navigate("/", { replace: true });

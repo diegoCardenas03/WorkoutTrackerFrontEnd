@@ -11,8 +11,8 @@ class UsuarioService {
    * @returns Usuario registrado o existente
    */
   async signupUser(token: string): Promise<UsuarioResponseDTO> {
-    console.log('🔵 [UsuarioService.signupUser] Iniciando registro de usuario...');
-    console.log('🔵 [UsuarioService.signupUser] URL:', `${this.BASE_URL}${this.BASE_PATH}/signup`);
+    // console.log('🔵 [UsuarioService.signupUser] Iniciando registro de usuario...');
+    // console.log('🔵 [UsuarioService.signupUser] URL:', `${this.BASE_URL}${this.BASE_PATH}/signup`);
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/signup`, {
       method: 'POST',
       headers: {
@@ -27,7 +27,7 @@ class UsuarioService {
     }
 
     const userData = await response.json();
-    console.log('✅ [UsuarioService.signupUser] Usuario registrado exitosamente:', userData);
+    // console.log('✅ [UsuarioService.signupUser] Usuario registrado exitosamente:', userData);
     return userData;
   }
 
@@ -82,8 +82,8 @@ class UsuarioService {
    * @throws Error si el usuario no existe
    */
   async getCurrentUser(token: string): Promise<UsuarioResponseDTO> {
-    console.log('🟡 [UsuarioService.getCurrentUser] Obteniendo usuario actual...');
-    console.log('🟡 [UsuarioService.getCurrentUser] URL:', `${this.BASE_URL}${this.BASE_PATH}/me`);
+    // console.log('🟡 [UsuarioService.getCurrentUser] Obteniendo usuario actual...');
+    // console.log('🟡 [UsuarioService.getCurrentUser] URL:', `${this.BASE_URL}${this.BASE_PATH}/me`);
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/me`, {
       method: 'GET',
       headers: {
@@ -93,13 +93,13 @@ class UsuarioService {
     });
 
     if (!response.ok) {
-      console.log('❌ [UsuarioService.getCurrentUser] Usuario no encontrado (404) - procederá a crear');
+      // console.log('❌ [UsuarioService.getCurrentUser] Usuario no encontrado (404) - procederá a crear');
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `Error al obtener usuario actual: ${response.statusText}`);
     }
 
     const userData = await response.json();
-    console.log('✅ [UsuarioService.getCurrentUser] Usuario encontrado:', userData);
+    // console.log('✅ [UsuarioService.getCurrentUser] Usuario encontrado:', userData);
     return userData;
   }
 
@@ -112,15 +112,15 @@ class UsuarioService {
   async getOrCreateUser(token: string): Promise<UsuarioResponseDTO> {
     try {
       // Primero intentar obtener el usuario existente
-      console.log('Verificando si el usuario ya existe...');
+      // console.log('Verificando si el usuario ya existe...');
       const existingUser = await this.getCurrentUser(token);
-      console.log('Usuario existente encontrado:', existingUser);
+      // console.log('Usuario existente encontrado:', existingUser);
       return existingUser;
     } catch (error) {
       // Si el usuario no existe, registrarlo
-      console.log('Usuario no existe, procediendo a registrar...');
+      // console.log('Usuario no existe, procediendo a registrar...');
       const newUser = await this.signupUser(token);
-      console.log('Usuario registrado exitosamente:', newUser);
+      // console.log('Usuario registrado exitosamente:', newUser);
       return newUser;
     }
   }
@@ -133,10 +133,10 @@ class UsuarioService {
    * @returns Usuario actualizado
    */
   async updateProfile(token: string, data: UsuarioUpdateRequestDTO, image?: File): Promise<UsuarioResponseDTO> {
-    console.log('🔄 [UsuarioService.updateProfile] Actualizando perfil...');
-    console.log('🔄 [UsuarioService.updateProfile] URL:', `${this.BASE_URL}${this.BASE_PATH}`);
-    console.log('🔄 [UsuarioService.updateProfile] Data:', data);
-    console.log('🔄 [UsuarioService.updateProfile] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
+    // console.log('🔄 [UsuarioService.updateProfile] Actualizando perfil...');
+    // console.log('🔄 [UsuarioService.updateProfile] URL:', `${this.BASE_URL}${this.BASE_PATH}`);
+    // console.log('🔄 [UsuarioService.updateProfile] Data:', data);
+    // console.log('🔄 [UsuarioService.updateProfile] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
     
     // El backend siempre espera multipart/form-data, así que siempre usamos FormData
     const formData = new FormData();
@@ -165,7 +165,7 @@ class UsuarioService {
     }
 
     const result = await response.json();
-    console.log(`✅ [UsuarioService.updateProfile] Perfil actualizado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
+    // console.log(`✅ [UsuarioService.updateProfile] Perfil actualizado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
     return result;
   }
 
@@ -194,7 +194,7 @@ class UsuarioService {
    * @returns Lista de usuarios
    */
   async getAllUsers(token: string): Promise<UsuarioResponseDTO[]> {
-    console.log('🔵 [UsuarioService.getAllUsers] Obteniendo usuarios...');
+    // console.log('🔵 [UsuarioService.getAllUsers] Obteniendo usuarios...');
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/admin/users`, {
       method: 'GET',
       headers: {
@@ -210,7 +210,7 @@ class UsuarioService {
     }
 
     const users = await response.json();
-    console.log('✅ [UsuarioService.getAllUsers] Usuarios obtenidos:', users.length);
+    // console.log('✅ [UsuarioService.getAllUsers] Usuarios obtenidos:', users.length);
     return users;
   }
 
@@ -220,7 +220,7 @@ class UsuarioService {
    * @returns Lista de administradores
    */
   async getAllAdmins(token: string): Promise<UsuarioResponseDTO[]> {
-    console.log('🔵 [UsuarioService.getAllAdmins] Obteniendo administradores...');
+    // console.log('🔵 [UsuarioService.getAllAdmins] Obteniendo administradores...');
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/admin/admins`, {
       method: 'GET',
       headers: {
@@ -236,7 +236,7 @@ class UsuarioService {
     }
 
     const admins = await response.json();
-    console.log('✅ [UsuarioService.getAllAdmins] Administradores obtenidos:', admins.length);
+    // console.log('✅ [UsuarioService.getAllAdmins] Administradores obtenidos:', admins.length);
     return admins;
   }
 
@@ -247,8 +247,8 @@ class UsuarioService {
    * @returns Administrador registrado
    */
   async registerAdmin(token: string, data: { email: string; password: string; name?: string }): Promise<UsuarioResponseDTO> {
-    console.log('🔵 [UsuarioService.registerAdmin] Registrando nuevo administrador...');
-    console.log('🔵 [UsuarioService.registerAdmin] Data:', { email: data.email, name: data.name });
+    // console.log('🔵 [UsuarioService.registerAdmin] Registrando nuevo administrador...');
+    // console.log('🔵 [UsuarioService.registerAdmin] Data:', { email: data.email, name: data.name });
     
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/admin/signup`, {
       method: 'POST',
@@ -266,7 +266,7 @@ class UsuarioService {
     }
 
     const admin = await response.json();
-    console.log('✅ [UsuarioService.registerAdmin] Administrador registrado:', admin);
+    // console.log('✅ [UsuarioService.registerAdmin] Administrador registrado:', admin);
     return admin;
   }
 
@@ -277,7 +277,7 @@ class UsuarioService {
    * @returns Usuario actualizado
    */
   async toggleUserActive(token: string, userId: number): Promise<UsuarioResponseDTO> {
-    console.log('🔵 [UsuarioService.toggleUserActive] Toggle active para usuario:', userId);
+    // console.log('🔵 [UsuarioService.toggleUserActive] Toggle active para usuario:', userId);
     
     const response = await fetch(`${this.BASE_URL}${this.BASE_PATH}/admin/${userId}/toggle-active`, {
       method: 'PATCH',
@@ -294,7 +294,7 @@ class UsuarioService {
     }
 
     const user = await response.json();
-    console.log('✅ [UsuarioService.toggleUserActive] Usuario actualizado:', user);
+    // console.log('✅ [UsuarioService.toggleUserActive] Usuario actualizado:', user);
     return user;
   }
 }

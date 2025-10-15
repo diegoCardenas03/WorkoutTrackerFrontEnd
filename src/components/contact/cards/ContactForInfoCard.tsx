@@ -48,7 +48,7 @@ export const ContactForInfoCard = () => {
     }
 
     const handleSubmit = () => {
-        console.log("Enviar solicitud comercial:", formData)
+        // console.log("Enviar solicitud comercial:", formData)
         // Aquí iría la lógica para enviar el formulario
     }
 

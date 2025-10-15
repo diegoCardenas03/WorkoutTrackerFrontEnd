@@ -52,20 +52,20 @@ export const CalendarView = () => {
             'SATURDAY': 6
         }
         
-        console.log('🔍 Calculando días a destacar en calendario...')
+        // console.log('🔍 Calculando días a destacar en calendario...')
         
         // SOLUCIÓN: Obtener información completa de rutinas para cada agenda
         // Para cada agenda, buscamos la rutina completa en el store
         const agendaItems = agenda.items ?? []
         
         agendaItems.forEach((agendaItem, index) => {
-            console.log(`\n📝 Agenda #${index + 1}: ${agendaItem.id}`)
-            console.log(`- Fecha de inicio: ${new Date(agendaItem.startDate).toLocaleDateString()}`)
+            // console.log(`\n📝 Agenda #${index + 1}: ${agendaItem.id}`)
+            // console.log(`- Fecha de inicio: ${new Date(agendaItem.startDate).toLocaleDateString()}`)
             
             // Obtener el ID de la rutina desde el item de agenda
             const routineId = agendaItem.routine?.id
             if (!routineId) {
-                console.log('❌ No se encontró ID de rutina en este item de agenda')
+                // console.log('❌ No se encontró ID de rutina en este item de agenda')
                 return
             }
             
@@ -73,7 +73,7 @@ export const CalendarView = () => {
             const fullRoutine = routines.find(r => r.id === routineId)
             
             if (!fullRoutine) {
-                console.log(`❌ No se encontró la rutina ID=${routineId} en el store`)
+                // console.log(`❌ No se encontró la rutina ID=${routineId} en el store`)
                 // Fallback: usar solo la fecha de la agenda
                 const date = new Date(agendaItem.startDate)
                 highlightedDates.push(date)
@@ -86,8 +86,8 @@ export const CalendarView = () => {
                 return
             }
             
-            console.log(`✅ Rutina encontrada: ${fullRoutine.name} (ID=${fullRoutine.id})`)
-            console.log(`- Sesiones en la rutina: ${fullRoutine.sessions?.length || 0}`)
+            // console.log(`✅ Rutina encontrada: ${fullRoutine.name} (ID=${fullRoutine.id})`)
+            // console.log(`- Sesiones en la rutina: ${fullRoutine.sessions?.length || 0}`)
             
             // Si la rutina tiene sesiones, procesar cada una para destacar sus días
             if (fullRoutine.sessions?.length) {
@@ -95,7 +95,7 @@ export const CalendarView = () => {
                 const startDate = new Date(agendaItem.startDate)
                 const startDateDay = startDate.getDay() // Día de la semana (0-6)
                 
-                console.log(`- Fecha inicio: ${startDate.toLocaleDateString()} (${['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][startDateDay]})`)
+                // console.log(`- Fecha inicio: ${startDate.toLocaleDateString()} (${['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][startDateDay]})`)
                 
                 // Para cada sesión, destacar su día de la semana correspondiente
                 fullRoutine.sessions.forEach(session => {
@@ -104,11 +104,11 @@ export const CalendarView = () => {
                     const sessionDay = dayOfWeekMap[dayOfWeek]
                     
                     if (sessionDay === undefined) {
-                        console.log(`❌ Día de semana no reconocido: ${dayOfWeek}`)
+                        // console.log(`❌ Día de semana no reconocido: ${dayOfWeek}`)
                         return
                     }
                     
-                    console.log(`- Procesando sesión: ${session.name} (${dayOfWeek}) - día ${sessionDay}`)
+                    // console.log(`- Procesando sesión: ${session.name} (${dayOfWeek}) - día ${sessionDay}`)
                     
                     // Calcular el desplazamiento desde el día de inicio hasta el día de la sesión
                     const daysDiff = (sessionDay - startDateDay + 7) % 7
@@ -117,7 +117,7 @@ export const CalendarView = () => {
                     // Obtener la primera fecha para esta sesión
                     const firstSessionDate = new Date(startDate.getTime() + daysDiff * daysInMs)
                     
-                    console.log(`  Primera fecha: ${firstSessionDate.toLocaleDateString()} (${['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][firstSessionDate.getDay()]})`)
+                    // console.log(`  Primera fecha: ${firstSessionDate.toLocaleDateString()} (${['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][firstSessionDate.getDay()]})`)
                     
                     // Generar fechas para 12 semanas (3 meses)
                     for (let week = 0; week < 12; week++) {
@@ -129,14 +129,14 @@ export const CalendarView = () => {
                         if (!dayCountMap[dateStr]) dayCountMap[dateStr] = new Set()
                         dayCountMap[dateStr].add(routineId)
                         
-                        if (week < 3) { // Mostrar solo las primeras 3 para no sobrecargar la consola
-                            console.log(`  Semana ${week + 1}: ${sessionDate.toLocaleDateString()}`)
-                        }
+                        // if (week < 3) { // Mostrar solo las primeras 3 para no sobrecargar la consola
+                        //     console.log(`  Semana ${week + 1}: ${sessionDate.toLocaleDateString()}`)
+                        // }
                     }
                 })
             } else {
                 // Si es una rutina sin sesiones, solo destacar la fecha original
-                console.log(`- Rutina simple: destacando solo fecha original`)
+                // console.log(`- Rutina simple: destacando solo fecha original`)
                 const date = new Date(agendaItem.startDate)
                 highlightedDates.push(date)
                 
@@ -153,8 +153,8 @@ export const CalendarView = () => {
             count: routineIds.size  // Número de rutinas únicas para ese día
         }))
         
-        console.log(`📊 Total de fechas destacadas: ${highlightedDates.length}`)
-        console.log(`📊 Días con múltiples rutinas: ${dayCounts.filter(d => d.count > 1).length}`)
+        // console.log(`📊 Total de fechas destacadas: ${highlightedDates.length}`)
+        // console.log(`📊 Días con múltiples rutinas: ${dayCounts.filter(d => d.count > 1).length}`)
         
         return { workoutDates: highlightedDates, dayCounts }
     }, [agenda.items, routines])
@@ -204,14 +204,14 @@ export const CalendarView = () => {
             // que sepa a partir de qué día programar la rutina
             const baseDate = selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
             
-            console.log('📅 Agendando rutina:', routine.name)
-            console.log('- ID de rutina:', routineId)
-            console.log('- Tipo de rutina:', isWeeklyRoutine ? 'Semanal' : 'Simple')
-            console.log('- Fecha seleccionada:', baseDate)
+            // console.log('📅 Agendando rutina:', routine.name)
+            // console.log('- ID de rutina:', routineId)
+            // console.log('- Tipo de rutina:', isWeeklyRoutine ? 'Semanal' : 'Simple')
+            // console.log('- Fecha seleccionada:', baseDate)
             
             if (isWeeklyRoutine) {
-                console.log('- Días de la semana:', routine.sessions.map(s => s.dayOfWeek).join(', '))
-                console.log('- Total sesiones:', routine.sessions.length)
+                // console.log('- Días de la semana:', routine.sessions.map(s => s.dayOfWeek).join(', '))
+                // console.log('- Total sesiones:', routine.sessions.length)
             }
             
             // Verificar si ya está agendada y no completada
@@ -250,7 +250,7 @@ export const CalendarView = () => {
                 throw new Error(result.error?.message || 'Error al crear agenda')
             }
         } catch (e: any) {
-            console.error('Error al agendar entrenamiento:', e)
+            // console.error('Error al agendar entrenamiento:', e)
             setToast({ open: true, type: 'error', message: `❌ ${e.message || 'Error al programar entrenamiento'}` })
         } finally {
             setIsCreating(false)
@@ -278,7 +278,7 @@ export const CalendarView = () => {
                     await new Promise(resolve => setTimeout(resolve, 500 - elapsed))
                 }
             } catch (e) {
-                console.error('Error al cargar datos:', e)
+                // console.error('Error al cargar datos:', e)
                 setToast({ open: true, type: 'error', message: '❌ Error al cargar agenda' })
             } finally {
                 setInitialLoading(false)
@@ -290,39 +290,39 @@ export const CalendarView = () => {
     // Efecto para imprimir las rutinas agendadas en consola
     useEffect(() => {
         if (agenda.items?.length) {
-            console.log('📅 Rutinas agendadas:', agenda.items.length, 'encontradas')
-            console.log('========================================')
+            // console.log('📅 Rutinas agendadas:', agenda.items.length, 'encontradas')
+            // console.log('========================================')
             agenda.items.forEach((item, index) => {
-                console.log(`📌 Agenda item #${index + 1}:`)
-                console.log(item)
-                console.log('- ID:', item.id)
-                console.log('- Rutina:', item.routine?.name)
-                console.log('- Fecha inicio:', new Date(item.startDate).toLocaleDateString())
+                // console.log(`📌 Agenda item #${index + 1}:`)
+                // console.log(item)
+                // console.log('- ID:', item.id)
+                // console.log('- Rutina:', item.routine?.name)
+                // console.log('- Fecha inicio:', new Date(item.startDate).toLocaleDateString())
                 
                 // Detalles adicionales sobre la rutina y sus sesiones
                 if (item.routine) {
-                    console.log('- Datos de la rutina:')
-                    console.log('  - ID:', item.routine.id)
-                    console.log('  - Nombre:', item.routine.name)
-                    console.log('  - Sesiones disponibles:', (item.routine.sessions || []).length)
+                    // console.log('- Datos de la rutina:')
+                    // console.log('  - ID:', item.routine.id)
+                    // console.log('  - Nombre:', item.routine.name)
+                    // console.log('  - Sesiones disponibles:', (item.routine.sessions || []).length)
                     
                     if (item.routine.sessions && item.routine.sessions.length > 0) {
-                        console.log('  - Lista de sesiones:')
+                        // console.log('  - Lista de sesiones:')
                         item.routine.sessions.forEach((session, sIndex) => {
-                            console.log(`    - Sesión #${sIndex + 1}: ${session.name} (${session.dayOfWeek})`)
+                            // console.log(`    - Sesión #${sIndex + 1}: ${session.name} (${session.dayOfWeek})`)
                         })
                     } else {
-                        console.log('  ⚠️ No hay sesiones en la rutina o no se han cargado correctamente')
+                        // console.log('  ⚠️ No hay sesiones en la rutina o no se han cargado correctamente')
                     }
                 } else {
-                    console.log('⚠️ No hay datos de rutina disponibles')
+                    // console.log('⚠️ No hay datos de rutina disponibles')
                 }
                 
-                console.log('----------------------------------------')
+                // console.log('----------------------------------------')
             })
-            console.log('========================================')
+            // console.log('========================================')
         } else if (!agenda.loading && agenda.items) {
-            console.log('📅 No hay rutinas agendadas')
+            // console.log('📅 No hay rutinas agendadas')
         }
     }, [agenda.items, agenda.loading])
     
@@ -360,7 +360,7 @@ export const CalendarView = () => {
                         const dayOfWeekMap = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
                         const selectedDayName = dayOfWeekMap[selectedDayOfWeek]
                         
-                        console.log('📅 Día seleccionado:', selectedDayName, `(${selectedDayOfWeek})`)
+                        // console.log('📅 Día seleccionado:', selectedDayName, `(${selectedDayOfWeek})`)
                         
                         // Filtrar todas las agendas que tengan sesiones para este día de la semana
                         const workouts = (agenda.items ?? []).reduce<Array<{
@@ -422,7 +422,7 @@ export const CalendarView = () => {
                             return acc
                         }, [])
                         
-                        console.log('💪 Entrenamientos encontrados para', selectedDayName, ':', workouts.length)
+                        // console.log('💪 Entrenamientos encontrados para', selectedDayName, ':', workouts.length)
                         
                         return (
                             <TrainProgramed
@@ -515,7 +515,7 @@ export const CalendarView = () => {
                             throw new Error('Error al eliminar')
                         }
                     } catch (e) {
-                        console.error('Error al eliminar agenda:', e)
+                        // console.error('Error al eliminar agenda:', e)
                         setToast({ open: true, type: 'error', message: '❌ Error al eliminar sesión' })
                     }
                 }}
@@ -567,7 +567,7 @@ export const CalendarView = () => {
                                 setIsDetailsOpen(true)
                             }
                         } catch (e) {
-                            console.error('Error al actualizar agenda:', e)
+                            // console.error('Error al actualizar agenda:', e)
                             setToast({ open: true, type: 'error', message: '❌ Error al actualizar sesión' })
                         } finally {
                             setIsUpdating(false)

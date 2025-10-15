@@ -132,7 +132,7 @@ export const MyProfileAdminView = () => {
 
             // Solo hacer la petición si hay cambios
             if (Object.keys(updateData).length > 0 || profileImage) {
-                console.log('💾 [MyProfileAdminView] Actualizando perfil con:', updateData);
+                // console.log('💾 [MyProfileAdminView] Actualizando perfil con:', updateData);
                 await usuarioService.updateProfile(token, updateData, profileImage || undefined)
                 await refetch() // Recargar datos del usuario
                 

@@ -16,7 +16,7 @@ export const AdminSideBar = () => {
   // Escuchar evento de actualización de perfil
   useEffect(() => {
     const handleProfileUpdate = () => {
-      console.log('🔄 [AdminSideBar] Perfil actualizado, recargando datos...')
+      // console.log('🔄 [AdminSideBar] Perfil actualizado, recargando datos...')
       refetch()
     }
 

@@ -24,8 +24,8 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
      * Crea un nuevo equipamiento (solo ADMIN)
      */
     async createEquipment(token: string, data: EquipamientoRequestDTO, image?: File): Promise<EquipamientoResponseDTO> {
-        console.log('🔵 [EquipamientoService.createEquipment] Creando equipamiento...', { data });
-        console.log('🔵 [EquipamientoService.createEquipment] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
+        // // console.log('🔵 [EquipamientoService.createEquipment] Creando equipamiento...', { data });
+        // // console.log('🔵 [EquipamientoService.createEquipment] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
         
         try {
             // El backend siempre espera multipart/form-data
@@ -45,7 +45,7 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
                 body: formData,
             });
 
-            console.log('🟡 [EquipamientoService.createEquipment] Response status:', response.status);
+            // // console.log('🟡 [EquipamientoService.createEquipment] Response status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -54,7 +54,7 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
             }
 
             const result = await response.json();
-            console.log(`✅ [EquipamientoService.createEquipment] Equipamiento creado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
+            // // console.log(`✅ [EquipamientoService.createEquipment] Equipamiento creado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
             return result;
         } catch (error) {
             console.error('❌ [EquipamientoService.createEquipment] Error:', error);
@@ -66,7 +66,7 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
      * Obtiene todos los equipamientos (solo ADMIN)
      */
     async getAllEquipments(token: string): Promise<EquipamientoResponseDTO[]> {
-        console.log('🔵 [EquipamientoService.getAllEquipments] Obteniendo equipamientos...');
+        // // console.log('🔵 [EquipamientoService.getAllEquipments] Obteniendo equipamientos...');
         try {
             const response = await fetch(`${this.baseUrl}/admin`, {
                 method: 'GET',
@@ -75,14 +75,14 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
                 },
             });
 
-            console.log('🟡 [EquipamientoService.getAllEquipments] Response status:', response.status);
+            // // console.log('🟡 [EquipamientoService.getAllEquipments] Response status:', response.status);
 
             if (!response.ok) {
                 throw new Error(`Error al obtener equipamientos: ${response.status}`);
             }
 
             const result = await response.json();
-            console.log('✅ [EquipamientoService.getAllEquipments] Equipamientos obtenidos:', result.length);
+            // // console.log('✅ [EquipamientoService.getAllEquipments] Equipamientos obtenidos:', result.length);
             return result;
         } catch (error) {
             console.error('❌ [EquipamientoService.getAllEquipments] Error:', error);
@@ -94,9 +94,9 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
      * Actualiza un equipamiento existente (solo ADMIN)
      */
     async updateEquipment(token: string, id: number, data: EquipamientoRequestDTO, image?: File): Promise<EquipamientoResponseDTO> {
-        console.log('🔄 [EquipamientoService.updateEquipment] Actualizando equipamiento:', id);
-        console.log('🔄 [EquipamientoService.updateEquipment] Data:', data);
-        console.log('🔄 [EquipamientoService.updateEquipment] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
+        // // console.log('🔄 [EquipamientoService.updateEquipment] Actualizando equipamiento:', id);
+        // // console.log('🔄 [EquipamientoService.updateEquipment] Data:', data);
+        // // console.log('🔄 [EquipamientoService.updateEquipment] Image:', image ? `${image.name} (${image.size} bytes)` : 'No image');
         
         try {
             // El backend siempre espera multipart/form-data
@@ -116,7 +116,7 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
                 body: formData,
             });
 
-            console.log('🟡 [EquipamientoService.updateEquipment] Response status:', response.status);
+            // // console.log('🟡 [EquipamientoService.updateEquipment] Response status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -125,7 +125,7 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
             }
 
             const result = await response.json();
-            console.log(`✅ [EquipamientoService.updateEquipment] Equipamiento actualizado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
+            // // console.log(`✅ [EquipamientoService.updateEquipment] Equipamiento actualizado ${image ? '(con imagen)' : '(sin imagen)'}:`, result);
             return result;
         } catch (error) {
             console.error('❌ [EquipamientoService.updateEquipment] Error:', error);
@@ -137,7 +137,7 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
      * Alterna el estado activo/inactivo de un equipamiento
      */
     async toggleActive(token: string, id: number): Promise<EquipamientoResponseDTO> {
-        console.log('🔵 [EquipamientoService.toggleActive] Toggle equipamiento:', id);
+        // // console.log('🔵 [EquipamientoService.toggleActive] Toggle equipamiento:', id);
         try {
             const response = await fetch(`${this.baseUrl}/admin/${id}/toggle-active`, {
                 method: 'PATCH',
@@ -146,14 +146,14 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
                 },
             });
 
-            console.log('🟡 [EquipamientoService.toggleActive] Response status:', response.status);
+            // // console.log('🟡 [EquipamientoService.toggleActive] Response status:', response.status);
 
             if (!response.ok) {
                 throw new Error(`Error al cambiar estado: ${response.status}`);
             }
 
             const result = await response.json();
-            console.log('✅ [EquipamientoService.toggleActive] Estado cambiado:', result);
+            // // console.log('✅ [EquipamientoService.toggleActive] Estado cambiado:', result);
             return result;
         } catch (error) {
             console.error('❌ [EquipamientoService.toggleActive] Error:', error);
@@ -165,7 +165,7 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
      * Desactiva un equipamiento (soft delete)
      */
     async deactivateEquipment(token: string, id: number): Promise<EquipamientoResponseDTO> {
-        console.log('🔵 [EquipamientoService.deactivateEquipment] Desactivando equipamiento:', id);
+        // // console.log('🔵 [EquipamientoService.deactivateEquipment] Desactivando equipamiento:', id);
         try {
             const response = await fetch(`${this.baseUrl}/admin/${id}/deactivate`, {
                 method: 'PATCH',
@@ -179,7 +179,7 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
             }
 
             const result = await response.json();
-            console.log('✅ [EquipamientoService.deactivateEquipment] Equipamiento desactivado:', result);
+            // // console.log('✅ [EquipamientoService.deactivateEquipment] Equipamiento desactivado:', result);
             return result;
         } catch (error) {
             console.error('❌ [EquipamientoService.deactivateEquipment] Error:', error);
@@ -191,7 +191,7 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
      * Elimina permanentemente un equipamiento (hard delete)
      */
     async hardDeleteEquipment(token: string, id: number): Promise<void> {
-        console.log('🔵 [EquipamientoService.hardDeleteEquipment] Eliminando equipamiento:', id);
+        // console.log('🔵 [EquipamientoService.hardDeleteEquipment] Eliminando equipamiento:', id);
         try {
             const response = await fetch(`${this.baseUrl}/admin/${id}`, {
                 method: 'DELETE',
@@ -200,13 +200,13 @@ export class EquipamientoService extends BackendClient<EquipamientoRequestDTO, E
                 },
             });
 
-            console.log('🟡 [EquipamientoService.hardDeleteEquipment] Response status:', response.status);
+            // // console.log('🟡 [EquipamientoService.hardDeleteEquipment] Response status:', response.status);
 
             if (!response.ok) {
                 throw new Error(`Error al eliminar equipamiento: ${response.status}`);
             }
 
-            console.log('✅ [EquipamientoService.hardDeleteEquipment] Equipamiento eliminado');
+            // // console.log('✅ [EquipamientoService.hardDeleteEquipment] Equipamiento eliminado');
         } catch (error) {
             console.error('❌ [EquipamientoService.hardDeleteEquipment] Error:', error);
             throw error;

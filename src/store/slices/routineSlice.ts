@@ -33,10 +33,10 @@ export const fetchRoutines = createAsyncThunk(
   'routines/fetchRoutines',
   async (token: string, { rejectWithValue }) => {
     try {
-      console.log('🔵 [routineSlice] Obteniendo rutinas del usuario...')
+      // console.log('🔵 [routineSlice] Obteniendo rutinas del usuario...')
       rutinaService.setToken(token)
       const data = await rutinaService.getAll()
-      console.log('✅ [routineSlice] Rutinas obtenidas:', data.length, data)
+      // console.log('✅ [routineSlice] Rutinas obtenidas:', data.length, data)
       return data as RutinaResponseDTO[]
     } catch (error) {
       console.error('❌ [routineSlice] Error al cargar rutinas:', error)
@@ -101,9 +101,9 @@ export const fetchSavedRoutines = createAsyncThunk(
   'routines/fetchSavedRoutines',
   async (token: string, { rejectWithValue }) => {
     try {
-      console.log('🔵 [routineSlice] Obteniendo rutinas guardadas del usuario...')
+      // console.log('🔵 [routineSlice] Obteniendo rutinas guardadas del usuario...')
       const data = await rutinaService.getSavedRoutines(token)
-      console.log('✅ [routineSlice] Rutinas guardadas obtenidas:', data.length)
+      // console.log('✅ [routineSlice] Rutinas guardadas obtenidas:', data.length)
       return data as RutinaResponseDTO[]
     } catch (error) {
       console.error('❌ [routineSlice] Error al cargar rutinas guardadas:', error)

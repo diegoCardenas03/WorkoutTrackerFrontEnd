@@ -191,14 +191,14 @@ export const ExercisesAdminView = () => {
         },
       })
       
-      console.log('🔑 [ExercisesAdminView] Token obtenido');
+      // console.log('🔑 [ExercisesAdminView] Token obtenido');
       
       let result;
       if (editingExercise) {
-        console.log('📝 [ExercisesAdminView] Actualizando ejercicio...');
+        // console.log('📝 [ExercisesAdminView] Actualizando ejercicio...');
         result = await (dispatch as any)(updateExercise({ token, id: Number(editingExercise.id), data: payload }))
       } else {
-        console.log('🆕 [ExercisesAdminView] Creando ejercicio...');
+        // console.log('🆕 [ExercisesAdminView] Creando ejercicio...');
         result = await (dispatch as any)(createExercise({ token, data: payload }))
       }
       
@@ -208,7 +208,7 @@ export const ExercisesAdminView = () => {
         throw new Error(result.payload || 'Error al guardar ejercicio');
       }
       
-      console.log('✅ [ExercisesAdminView] Ejercicio guardado exitosamente');
+      // console.log('✅ [ExercisesAdminView] Ejercicio guardado exitosamente');
       
       setIsModalOpen(false)
       setEditingExercise(null)

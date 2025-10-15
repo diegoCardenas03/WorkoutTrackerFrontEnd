@@ -12,9 +12,9 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
      * POST /api/routines/{id}/like
      */
     async toggleLikeRoutine(token: string, id: number): Promise<any> {
-        console.log('🔵 RutinaService.toggleLikeRoutine llamado para rutina:', id)
+        // console.log('🔵 RutinaService.toggleLikeRoutine llamado para rutina:', id)
         const url = `${this.baseUrl}/${id}/like`
-        console.log('🔵 URL:', url)
+        // console.log('🔵 URL:', url)
         
         const response = await fetch(url, {
             method: 'POST',
@@ -23,7 +23,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
             },
         });
 
-        console.log('🔵 Response status:', response.status)
+        // console.log('🔵 Response status:', response.status)
 
         if (!response.ok) {
             const errorText = await response.text()
@@ -32,7 +32,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
         }
 
         const data = await response.json();
-        console.log('🟢 Toggle like exitoso, data:', data)
+        // console.log('🟢 Toggle like exitoso, data:', data)
         return data;
     }
 
@@ -41,9 +41,9 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
      * POST /api/routines/{id}/save
      */
     async toggleSaveRoutine(token: string, id: number): Promise<any> {
-        console.log('🔵 RutinaService.toggleSaveRoutine llamado para rutina:', id)
+        // console.log('🔵 RutinaService.toggleSaveRoutine llamado para rutina:', id)
         const url = `${this.baseUrl}/${id}/save`
-        console.log('🔵 URL:', url)
+        // console.log('🔵 URL:', url)
         
         const response = await fetch(url, {
             method: 'POST',
@@ -52,7 +52,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
             },
         });
 
-        console.log('🔵 Response status:', response.status)
+        // console.log('🔵 Response status:', response.status)
 
         if (!response.ok) {
             const errorText = await response.text()
@@ -61,7 +61,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
         }
 
         const data = await response.json();
-        console.log('🟢 Toggle save exitoso, data:', data)
+        // console.log('🟢 Toggle save exitoso, data:', data)
         return data;
     }
 
@@ -70,9 +70,9 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
      * GET /api/routines/liked
      */
     async getLikedRoutines(token: string): Promise<RutinaResponseDTO[]> {
-        console.log('🔵 RutinaService.getLikedRoutines llamado')
+        // console.log('🔵 RutinaService.getLikedRoutines llamado')
         const url = `${this.baseUrl}/liked`
-        console.log('🔵 URL:', url)
+        // console.log('🔵 URL:', url)
         
         const response = await fetch(url, {
             method: 'GET',
@@ -81,7 +81,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
             },
         });
 
-        console.log('🔵 Response status:', response.status)
+        // console.log('🔵 Response status:', response.status)
 
         if (!response.ok) {
             const errorText = await response.text()
@@ -90,7 +90,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
         }
 
         const data = await response.json();
-        console.log('🟢 Rutinas con like obtenidas, cantidad:', data?.length || 0)
+        // console.log('🟢 Rutinas con like obtenidas, cantidad:', data?.length || 0)
         return data;
     }
 
@@ -99,9 +99,9 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
      * GET /api/routines/saved
      */
     async getSavedRoutines(token: string): Promise<RutinaResponseDTO[]> {
-        console.log('🔵 RutinaService.getSavedRoutines llamado')
+        // console.log('🔵 RutinaService.getSavedRoutines llamado')
         const url = `${this.baseUrl}/saved`
-        console.log('🔵 URL:', url)
+        // console.log('🔵 URL:', url)
         
         const response = await fetch(url, {
             method: 'GET',
@@ -110,7 +110,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
             },
         });
 
-        console.log('🔵 Response status:', response.status)
+        // console.log('🔵 Response status:', response.status)
 
         if (!response.ok) {
             const errorText = await response.text()
@@ -119,7 +119,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
         }
 
         const data = await response.json();
-        console.log('🟢 Rutinas guardadas obtenidas, cantidad:', data?.length || 0)
+        // console.log('🟢 Rutinas guardadas obtenidas, cantidad:', data?.length || 0)
         return data;
     }
 
@@ -129,7 +129,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
      * @returns El DTO actualizado de la rutina
      */
     async toggleCompleteRoutine(token: string, routineId: number): Promise<RutinaResponseDTO> {
-        console.log(`🔵 POST /api/routines/${routineId}/complete`);
+        // console.log(`🔵 POST /api/routines/${routineId}/complete`);
         const url = `${this.baseUrl}/${routineId}/complete`
         
         const response = await fetch(url, {
@@ -140,7 +140,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
             },
         });
 
-        console.log(`📡 Response: ${response.status} ${response.ok ? 'OK' : 'ERROR'}`);
+        // console.log(`📡 Response: ${response.status} ${response.ok ? 'OK' : 'ERROR'}`);
 
         if (!response.ok) {
             const error = await response.text();
@@ -149,7 +149,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
         }
 
         const data = await response.json();
-        console.log(`✅ Usuario completedRoutines: ${data.user?.completedRoutines ?? 'N/A'}`);
+        // console.log(`✅ Usuario completedRoutines: ${data.user?.completedRoutines ?? 'N/A'}`);
         return data;
     }
 
@@ -158,9 +158,9 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
      * GET /api/routines/completed
      */
     async getCompletedRoutines(token: string): Promise<RutinaResponseDTO[]> {
-        console.log('🔵 [RutinaService] Obteniendo rutinas completadas');
+        // console.log('🔵 [RutinaService] Obteniendo rutinas completadas');
         const url = `${this.baseUrl}/completed`
-        console.log('🔵 [RutinaService] URL:', url);
+        // console.log('🔵 [RutinaService] URL:', url);
 
         const response = await fetch(url, {
             headers: {
@@ -168,7 +168,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
             },
         });
 
-        console.log('📡 [RutinaService] Response status:', response.status);
+        // console.log('📡 [RutinaService] Response status:', response.status);
 
         if (!response.ok) {
             console.error('❌ [RutinaService] Error:', response.status);
@@ -176,7 +176,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
         }
 
         const data = await response.json();
-        console.log('✅ [RutinaService] Rutinas completadas:', data.length);
+        // console.log('✅ [RutinaService] Rutinas completadas:', data.length);
         return data;
     }
 
@@ -192,7 +192,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
      * @returns Lista de SesionCompletadaResponseDTO registradas
      */
     async completeRoutine(token: string, routineId: number): Promise<any[]> {
-        console.log(`🔵 POST /api/routines/${routineId}/complete`);
+        // console.log(`🔵 POST /api/routines/${routineId}/complete`);
         const url = `${this.baseUrl}/${routineId}/complete`
         
         const response = await fetch(url, {
@@ -203,7 +203,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
             },
         });
 
-        console.log(`📡 Response: ${response.status} ${response.ok ? 'OK' : 'ERROR'}`);
+        // console.log(`📡 Response: ${response.status} ${response.ok ? 'OK' : 'ERROR'}`);
 
         if (!response.ok) {
             const error = await response.text();
@@ -212,7 +212,7 @@ export class RutinaService extends BackendClient<RutinaRequestDTO, RutinaRespons
         }
 
         const data = await response.json();
-        console.log(`✅ Sesiones registradas como completadas:`, data.length);
+        // console.log(`✅ Sesiones registradas como completadas:`, data.length);
         return data;
     }
 }

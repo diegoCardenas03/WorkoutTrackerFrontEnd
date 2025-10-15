@@ -22,7 +22,7 @@ export const fetchEquipments = createAsyncThunk(
   'equipments/fetchAll',
   async (token: string, { rejectWithValue }) => {
     try {
-      console.log('📊 [equipmentSlice] Fetching equipments con token...')
+      // console.log('📊 [equipmentSlice] Fetching equipments con token...')
       equipamientoService.setToken(token)
       // Delay mínimo para mejor UX del spinner
       const [data] = await Promise.all([
@@ -42,7 +42,7 @@ export const fetchActiveEquipments = createAsyncThunk(
   'equipments/fetchActive',
   async (token: string, { rejectWithValue }) => {
     try {
-      console.log('📊 [equipmentSlice] Fetching active equipments...')
+      // console.log('📊 [equipmentSlice] Fetching active equipments...')
       equipamientoService.setToken(token)
       const data = await equipamientoService.getAll() // Solo activos
       return data
@@ -58,7 +58,7 @@ export const createEquipment = createAsyncThunk(
   'equipments/create',
   async ({ token, data, image }: { token: string; data: EquipamientoRequestDTO; image?: File }, { rejectWithValue }) => {
     try {
-      console.log('🚀 [equipmentSlice] Creando equipamiento...')
+      // console.log('🚀 [equipmentSlice] Creando equipamiento...')
       const result = await equipamientoService.createEquipment(token, data, image)
       return result
     } catch (error) {
@@ -73,7 +73,7 @@ export const updateEquipment = createAsyncThunk(
   'equipments/update',
   async ({ token, id, data, image }: { token: string; id: number; data: Partial<EquipamientoRequestDTO>; image?: File }, { rejectWithValue }) => {
     try {
-      console.log('🔄 [equipmentSlice] Actualizando equipamiento:', id)
+      // console.log('🔄 [equipmentSlice] Actualizando equipamiento:', id)
       const result = await equipamientoService.updateEquipment(token, id, data as EquipamientoRequestDTO, image)
       return result
     } catch (error) {
@@ -88,7 +88,7 @@ export const toggleEquipmentActive = createAsyncThunk(
   'equipments/toggleActive',
   async ({ token, id }: { token: string; id: number }, { rejectWithValue }) => {
     try {
-      console.log('🔄 [equipmentSlice] Toggle equipamiento:', id)
+      // console.log('🔄 [equipmentSlice] Toggle equipamiento:', id)
       equipamientoService.setToken(token)
       const result = await equipamientoService.toggleActiveAdmin(id)
       return result

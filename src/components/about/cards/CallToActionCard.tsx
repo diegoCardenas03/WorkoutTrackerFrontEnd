@@ -2,7 +2,7 @@ import { Button } from "../../Button"
 
 export const CallToActionCard = () => {
   const handleGetStarted = () => {
-    console.log("Iniciar transformación del gimnasio")
+    // console.log("Iniciar transformación del gimnasio")
     // Aquí iría la lógica para redirigir o abrir modal de contacto
   }
 

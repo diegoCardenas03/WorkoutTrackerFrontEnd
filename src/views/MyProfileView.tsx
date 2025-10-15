@@ -172,7 +172,7 @@ export const MyProfileView = () => {
       }
 
       // Actualizar perfil
-      console.log('📤 Enviando actualización de perfil:', updateData);
+      // console.log('📤 Enviando actualización de perfil:', updateData);
       await usuarioService.updateProfile(token, updateData, profileImage || undefined);
       
       // Recargar datos del usuario

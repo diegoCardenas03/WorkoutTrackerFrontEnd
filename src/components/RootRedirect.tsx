@@ -22,7 +22,7 @@ export const RootRedirect = () => {
     const refreshTokenIfNeeded = async () => {
       if (isAuthenticated && !isLoading && roles.length === 0 && retryCount < 2 && !isRefreshing) {
         setIsRefreshing(true);
-        console.log(`⚠️ Usuario autenticado sin roles detectados. Intento ${retryCount + 1}/2 de refrescar token...`);
+        // console.log(`⚠️ Usuario autenticado sin roles detectados. Intento ${retryCount + 1}/2 de refrescar token...`);
         
         try {
           // Esperar un momento para que Auth0 procese la asignación de roles
@@ -37,7 +37,7 @@ export const RootRedirect = () => {
             cacheMode: 'off',
           });
           
-          console.log('✅ Token refrescado, verificando roles...');
+          // console.log('✅ Token refrescado, verificando roles...');
           setRetryCount(prev => prev + 1);
         } catch (error) {
           console.error('❌ Error al refrescar token:', error);
@@ -71,7 +71,7 @@ export const RootRedirect = () => {
   // Si es PROPIETARIO o ADMIN, redirigir a perfil de admin
   if (isOwner || isAdmin) {
     const roleLabel = isOwner ? 'Propietario' : 'Admin';
-    console.log(`🔄 ${roleLabel} detectado, redirigiendo a /admin/profile`);
+    // console.log(`🔄 ${roleLabel} detectado, redirigiendo a /admin/profile`);
     return <Navigate to="/admin/profile" replace />;
   }
 
