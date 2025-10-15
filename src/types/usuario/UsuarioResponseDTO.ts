@@ -7,10 +7,11 @@ export interface UsuarioResponseDTO {
   bodyWeight?: number;
   active: boolean;
   pictureUrl?: string;
+  picture?: string; // Añadido para compatibilidad con el backend
   createdAt: string;
   updatedAt: string;
   lastAccess?: string;
-  completedWorkouts: number;
+  completedWorkouts?: number; // Opcional porque no aparece en la respuesta del backend
   createdRoutines: number;
   likedRoutines: number;
   savedRoutines: number;

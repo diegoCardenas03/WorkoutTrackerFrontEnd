@@ -1,4 +1,4 @@
-import type { RutinaSimpleDTO } from "../rutina/RutinaSimpleDTO";
+import type { RutinaResponseDTO } from "../rutina/RutinaResponseDTO";
 import type { UsuarioResponseDTO } from "../usuario/UsuarioResponseDTO";
 
 export interface AgendaResponseDTO {
@@ -10,7 +10,7 @@ export interface AgendaResponseDTO {
   comment?: string;
   completed: boolean;
   completedAt?: string;
-  routine: RutinaSimpleDTO;
+  routine: RutinaResponseDTO;
   user: UsuarioResponseDTO;
 
 }
