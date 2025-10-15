@@ -245,17 +245,8 @@ export const CommunityRoutineModal = ({
             </div>
           </div>
 
-          {/* Publication Date */}
-          <div className="flex items-center gap-2 text-quaternary text-sm">
-            <LuCalendarDays size={16} />
-            <span>
-              Publicada el {new Date(routine.createdAt).toLocaleDateString('es-ES', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-              })}
-            </span>
-          </div>
+         
+          
         </div>
 
         {/* Footer Actions */}
