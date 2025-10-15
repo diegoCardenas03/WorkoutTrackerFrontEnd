@@ -104,6 +104,7 @@ export const ExerciseAdminModal = ({
         active: exercise.status === 'active',
       }))
     } else {
+      // Reset form when creating new exercise
       setFormData({
         name: "",
         description: "",
@@ -114,8 +115,28 @@ export const ExerciseAdminModal = ({
         instructions: [""],
   equipmentIds: [],
       })
+      setErrors({})
     }
   }, [exercise])
+
+  // Resetear modal cuando se crea un ejercicio
+  useEffect(() => {
+    if (isOpen && !exercise) {
+      setFormData({
+        name: "",
+        description: "",
+        tips: "",
+        muscleIds: [],
+        videoLinks: [],
+        active: true,
+        instructions: [""],
+        equipmentIds: [],
+      })
+      setErrors({})
+      setMuscleSearch("")
+      setEquipSearch("")
+    }
+  }, [isOpen, exercise])
 
   // Hydrate from backend details when present
   useEffect(() => {
